@@ -2,9 +2,10 @@ import time
 import json
 from sqlalchemy.orm import Session
 
-from app.db import SessionLocal
+from .db import SessionLocal
+#from app.db import SessionLocal
 from app.models import Orden
-import script
+from app import script
 
 
 def get_pending(db: Session):

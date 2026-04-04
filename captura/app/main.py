@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends
-from sqlalchemy.orm import Session, inspect
+from sqlalchemy.orm import Session
+from sqlalchemy.inspection import inspect
 import json
 import os
 

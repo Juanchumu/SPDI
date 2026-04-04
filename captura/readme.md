@@ -2,7 +2,20 @@
 
 ### levantar:
 
-docker-compose up --build
+antiguo: docker-compose up --build
+
+# Detener contenedores
+docker-compose down
+
+# Reconstruir sin caché para instalar nuevas dependencias
+docker-compose build --no-cache
+
+# Levantar servicios
+docker-compose up
+
+
+
+
 
 * Crear Orden:
 

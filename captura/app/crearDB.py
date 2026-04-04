@@ -29,36 +29,49 @@ conn.close()
 DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:5432/{DB_NAME}"
 engine = create_engine(DATABASE_URL)
 
+# Usar un contexto de transacción explícito
 with engine.connect() as conn:
-    # 📦 Productos
-    conn.execute(text("""
-    CREATE TABLE IF NOT EXISTS products (
-        id TEXT PRIMARY KEY,
-        name TEXT,
-        fecha TEXT
-    )
-    """))
+    # Iniciar una transacción
+    trans = conn.begin()
     
-    # 📥 Descargas
-    conn.execute(text("""
-    CREATE TABLE IF NOT EXISTS downloads (
-        product_id TEXT PRIMARY KEY,
-        filepath TEXT,
-        fecha_descarga TIMESTAMP
-    )
-    """))
-    
-    # 🟢 Ordenes
-    conn.execute(text("""
-    CREATE TABLE IF NOT EXISTS ordenes (
-        id SERIAL PRIMARY KEY,
-        args TEXT,
-        status TEXT,
-        ruta_safe TEXT,
-        ruta_stack TEXT,
-        created_at TIMESTAMP,
-        updated_at TIMESTAMP
-    )
-    """))
-    
-    conn.commit()
+    try:
+        # 📦 Productos
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS products (
+            id TEXT PRIMARY KEY,
+            name TEXT,
+            fecha TEXT
+        )
+        """))
+        
+        # 📥 Descargas
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS downloads (
+            product_id TEXT PRIMARY KEY,
+            filepath TEXT,
+            fecha_descarga TIMESTAMP
+        )
+        """))
+        
+        # 🟢 Ordenes
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS ordenes (
+            id SERIAL PRIMARY KEY,
+            args TEXT,
+            status TEXT,
+            ruta_safe TEXT,
+            ruta_stack TEXT,
+            created_at TIMESTAMP,
+            updated_at TIMESTAMP
+        )
+        """))
+        
+        # Confirmar la transacción
+        trans.commit()
+        print("✅ Tablas creadas exitosamente")
+        
+    except Exception as e:
+        # Si hay error, deshacer los cambios
+        trans.rollback()
+        print(f"❌ Error al crear tablas: {e}")
+        raise
