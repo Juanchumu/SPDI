@@ -3,6 +3,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+print(f"Email user: {os.getenv('email_user')}")
+print(f"Email password: {'*' * len(os.getenv('email_password', ''))}")
+
 import requests
 from datetime import datetime, timedelta, UTC
 import os

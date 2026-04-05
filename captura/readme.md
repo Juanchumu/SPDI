@@ -43,3 +43,23 @@ GET /orden/1
 devuelve: 
 
 status: pending → processing → done
+
+
+
+
+
+# En caso de errores:
+
+
+# Limpiar completamente
+sudo docker-compose down -v  # Esto borra volúmenes (incluye postgres_data)
+sudo docker system prune -a  # Limpia imágenes no usadas
+
+# Reconstruir
+sudo docker-compose build --no-cache
+
+# Crear carpetas locales (si no existen)
+mkdir -p data descargas
+
+# Levantar
+sudo docker-compose up
