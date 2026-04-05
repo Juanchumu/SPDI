@@ -31,6 +31,9 @@ services:
       - DB_USER=user
       - DB_PASSWORD=password
       - DB_NAME=mydb
+    volumes:                           # 
+      - ./data:/app/data               # 
+      - ./descargas:/app/descargas     # 
     restart: unless-stopped
 
   worker:
@@ -45,6 +48,10 @@ services:
       - DB_USER=user
       - DB_PASSWORD=password
       - DB_NAME=mydb
+    volumes:                           # 
+      - ./data:/app/data               # 
+      - ./descargas:/app/descargas     # 
+
     restart: unless-stopped
 
 volumes:
