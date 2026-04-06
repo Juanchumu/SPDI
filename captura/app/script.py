@@ -250,7 +250,7 @@ def run(dia_de_la_imagen, izquierda, derecha, abajo, arriba, orden_id):
                     "count": 1,
                     "driver": "GTiff"
                 })
-                
+                output = os.path.join("/app/data/temp", output)
                 with rasterio.open(output, "w", **profile) as dst:
                     dst.write(data, 1)
             
@@ -287,18 +287,18 @@ def run(dia_de_la_imagen, izquierda, derecha, abajo, arriba, orden_id):
     
     MMO_tipo = 'float64'
     
-    with rasterio.open("B8_mosaic.tif") as nir:
+    with rasterio.open("/app/data/temp/B8_mosaic.tif") as nir:
         nir_data = nir.read(1).astype(MMO_tipo)
         profile = nir.profile.copy()
         
-        with rasterio.open("B11_mosaic.tif") as swir:
+        with rasterio.open("/app/data/temp/B11_mosaic.tif") as swir:
             swir_resampled = swir.read(
                 1,
                 out_shape=nir.shape,
                 resampling=Resampling.bilinear
             ).astype(MMO_tipo)
     
-    with rasterio.open("B4_mosaic.tif") as red:
+    with rasterio.open("/app/data/temp/B4_mosaic.tif") as red:
         red_data = red.read(1).astype(MMO_tipo)
     
     def safe_index(a, b):
@@ -315,30 +315,30 @@ def run(dia_de_la_imagen, izquierda, derecha, abajo, arriba, orden_id):
     ndbi = safe_index(swir_resampled, nir_data)
     
     profile.update(dtype=rasterio.float64, count=1)
-    
-    with rasterio.open(f"{dia_de_la_imagen}-nbr.tif", "w", **profile) as dst:
+     
+    with rasterio.open(os.path.join("/app/data/temp", f"{dia_de_la_imagen}-nbr.tif"), "w", **profile) as dst:
         dst.write(nbr.astype(rasterio.float64), 1)
     
-    with rasterio.open(f"{dia_de_la_imagen}-ndvi.tif", "w", **profile) as dst:
+    with rasterio.open(os.path.join("/app/data/temp", f"{dia_de_la_imagen}-ndvi.tif"), "w", **profile) as dst:
         dst.write(ndvi.astype(rasterio.float64), 1)
     
-    with rasterio.open(f"{dia_de_la_imagen}-ndbi.tif", "w", **profile) as dst:
+    with rasterio.open(os.path.join("/app/data/temp", f"{dia_de_la_imagen}-ndbi.tif"), "w", **profile) as dst:
         dst.write(ndbi.astype(rasterio.float64), 1)
     
     critical = nbr < 0.1
     
-    with rasterio.open("B8_mosaic.tif") as src:
+    with rasterio.open("/app/data/temp/B8_mosaic.tif") as src:
         profile_crit = src.profile
     
     profile_crit.update(dtype=rasterio.uint8)
     
-    with rasterio.open(f"{dia_de_la_imagen}-zonas_criticas.tif", "w", **profile_crit) as dst:
+    with rasterio.open(os.path.join("/app/data/temp", f"{dia_de_la_imagen}-zonas_criticas.tif"), "w", **profile_crit) as dst:
         dst.write(critical.astype(rasterio.uint8), 1)
     
     # Stack final
-    with rasterio.open(f"{dia_de_la_imagen}-ndvi.tif") as ndvi_src, \
-         rasterio.open(f"{dia_de_la_imagen}-nbr.tif") as nbr_src, \
-         rasterio.open(f"{dia_de_la_imagen}-ndbi.tif") as ndbi_src:
+    with rasterio.open(f"/app/data/temp/{dia_de_la_imagen}-ndvi.tif") as ndvi_src, \
+         rasterio.open(f"/app/data/temp/{dia_de_la_imagen}-nbr.tif") as nbr_src, \
+         rasterio.open(f"/app/data/temp/{dia_de_la_imagen}-ndbi.tif") as ndbi_src:
         
         ndvi_data = ndvi_src.read(1)
         nbr_data = nbr_src.read(1)
@@ -348,7 +348,7 @@ def run(dia_de_la_imagen, izquierda, derecha, abajo, arriba, orden_id):
         profile_stack.update(count=3)
         
         #ruta_stack = f"{dia_de_la_imagen}-{order_id}-stack.tif"
-        ruta_stack = os.path.join("/app/data", f"{dia_de_la_imagen}-{orden_id}-stack.tif")
+        ruta_stack = os.path.join("/app/data/imagenes", f"{dia_de_la_imagen}-{orden_id}-stack.tif")
         with rasterio.open(ruta_stack, "w", **profile_stack) as dst:
             dst.write(ndvi_data, 1)
             dst.write(nbr_data, 2)
