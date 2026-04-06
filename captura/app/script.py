@@ -348,7 +348,7 @@ def run(dia_de_la_imagen, izquierda, derecha, abajo, arriba, orden_id):
         profile_stack.update(count=3)
         
         #ruta_stack = f"{dia_de_la_imagen}-{order_id}-stack.tif"
-        ruta_stack = os.path.join("data", f"{dia_de_la_imagen}-{orden_id}-stack.tif")
+        ruta_stack = os.path.join("/app/data", f"{dia_de_la_imagen}-{orden_id}-stack.tif")
         with rasterio.open(ruta_stack, "w", **profile_stack) as dst:
             dst.write(ndvi_data, 1)
             dst.write(nbr_data, 2)
