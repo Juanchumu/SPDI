@@ -19,15 +19,7 @@ docker-compose up
 
 * Crear Orden:
 
-curl -X POST http://localhost:8000/orden \
-  -H "Content-Type: application/json" \
-  -d '{
-    "dia": 20260318,
-    "izquierda": -58.745420,
-    "derecha": -58.738993,
-    "abajo": -34.631716,
-    "arriba": -34.628794
-  }'
+curl -X POST http://localhost:8000/orden -H "Content-Type: application/json" -d '{ "dia": 20260318, "izquierda": -58.745420, "derecha": -58.738993, "abajo": -34.631716, "arriba": -34.628794 }'
   
 
 * Devuelve
@@ -38,11 +30,11 @@ curl -X POST http://localhost:8000/orden \
 }
 ### Consultar:
 
-GET /orden/1
+curl -X GET http://localhost:8000/orden/1
 
 devuelve: 
 
-status: pending → processing → done
+
 
 
 
@@ -52,8 +44,12 @@ status: pending → processing → done
 
 
 # Limpiar completamente
-sudo docker-compose down -v  # Esto borra volúmenes (incluye postgres_data)
-sudo docker system prune -a  # Limpia imágenes no usadas
+
+### Esto borra volúmenes (incluye postgres_data)
+sudo docker-compose down -v 
+
+### Limpia imágenes no usadas
+sudo docker system prune -a  
 
 # Reconstruir
 sudo docker-compose build --no-cache
@@ -63,3 +59,13 @@ mkdir -p data descargas
 
 # Levantar
 sudo docker-compose up
+
+
+
+# Entrar en el worker:
+
+sudo docker exec -it captura_worker_1 /bin/bash
+python
+
+run("20260318",-58.745420,-58.738993,-34.631716,-34.628794,None)
+

@@ -3,8 +3,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-print(f"Email user: {os.getenv('email_user')}")
-print(f"Email password: {'*' * len(os.getenv('email_password', ''))}")
+#print(f"Email user: {os.getenv('email_user')}")
+#print(f"Email password: {'*' * len(os.getenv('email_password', ''))}")
 
 import requests
 from datetime import datetime, timedelta, UTC
@@ -13,6 +13,7 @@ import zipfile
 
 import rasterio
 from rasterio.merge import merge
+from rasterio.mask import mask
 
 import matplotlib.pyplot as plt
 from rasterio.enums import Resampling
@@ -21,6 +22,7 @@ import pyproj
 from shapely.geometry import shape
 from shapely.ops import transform
 
+print("imports cargados...!")
 
 # ==================================================
 # FUNCIÓN PRINCIPAL que recibe los 5 argumentos
@@ -49,7 +51,7 @@ def run(dia_de_la_imagen, izquierda, derecha, abajo, arriba, orden_id):
     # Convertir string a datetime
     fecha_base = datetime.strptime(dia_de_la_imagen, "%Y%m%d").replace(tzinfo=UTC)
     start_date = (fecha_base - timedelta(days=10)).strftime("%Y-%m-%dT00:00:00Z")
-    end_date = fecha_base.strftime("%Y-%m-%dT00:00:00Z")
+    end_date = (fecha_base + timedelta(days=5)).strftime("%Y-%m-%dT00:00:00Z")
     
     # Polígono
     poligono = f"{izquierda} {abajo},{izquierda} {arriba},{derecha} {arriba},{derecha} {abajo},{izquierda} {abajo}"
@@ -138,16 +140,15 @@ def run(dia_de_la_imagen, izquierda, derecha, abajo, arriba, orden_id):
     
     for p in products:
         product_id = p["Id"]
-        name = p["Name"]
-        
+        name = p["Name"] 
         filepath = os.path.join(output_dir, name + ".zip")
-        
         if os.path.exists(filepath):
             print(f"Archivo ya existe: {name}")
         else:
+            hora = datetime.now().strftime('%H:%M:%S')
+            print(f"La descarga empezó a las {hora}")
             print(f"Descargando: {name}")
             url = f"https://download.dataspace.copernicus.eu/odata/v1/Products({product_id})/$value"
-            
             with requests.get(url, headers=headers, stream=True) as r:
                 if r.status_code != 200:
                     print("Error:", r.status_code, r.text)
@@ -159,29 +160,29 @@ def run(dia_de_la_imagen, izquierda, derecha, abajo, arriba, orden_id):
                             f.write(chunk)
             
             print(f"OK: {filepath}")
+            print(f"La descarga Termino a las {datetime.now().strftime('%H:%M:%S')}")
         
-        # Descomprimir archivos
-        zip_dir = "descargas"
-        extract_dir = "data"
-        
-        os.makedirs(extract_dir, exist_ok=True)
-        
-        for file in os.listdir(zip_dir):
-            if file.endswith(".zip"):
-                path = os.path.join(zip_dir, file)
-                print("Extrayendo:", file)
+    # Descomprimir archivos
+    print(f"Descomprimir archivos {datetime.now().strftime('%H:%M:%S')}")
+    zip_dir = "descargas"
+    extract_dir = "data"    
+    os.makedirs(extract_dir, exist_ok=True)    
+    for file in os.listdir(zip_dir):
+        if file.endswith(".zip"):
+            path = os.path.join(zip_dir, file)
+            print("Extrayendo:", file)
                 
-                with zipfile.ZipFile(path, 'r') as zip_ref:
-                    zip_ref.extractall(extract_dir)
+            with zipfile.ZipFile(path, 'r') as zip_ref:
+                zip_ref.extractall(extract_dir)
                 
-                # Buscar la carpeta .SAFE
-                for root, dirs, files in os.walk(extract_dir):
-                    for d in dirs:
-                        if d.endswith(".SAFE"):
-                            ruta_safe = os.path.join(root, d)
-                            print(f"Carpeta SAFE encontrada: {ruta_safe}")
+            # Buscar la carpeta .SAFE
+            for root, dirs, files in os.walk(extract_dir):
+                for d in dirs:
+                    if d.endswith(".SAFE"):
+                        ruta_safe = os.path.join(root, d)
+                        print(f"Carpeta SAFE encontrada: {ruta_safe}")
     
-    # Procesamiento de bandas
+    print(f"Procesamiento de bandas {datetime.now().strftime('%H:%M:%S')}")
     bandas = ["B04_10m", "B08_10m", "B11_20m"]
     rutas = []
     
@@ -219,7 +220,7 @@ def run(dia_de_la_imagen, izquierda, derecha, abajo, arriba, orden_id):
         
         print("Guardado:", output_path)
     
-    # Encontrar archivos de banda
+    print(f"Encontrar archivos de banda {datetime.now().strftime('%H:%M:%S')}")
     def find_band_files(base_dir, band):
         paths = []
         for root, dirs, files in os.walk(base_dir):
