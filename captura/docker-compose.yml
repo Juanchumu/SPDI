@@ -4,9 +4,9 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: mydb
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
@@ -26,11 +26,11 @@ services:
       db:
         condition: service_healthy
     environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USER=user
-      - DB_PASSWORD=password
-      - DB_NAME=mydb
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
     volumes:                           # 
       - ./data:/app/data               # 
       - ./descargas:/app/descargas     # 
@@ -43,11 +43,11 @@ services:
       db:
         condition: service_healthy
     environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USER=user
-      - DB_PASSWORD=password
-      - DB_NAME=mydb
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
     volumes:                           # 
       - ./data:/app/data               # 
       - ./descargas:/app/descargas     # 
