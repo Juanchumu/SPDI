@@ -54,5 +54,24 @@ services:
 
     restart: unless-stopped
 
+  worker-predictor:
+    build: .
+    command: python -m app.worker-predictor
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+    volumes:                           # 
+      - ./data:/app/data               # 
+      - ./descargas:/app/descargas     # 
+
+    restart: unless-stopped
+
+
 volumes:
   postgres_data:

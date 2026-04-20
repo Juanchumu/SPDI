@@ -36,7 +36,7 @@ def run():
                     orden_id=orden.id
                 )
 
-                orden.status = "done"
+                orden.status = "predict-ready"
                 orden.ruta_safe = ruta_safe
                 orden.ruta_stack = ruta_stack
 

@@ -1,10 +1,12 @@
 import psycopg2
 from sqlalchemy import create_engine, text
+from dotenv import load_dotenv
+load_dotenv()
 
-DB_NAME = "mydb"
-DB_USER = "user"
-DB_PASSWORD = "password"
-DB_HOST = "db"
+DB_NAME = os.getenv("DB_NAME")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_HOST = os.getenv("DB_HOST")
 
 # Conectar a la base por defecto para crear la DB si no existe
 conn = psycopg2.connect(
@@ -35,7 +37,7 @@ with engine.connect() as conn:
     trans = conn.begin()
     
     try:
-        # 📦 Productos
+        # Productos | son los productos disponibles de sentinel
         conn.execute(text("""
         CREATE TABLE IF NOT EXISTS products (
             id TEXT PRIMARY KEY,
@@ -44,7 +46,7 @@ with engine.connect() as conn:
         )
         """))
         
-        # 📥 Descargas
+        # Descargas | son las descargas de los archivos de sentinel
         conn.execute(text("""
         CREATE TABLE IF NOT EXISTS downloads (
             product_id TEXT PRIMARY KEY,
@@ -53,7 +55,7 @@ with engine.connect() as conn:
         )
         """))
         
-        # 🟢 Ordenes
+        # Ordenes | las ordenes 
         conn.execute(text("""
         CREATE TABLE IF NOT EXISTS ordenes (
             id SERIAL PRIMARY KEY,
@@ -61,6 +63,7 @@ with engine.connect() as conn:
             status TEXT,
             ruta_safe TEXT,
             ruta_stack TEXT,
+            prediccion TEXT,
             created_at TIMESTAMP,
             updated_at TIMESTAMP
         )

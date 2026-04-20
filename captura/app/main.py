@@ -25,7 +25,7 @@ def get_db():
         db.close()
 
 
-@app.post("/orden")
+@app.post("/api/v1/orden")
 def crear_orden(request: OrdenRequest, db: Session = Depends(get_db)):
     dia_str = str(request.dia)
     
@@ -49,30 +49,14 @@ def crear_orden(request: OrdenRequest, db: Session = Depends(get_db)):
     return {"id": nueva.id, "status": "pending"}
 
 
-@app.get("/orden/{id}")
+@app.get("/api/v1/orden/{id}")
 def obtener_orden(id: int, db: Session = Depends(get_db)):
     orden = db.query(Orden).filter(Orden.id == id).first()
+    respuesta = f'Estado: {orden.status}'
     if not orden:
         raise HTTPException(status_code=404, detail="Orden no encontrada")
-    return orden
+    if (orden.status = 'done'):
+        respuesta = orden.prediccion
+    return respuesta
 
 
-@app.get("/products")
-def get_products(db: Session = Depends(get_db)):
-    productos = db.query(Product).all()
-    return productos
-
-
-@app.get("/downloads")
-def get_downloads(db: Session = Depends(get_db)):
-    downloads = db.query(Download).all()
-    return downloads
-
-
-@app.get("/downloads/{product_id}")
-def check_download(product_id: str, db: Session = Depends(get_db)):
-    download = db.query(Download).filter(Download.product_id == product_id).first()
-    if download:
-        return {"status": "downloaded", "data": download}
-    else:
-        return {"status": "not_downloaded"}
