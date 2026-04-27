@@ -14,8 +14,6 @@ dataset/
 │       └── ...
 
 
-
-
 inputs/escena_001.tif
 ├── banda 1 → imagen 1 índice A
 ├── banda 2 → imagen 1 índice B
@@ -85,7 +83,7 @@ curl -X POST http://10.11.11.22:8001/api/v1/generar_datos -H "Content-Type: appl
 }
 ### Consultar:
 
-curl -X GET http://localhost:8000/orden/1
+curl -X GET http://10.11.11.22:8001/api/v1/entrenamiento/1
 
 devuelve: 
 

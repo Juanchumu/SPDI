@@ -13,8 +13,6 @@ app = FastAPI()
 
 class OrdenRequest(BaseModel):
     dia: int          # formato YYYYMMDD
-
-
 def get_db():
     db = SessionLocal()
     try:
@@ -41,12 +39,12 @@ def generar_datos(request: OrdenRequest, db: Session = Depends(get_db)):
     return {"id": nueva.id, "status": "pending"}
 
 
-@app.get("/api/v1/entrenamiento/{id}")
+@app.get("/api/v1/generar_datos/{id}")
 def obtener_orden(id: int, db: Session = Depends(get_db)):
     orden = db.query(Orden).filter(Orden.id == id).first()
     respuesta = f'Estado: {orden.status}'
     if not orden:
-        raise HTTPException(status_code=404, detail="Entrenamiento no encontrado")
+        raise HTTPException(status_code=404, detail="Generador no encontrado")
     if (orden.status == 'done'):
         respuesta = orden.prediccion
     return respuesta
