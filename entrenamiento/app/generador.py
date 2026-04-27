@@ -10,7 +10,9 @@ from tqdm import tqdm
 # ======================
 N = 15000
 H, W = 100, 100
-OUT_DIR = "dataset/train"
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUT_DIR = os.path.join(BASE_DIR, "data", "dataset", "train")
 
 os.makedirs(f"{OUT_DIR}/inputs", exist_ok=True)
 os.makedirs(f"{OUT_DIR}/masks", exist_ok=True)

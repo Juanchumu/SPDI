@@ -25,9 +25,17 @@ def get_db():
         db.close()
 
 @app.post("/api/v1/generar_datos")
-def generar_datos():
-    os.system("python app/generador.py")
-    return {"Generando...."}
+def generar_datos(request: OrdenRequest, db: Session = Depends(get_db)):
+    args = {"Nueva"}
+    nueva = Orden(
+        args=json.dumps(args),
+        status="pending"
+    )
+    db.add(nueva)
+    db.commit()
+    db.refresh(nueva)
+    
+    return {"id": nueva.id, "status": "pending"}
 
 
 @app.get("/api/v1/entrenamiento/{id}")

@@ -27,14 +27,7 @@ def run():
             args = json.loads(orden.args)
 
             try:
-                # ejecutar script con los 3 argumentos + orden_id
-                ruta_safe, ruta_stack = script.run(
-                    dia_de_la_imagen=args.get("dia_de_la_imagen"),
-                    lat = args.get("lat"),
-                    lon = args.get("lon"),
-                    orden_id=orden.id
-                )
-
+                os.system("python generador.py")
                 orden.status = "lista-para-entrenar"
                 orden.ruta_safe = ruta_safe
                 orden.ruta_stack = ruta_stack
