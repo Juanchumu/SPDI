@@ -66,11 +66,20 @@ def run(dia_de_la_imagen, lat, lon, orden_id=None):
     # ================= TOKEN =================
     token_url = "https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token"
 
+    #response = requests.post(token_url, data={
+     #   "grant_type": "client_credentials",
+      #  "client_id": client_id,
+       # "client_secret": client_secret
+       # })
     response = requests.post(token_url, data={
-        "grant_type": "client_credentials",
-        "client_id": client_id,
-        "client_secret": client_secret
+        "grant_type": "password",
+        "client_id": "cdse-public",
+        "username": email_user,
+        "password": email_password
         })
+
+
+
     #access_token = ""
     access_token = response.json()["access_token"]
     #if (access_token == ""):
