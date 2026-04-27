@@ -130,3 +130,6 @@ run("20260318",-58.745420,-58.738993,-34.631716,-34.628794,None)
 
 touch /app/descargas/test.txt
 
+# Problemas de SPAM
+
+We apologize, but you have reached the maximum number of concurrent sessions.
