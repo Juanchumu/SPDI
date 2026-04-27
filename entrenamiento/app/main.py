@@ -13,8 +13,6 @@ app = FastAPI()
 
 class OrdenRequest(BaseModel):
     dia: int          # formato YYYYMMDD
-    lat: float
-    lon: float
 
 
 def get_db():
@@ -25,11 +23,13 @@ def get_db():
         db.close()
 
 @app.post("/api/v1/generar_datos")
-def generar_datos(db: Session = Depends(get_db)):
+def generar_datos(request: OrdenRequest, db: Session = Depends(get_db)):
+    dia_str = str(request.dia)
     args = {
-    "tipo": "generacion_dataset",
-    "version": "v1"
-}
+        "dia": dia_str,
+        "tipo": "generacion_dataset",
+        "version": "v1"
+        }
     nueva = Orden(
         args=json.dumps(args),
         status="pending"
