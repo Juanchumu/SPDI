@@ -116,8 +116,11 @@ sudo docker-compose up
 
 # Entrar en el worker:
 
-sudo docker exec -it captura_worker_1 /bin/bash
+sudo docker exec -it entrenamiento-worker-1 /bin/bash
 python
+from app.script import run
+
+run("20211124",-34.209041,-58.886371,None)
 
 run("20260318",-58.745420,-58.738993,-34.631716,-34.628794,None)
 

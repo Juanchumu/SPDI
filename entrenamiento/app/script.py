@@ -66,8 +66,10 @@ def run(dia_de_la_imagen, lat, lon, orden_id=None):
         "client_id": client_id,
         "client_secret": client_secret
         })
-
+    access_token = ""
     access_token = response.json()["access_token"]
+    if (access_token == ""):
+        print("No hay respuesta")
 
     headers = {"Authorization": f"Bearer {access_token}"}
 
