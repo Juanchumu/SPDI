@@ -124,3 +124,9 @@ run("20211124",-34.209041,-58.886371,None)
 
 run("20260318",-58.745420,-58.738993,-34.631716,-34.628794,None)
 
+
+## Problemas de permisos de usuario por utilizar un usuario en vez de root
+
+
+touch /app/descargas/test.txt
+

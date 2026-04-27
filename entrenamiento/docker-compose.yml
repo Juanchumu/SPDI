@@ -20,6 +20,7 @@ services:
 
   api:
     build: .
+    user: root
     ports:
       - "8001:8000"
     depends_on:
@@ -38,6 +39,7 @@ services:
 
   worker:
     build: .
+    user: root
     command: python -m app.worker
     depends_on:
       db:
