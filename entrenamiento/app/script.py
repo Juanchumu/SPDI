@@ -75,26 +75,43 @@ def run(dia_de_la_imagen, lat, lon, orden_id=None):
     access_token = response.json()["access_token"]
     if (access_token == ""):
         print("No hay respuesta")
-    print(access_token)
+    #print(access_token)
     headers = {"Authorization": f"Bearer {access_token}"}
 
     # ================= BUSQUEDA =================
     url = "https://catalogue.dataspace.copernicus.eu/odata/v1/Products"
 
+    #params = {
+           # "$filter": (
+             #   "Collection/Name eq 'SENTINEL-2' "
+            #    "and Attributes/OData.CSC.StringAttribute/any(a: a/Name eq 'productType' and a/Value eq 'S2MSI2A') "
+           #     f"and ContentDate/Start gt {start_date} "
+          #      f"and ContentDate/Start lt {end_date} "
+         #       "and OData.CSC.Intersects(area=geography'SRID=4326;"
+        #        f"POLYGON(({poligono}))') "
+       #         ),
+      #      "$top": 5,
+     #       "$orderby": "ContentDate/Start desc"
+    #        }
+    
     params = {
-            "$filter": (
-                "Collection/Name eq 'SENTINEL-2' "
-                "and Attributes/OData.CSC.StringAttribute/any(a: a/Name eq 'productType' and a/Value eq 'S2MSI2A') "
-                f"and ContentDate/Start gt {start_date} "
-                f"and ContentDate/Start lt {end_date} "
-                "and OData.CSC.Intersects(area=geography'SRID=4326;"
-                f"POLYGON(({poligono}))') "
-                ),
-            "$top": 5,
-            "$orderby": "ContentDate/Start desc"
-            }
-
+        "$filter": (
+            "Collection/Name eq 'SENTINEL-2' "
+            "and Attributes/OData.CSC.StringAttribute/any(a: a/Name eq 'productType' and a/Value eq 'S2MSI2A') "
+            f"and ContentDate/Start gt {start_date} "
+            f"and ContentDate/Start lt {end_date} "
+            "and OData.CSC.Intersects(area=geography'SRID=4326;"
+            f"POLYGON(({poligono}))') "
+            "and Attributes/OData.CSC.DoubleAttribute/any(a: a/Name eq 'cloudCover' and a/Value le 100)"
+        ),
+        "$top": 5,
+        "$orderby": "ContentDate/Start desc"
+    }
     response = requests.get(url, headers=headers, params=params)
+    print("STATUS:", response.status_code)
+    print("URL FINAL:", response.url)
+    print("TEXT:")
+    print(response.text[:3000])
     products = response.json().get("value", [])
 
     if len(products) == 0:
