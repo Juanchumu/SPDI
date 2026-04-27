@@ -120,7 +120,7 @@ def run(dia_de_la_imagen, lat, lon, orden_id=None):
         return None, None
 
     # ================= LOGIN DESCARGA =================
-    response = requests.post(token_url, data={
+    response = requests.get(token_url, data={
         "grant_type": "password",
         "client_id": "cdse-public",
         "username": email_user,
