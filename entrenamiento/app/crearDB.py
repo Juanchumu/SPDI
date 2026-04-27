@@ -69,6 +69,16 @@ with engine.connect() as conn:
             updated_at TIMESTAMP
         )
         """))
+        # Ordenes | las Entrenamientos 
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS entrenamientos (
+            id SERIAL PRIMARY KEY,
+            args TEXT,
+            status TEXT,
+            created_at TIMESTAMP,
+            updated_at TIMESTAMP
+        )
+        """))
         
         # Confirmar la transacción
         trans.commit()

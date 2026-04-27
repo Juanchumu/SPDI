@@ -20,6 +20,31 @@ def get_db():
     finally:
         db.close()
 
+
+@app.post("/api/v1/generar_datos_reales")
+def generar_datos(request: OrdenRequest, db: Session = Depends(get_db)):
+    dia_str = str(request.dia)
+    args = {
+        "dia": dia_str,
+        "tipo": "generacion_dataset",
+        "version": "v1"
+        }
+    nueva = Orden(
+        args=json.dumps(args),
+        status="pending"
+    )
+    db.add(nueva)
+    db.commit()
+    db.refresh(nueva)
+    
+    return {"id": nueva.id, "status": "pending"}
+
+
+
+
+
+
+
 @app.post("/api/v1/generar_datos")
 def generar_datos(request: OrdenRequest, db: Session = Depends(get_db)):
     dia_str = str(request.dia)

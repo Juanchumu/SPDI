@@ -5,19 +5,25 @@ from app.db import Base
 
 class Orden(Base):
     __tablename__ = "ordenes"
-
     id = Column(Integer, primary_key=True, index=True)
     args = Column(Text)  # JSON en string
     status = Column(String, default="pending")
-
     ruta_safe = Column(Text, nullable=True)
     ruta_stack = Column(Text, nullable=True)
-
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-# 📦 Productos disponibles (Copernicus)
+class Entrenamientos(Base):
+    __tablename__ = "Entrenamientos"
+    id = Column(Integer, primary_key=True, index=True)
+    args = Column(Text)  # JSON en string
+    status = Column(String, default="pending")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+# Productos disponibles (Copernicus)
 class Product(Base):
     __tablename__ = "products"
 
@@ -26,7 +32,7 @@ class Product(Base):
     fecha = Column(String)  # fecha del producto
 
 
-# 📥 Descargas realizadas
+# Descargas realizadas
 class Download(Base):
     __tablename__ = "downloads"
 

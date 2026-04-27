@@ -4,38 +4,33 @@ from sqlalchemy.orm import Session
 
 from .db import SessionLocal
 #from app.db import SessionLocal
-from app.models import Orden
+from app.models import Entrenamientos
 from app import script
 import os
 
-
 def get_pending(db: Session):
-    return db.query(Orden).filter(Orden.status == "pending").first()
+    return db.query(Entrenamientos).filter(Entrenamientos.status == "pending").first()
 
 def run():
     while True:
         db = SessionLocal()
 
-        orden = get_pending(db)
+        entrenamiento = get_pending(db)
 
-        if orden:
+        if entrenamiento:
             # marcar como processing esto deberia ser un try para evitar pisarse con
             # otro worker
-            orden.status = "processing"
+            entrenamiento.status = "processing"
             db.commit()
 
             args = json.loads(orden.args)
 
             try:
-                os.system("python /app/app/generador.py")
-                orden.status = "lista-para-entrenar"
-                #orden.ruta_safe = ruta_safe
-                #orden.ruta_stack = ruta_stack
-
+                #os.system("python /app/app/generador.py")
+                entrenamiento.status = "lista-para-entrenar"
             except Exception as e:
-                orden.status = "error"
+                entrenamiento.status = "error"
                 print(f"Error: {e}")
-
             db.commit()
 
         db.close()

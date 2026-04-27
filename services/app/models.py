@@ -16,6 +16,15 @@ class Orden(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+class Entrenamientos(Base):
+    __tablename__ = "Entrenamientos"
+    id = Column(Integer, primary_key=True, index=True)
+    args = Column(Text)  # JSON en string
+    status = Column(String, default="pending")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 
 # 📦 Productos disponibles (Copernicus)
 class Product(Base):
