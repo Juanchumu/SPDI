@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 import json
+import os
 
 #from app import generador
 from app.db import SessionLocal
