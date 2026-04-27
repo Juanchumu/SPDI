@@ -71,10 +71,10 @@ def run(dia_de_la_imagen, lat, lon, orden_id=None):
         "client_id": client_id,
         "client_secret": client_secret
         })
-    access_token = ""
+    #access_token = ""
     access_token = response.json()["access_token"]
-    if (access_token == ""):
-        print("No hay respuesta")
+    #if (access_token == ""):
+    #    print("No hay respuesta")
     #print(access_token)
     headers = {"Authorization": f"Bearer {access_token}"}
 
@@ -110,8 +110,8 @@ def run(dia_de_la_imagen, lat, lon, orden_id=None):
     response = requests.get(url, headers=headers, params=params)
     print("STATUS:", response.status_code)
     print("URL FINAL:", response.url)
-    print("TEXT:")
-    print(response.text[:3000])
+    #print("TEXT:")
+    #print(response.text[:3000])
     products = response.json().get("value", [])
 
     if len(products) == 0:
