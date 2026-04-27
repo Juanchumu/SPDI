@@ -72,6 +72,8 @@ docker-compose up
 
 * Crear Orden:
 
+curl -X POST http://localhost:8000/api/v1/generar_datos
+
 curl -X POST http://localhost:8000/orden -H "Content-Type: application/json" -d '{ "dia": 20260318, "izquierda": -58.745420, "derecha": -58.738993, "abajo": -34.631716, "arriba": -34.628794 }'
   
 

@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 import json
 
+#from app import generador
 from app.db import SessionLocal
 from app.models import Orden, Product, Download
 
@@ -22,25 +23,10 @@ def get_db():
     finally:
         db.close()
 
-@app.post("/api/v1/entrenar")
-def crear_orden(request: OrdenRequest, db: Session = Depends(get_db)):
-    dia_str = str(request.dia)
-    args = {
-        "dia_de_la_imagen": dia_str,
-        "lat": request.lat,
-        "lon" : request.lon
-    }
-    
-    nueva = Orden(
-        args=json.dumps(args),
-        status="pending"
-    )
-    
-    db.add(nueva)
-    db.commit()
-    db.refresh(nueva)
-    
-    return {"id": nueva.id, "status": "pending"}
+@app.post("/api/v1/generar_datos")
+def generar_datos():
+    os.system("python generador.py")
+    return {"Generando...."}
 
 
 @app.get("/api/v1/entrenamiento/{id}")
