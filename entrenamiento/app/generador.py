@@ -12,10 +12,13 @@ N = 15000
 H, W = 100, 100
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT_DIR = os.path.join(BASE_DIR, "data", "dataset", "train")
+DATA_DIR = os.path.join(BASE_DIR, "data")
 
-os.makedirs(f"{OUT_DIR}/inputs", exist_ok=True)
-os.makedirs(f"{OUT_DIR}/masks", exist_ok=True)
+OUT_DIR = os.path.join(DATA_DIR, "dataset", "train")
+
+os.makedirs(OUT_DIR, exist_ok=True)
+os.makedirs(os.path.join(OUT_DIR, "inputs"), exist_ok=True)
+os.makedirs(os.path.join(OUT_DIR, "masks"), exist_ok=True)
 
 # ======================
 # GENERADORES
