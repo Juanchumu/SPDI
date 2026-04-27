@@ -1,7 +1,6 @@
 # imports
 from dotenv import load_dotenv
 
-load_dotenv()
 
 import requests
 import os
@@ -16,6 +15,7 @@ import pyproj
 from shapely.geometry import shape
 from shapely.ops import transform
 
+load_dotenv()
 print("imports cargados...!")
 
 # ==================================================
@@ -70,7 +70,7 @@ def run(dia_de_la_imagen, lat, lon, orden_id=None):
     access_token = response.json()["access_token"]
     if (access_token == ""):
         print("No hay respuesta")
-
+    print(access_token)
     headers = {"Authorization": f"Bearer {access_token}"}
 
     # ================= BUSQUEDA =================
