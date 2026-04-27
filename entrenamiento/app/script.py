@@ -33,8 +33,13 @@ def run(dia_de_la_imagen, lat, lon, orden_id=None):
 
     fecha_base = datetime.strptime(dia_de_la_imagen, "%Y%m%d").replace(tzinfo=UTC)
 
-    start_date = (fecha_base - timedelta(days=40)).strftime("%Y-%m-%dT00:00:00Z")
-    end_date = fecha_base.strftime("%Y-%m-%dT00:00:00Z")
+
+
+
+    start_date = (fecha_base - timedelta(days=40)).strftime("%Y-%m-%dT00:00:00.000Z")
+    end_date = fecha_base.strftime("%Y-%m-%dT00:00:00.000Z")
+    #start_date = (fecha_base - timedelta(days=40)).strftime("%Y-%m-%dT00:00:00Z")
+    #end_date = fecha_base.strftime("%Y-%m-%dT00:00:00Z")
 
     # bounding box chico
     lat_buffer = 0.009
