@@ -1,0 +1,26 @@
+# Carpetas de datos persistentes
+data/
+descargas/
+descargas2/
+stacks/
+
+# Archivos generados por el script
+*.tif
+*.tiff
+*.SAFE/
+*.zip
+
+# Archivos temporales de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Variables de entorno
+.env
+
+# Base de datos local (si usás SQLite)
+*.db
+*.sqlite
+
+# Logs
+*.log

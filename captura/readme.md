@@ -34,9 +34,8 @@ curl -X GET http://localhost:8000/orden/1
 
 devuelve: 
 
-{"args":"{\"dia_de_la_imagen\": \"20211114\", \"izquierda\": -58.92191, \"derecha\": -58.82097, \"abajo\": -34.28828, \"arriba\": -34.22117}","ruta_safe":null,"id":1,"created_at":"2026-04-19T22:26:38.077911","status":"error","ruta_stack":null,"updated_at":"2026-04-19T22:30:19.166821"}
-
-
+{Estado: pending}
+{Estado: Riesgo de Incendio Elevado}
 
 
 
