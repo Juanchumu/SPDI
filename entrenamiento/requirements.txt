@@ -8,3 +8,5 @@ requests
 rasterio
 matplotlib
 shapely
+scipy
+tqdm
