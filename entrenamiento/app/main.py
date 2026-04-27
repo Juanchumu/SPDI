@@ -25,8 +25,11 @@ def get_db():
         db.close()
 
 @app.post("/api/v1/generar_datos")
-def generar_datos(request: OrdenRequest, db: Session = Depends(get_db)):
-    args = {"Nueva"}
+def generar_datos(db: Session = Depends(get_db)):
+    args = {
+    "tipo": "generacion_dataset",
+    "version": "v1"
+}
     nueva = Orden(
         args=json.dumps(args),
         status="pending"
