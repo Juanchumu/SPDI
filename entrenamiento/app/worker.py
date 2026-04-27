@@ -6,6 +6,7 @@ from .db import SessionLocal
 #from app.db import SessionLocal
 from app.models import Orden
 from app import script
+import os
 
 
 def get_pending(db: Session):
@@ -29,8 +30,8 @@ def run():
             try:
                 os.system("python generador.py")
                 orden.status = "lista-para-entrenar"
-                orden.ruta_safe = ruta_safe
-                orden.ruta_stack = ruta_stack
+                #orden.ruta_safe = ruta_safe
+                #orden.ruta_stack = ruta_stack
 
             except Exception as e:
                 orden.status = "error"
