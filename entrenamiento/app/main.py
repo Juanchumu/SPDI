@@ -26,7 +26,7 @@ def get_db():
 
 @app.post("/api/v1/generar_datos")
 def generar_datos():
-    os.system("python generador.py")
+    os.system("python app/generador.py")
     return {"Generando...."}
 
 
