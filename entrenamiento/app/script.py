@@ -127,6 +127,37 @@ def run(dia_de_la_imagen, lat, lon, orden_id=None):
         "password": email_password
         })
     print("B")
+    response = requests.post(token_url, data={
+        "grant_type": "password",
+        "client_id": "cdse-public",
+        "username": email_user,
+        "password": email_password},
+                             headers={"Content-Type": "application/x-www-form-urlencoded"})
+    print("STATUS:", response.status_code)
+    if response.status_code != 200:
+        print("ERROR:", response.text)
+        raise Exception("No se pudo obtener token")
+    try:
+        access_token = response.json()["access_token"]
+    except Exception:
+            print("NO JSON:", response.text)
+            raise
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     access_token = response.json()["access_token"]
     headers = {"Authorization": f"Bearer {access_token}"}
 
