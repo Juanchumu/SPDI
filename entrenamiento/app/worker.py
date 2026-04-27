@@ -28,7 +28,7 @@ def run():
             args = json.loads(orden.args)
 
             try:
-                os.system("python generador.py")
+                os.system("python app/generador.py")
                 orden.status = "lista-para-entrenar"
                 #orden.ruta_safe = ruta_safe
                 #orden.ruta_stack = ruta_stack
