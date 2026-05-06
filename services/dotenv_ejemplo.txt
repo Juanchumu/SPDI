@@ -1,0 +1,16 @@
+client_id = 'se obtiene de sentinel hub'
+client_secret = 'se obtiene de sentinel hub'
+email_user = 'email con el que se registro en sentinelhub'
+email_password = 'password con el que se registro en sentinelhub'
+
+POSTGRES_USER = ''
+POSTGRES_PASSWORD = ''
+POSTGRES_DB = ''
+DB_HOST = ''
+DB_PORT = ''
+DB_USER = ''
+DB_PASSWORD = ''
+DB_NAME = ''
+
+DATABASE_URL = "postgresql://usuario:password@base:puerto/nombredelabase"
+      
