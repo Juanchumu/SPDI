@@ -56,7 +56,7 @@ def obtener_orden(id: int, db: Session = Depends(get_db)):
     respuesta = f'Estado: {orden.status}'
     if not orden:
         raise HTTPException(status_code=404, detail="Orden no encontrada")
-    if (orden.status = 'done'):
+    if (orden.status == 'done'):
         respuesta = orden.prediccion
     return respuesta
 

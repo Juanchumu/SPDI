@@ -7,7 +7,6 @@ from .db import SessionLocal
 from app.models import Orden
 from app import script
 
-import os
 
 def get_pending(db: Session):
     return db.query(Orden).filter(Orden.status == "pending").first()
