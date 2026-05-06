@@ -106,10 +106,10 @@ def preprocess(data):
 def guardar_pred_tif(pred, profile, orden_id):
     profile.update(count=1, dtype="float32")
 
-    path = f"dataset/predictions/pred_{orden_id}.tif"
+    path = f"ordenes/predictions/pred_{orden_id}.tif"
 
     import os
-    os.makedirs("dataset/predictions", exist_ok=True)
+    os.makedirs("ordenes/predictions", exist_ok=True)
 
     with rasterio.open(path, "w", **profile) as dst:
         dst.write(pred.astype("float32"), 1)
