@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 import json
 
 from app.db import SessionLocal
-from app.models import Orden, Product, Download
+from app.models import Orden, Entrenamiento, Product, Download
 import os
 
 app = FastAPI()
@@ -55,7 +55,7 @@ def obtener_orden(id: int, db: Session = Depends(get_db)):
     orden = db.query(Orden).filter(Orden.id == id).first()
     respuesta = f'Estado: {orden.status}'
     if not orden:
-        raise HTTPException(status_code=404, detail="Orden no encontrada")
+        respuesta = {"status": "404"}
     if (orden.status == 'done'):
         respuesta = orden.prediccion
     return respuesta
@@ -90,5 +90,9 @@ def obtener_entrenamiento(id: int, db: Session = Depends(get_db)):
     if (orden.status == 'done'):
         respuesta = "Almacenado"
     return respuesta
+
+@app.get("/api/v1/health")  # liveness
+def health():
+    return {"status": "200"}
 
 
