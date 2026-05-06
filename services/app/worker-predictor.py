@@ -4,12 +4,13 @@ import torch
 import rasterio
 import numpy as np
 from sqlalchemy.orm import Session
+from scipy.ndimage import label, find_objects
 
 from .db import SessionLocal
 from app.models import Orden
 
 # =========================
-# 🔧 MODELO (COPIADO DEL TRAINING)
+# 🔧 MODELO
 # =========================
 
 import torch.nn as nn
@@ -46,14 +47,14 @@ class TemporalFireNet(nn.Module):
 
         feats = []
         for t in range(T):
-            ft = self.encoder(x[:, t])       # (B, 32, H, W)
-            ft = ft.mean(dim=[2,3])          # (B, 32)
+            ft = self.encoder(x[:, t])
+            ft = ft.mean(dim=[2,3])
             feats.append(ft)
 
-        feats = torch.stack(feats, dim=1)    # (B, T, 32)
+        feats = torch.stack(feats, dim=1)
 
-        out, _ = self.lstm(feats)            # (B, T, 64)
-        last = out[:, -1]                    # (B, 64)
+        out, _ = self.lstm(feats)
+        last = out[:, -1]
 
         last = last[:, :, None, None].expand(-1, -1, H, W)
 
@@ -61,10 +62,10 @@ class TemporalFireNet(nn.Module):
 
 
 # =========================
-# 🚀 CARGA DEL MODELO
+# 🚀 CARGA
 # =========================
 
-MODEL_PATH = "model.pth"  # <-- poné tu path real
+MODEL_PATH = "model.pth"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -82,50 +83,119 @@ print("Modelo cargado OK")
 
 def cargar_stack(ruta):
     with rasterio.open(ruta) as src:
-        data = src.read().astype(np.float32)  # (25, H, W)
-    return data
+        data = src.read().astype(np.float32)
+        profile = src.profile
+    return data, profile
 
 
 def preprocess(data):
-    # reshape: (25, H, W) -> (5, 5, H, W)
     x = data.reshape(5, 5, data.shape[1], data.shape[2])
 
-    # normalización igual que training
     x_min = x.min()
     x_max = x.max()
     x = (x - x_min) / (x_max - x_min + 1e-6)
 
-    x = torch.tensor(x, dtype=torch.float32)
-    x = x.unsqueeze(0)  # (1, 5, 5, H, W)
-
+    x = torch.tensor(x, dtype=torch.float32).unsqueeze(0)
     return x
 
 
 # =========================
-# 🔮 PREDICCIÓN
+# 🗺️ GUARDAR TIF
 # =========================
 
-def predecir(ruta_stack):
-    data = cargar_stack(ruta_stack)
+def guardar_pred_tif(pred, profile, orden_id):
+    profile.update(count=1, dtype="float32")
+
+    path = f"dataset/predictions/pred_{orden_id}.tif"
+
+    import os
+    os.makedirs("dataset/predictions", exist_ok=True)
+
+    with rasterio.open(path, "w", **profile) as dst:
+        dst.write(pred.astype("float32"), 1)
+
+    return path
+
+
+# =========================
+# 📊 % AREA EN RIESGO
+# =========================
+
+def calcular_porcentaje(pred, threshold=0.5):
+    mask = pred > threshold
+    return float(mask.mean()) * 100
+
+
+# =========================
+# 📦 BOUNDING BOXES
+# =========================
+
+def detectar_zonas(pred, threshold=0.5, min_pixels=50):
+    binary = pred > threshold
+
+    labeled, num = label(binary)
+    slices = find_objects(labeled)
+
+    boxes = []
+
+    for i, slc in enumerate(slices):
+        if slc is None:
+            continue
+
+        region = labeled[slc] == (i + 1)
+
+        if region.sum() < min_pixels:
+            continue
+
+        y1, y2 = slc[0].start, slc[0].stop
+        x1, x2 = slc[1].start, slc[1].stop
+
+        boxes.append({
+            "x1": int(x1),
+            "y1": int(y1),
+            "x2": int(x2),
+            "y2": int(y2),
+            "pixels": int(region.sum())
+        })
+
+    return boxes
+
+
+# =========================
+# 🔮 PREDICCIÓN COMPLETA
+# =========================
+
+def predecir(ruta_stack, orden_id):
+    data, profile = cargar_stack(ruta_stack)
 
     x = preprocess(data).to(device)
 
     with torch.no_grad():
-        pred = model(x)  # ya tiene sigmoid
+        pred = model(x)
 
-    pred = pred.cpu().numpy()[0, 0]  # (H, W)
+    pred = pred.cpu().numpy()[0, 0]
 
-    # score global
-    score = pred.mean()
+    # 🗺️ guardar tif
+    tif_path = guardar_pred_tif(pred, profile, orden_id)
 
-    if score > 0.5:
-        return "Riesgo de Incendio Elevado"
-    else:
-        return "Riesgo Bajo"
+    # 📊 porcentaje
+    porcentaje = calcular_porcentaje(pred)
+
+    # 📦 zonas
+    zonas = detectar_zonas(pred)
+
+    resultado = {
+        "riesgo": "alto" if porcentaje > 10 else "bajo",
+        "porcentaje_area_riesgo": porcentaje,
+        "zonas_criticas": zonas,
+        "archivo_prediccion": tif_path
+    }
+
+    return json.dumps(resultado)
 
 
 # =========================
-# 🔁 WORKER LOOP
+# 🔁 WORKER
 # =========================
 
 def get_pending(db: Session):
@@ -143,17 +213,14 @@ def run():
             db.commit()
 
             try:
-                if not orden.ruta_stack:
-                    raise Exception("No hay ruta_stack")
-
-                pred = predecir(orden.ruta_stack)
+                pred = predecir(orden.ruta_stack, orden.id)
 
                 orden.status = "done"
                 orden.prediccion = pred
 
             except Exception as e:
                 orden.status = "error"
-                print(f"Error en predicción: {e}")
+                print(f"Error: {e}")
 
             db.commit()
 
