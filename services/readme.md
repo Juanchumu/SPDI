@@ -1,70 +1,155 @@
-# Como usar:
+# Cómo usar
 
-### levantar:
+## Levantar servicios
 
-antiguo: docker-compose up --build
+Utilizá uno de estos comandos según tu instalación de Docker:
 
-# Detener contenedores
+```bash
+sudo docker-compose up --build
+# o
+sudo docker compose up --build
+```
+
+## Detener contenedores
+
+```bash
 docker-compose down
+```
 
-# Reconstruir sin caché para instalar nuevas dependencias
+## Reconstruir sin caché (para instalar nuevas dependencias)
+
+```bash
 docker-compose build --no-cache
+```
 
-# Levantar servicios
+## Levantar servicios (modo normal)
+
+```bash
 docker-compose up
+```
 
+---
 
+## Crear orden
 
+```bash
+curl -X POST http://localhost:8000/orden \
+  -H "Content-Type: application/json" \
+  -d '{ "dia": 20260318, "lat": -58.745420, "lon": -58.738992 }'
+```
 
+### Respuesta esperada
 
-* Crear Orden:
-
-curl -X POST http://localhost:8000/orden -H "Content-Type: application/json" -d '{ "dia": 20260318, "izquierda": -58.745420, "derecha": -58.738993, "abajo": -34.631716, "arriba": -34.628794 }'
-  
-
-* Devuelve
-
+```json
 {
   "id": 1,
   "status": "pending"
 }
-### Consultar:
+```
 
+---
+
+## Consultar orden
+
+```bash
 curl -X GET http://localhost:8000/orden/1
+```
 
-devuelve: 
+### Si sale todo bien
 
-{Estado: pending}
-{Estado: Riesgo de Incendio Elevado}
+```json
+{
+  "riesgo": "alto",
+  "porcentaje_area_riesgo": 23.78,
+  "zonas_criticas": [
+    {
+      "x1": 120,
+      "y1": 45,
+      "x2": 180,
+      "y2": 110,
+      "pixels": 3500
+    },
+    {
+      "x1": 300,
+      "y1": 200,
+      "x2": 360,
+      "y2": 260,
+      "pixels": 1800
+    }
+  ],
+  "archivo_prediccion": "ordenes/predictions/pred_42.tif"
+}
+```
 
+### En caso de error
 
+```json
+{
+  "status": "404"
+}
+```
 
-# En caso de errores:
+---
 
+## Health check (estado de la API)
 
-# Limpiar completamente
+```bash
+curl -X GET http://localhost:8000/api/v1/health
+```
 
-### Esto borra volúmenes (incluye postgres_data)
-sudo docker-compose down -v 
+### Respuesta esperada
 
-### Limpia imágenes no usadas
-sudo docker system prune -a  
+```json
+{
+  "status": "200"
+}
+```
 
-# Reconstruir
+---
+
+## En caso de errores con Docker
+
+### Limpiar completamente (incluye volúmenes como postgres_data)
+
+```bash
+sudo docker-compose down -v
+```
+
+### Eliminar imágenes no utilizadas
+
+```bash
+sudo docker system prune -a
+```
+
+### Reconstruir sin caché
+
+```bash
 sudo docker-compose build --no-cache
+```
 
-# Crear carpetas locales (si no existen)
+### Crear carpetas locales (si no existen)
+
+```bash
 mkdir -p data descargas
+```
 
-# Levantar
+### Levantar servicios nuevamente
+
+```bash
 sudo docker-compose up
+```
 
+---
 
+## Entrar en el worker
 
-# Entrar en el worker:
-
+```bash
 sudo docker exec -it captura_worker_1 /bin/bash
-python
+```
 
-run("20260318",-58.745420,-58.738993,-34.631716,-34.628794,None)
+Dentro del contenedor:
+
+```python
+run("20260318", -58.745420, -58.738993, None)
+```
 
