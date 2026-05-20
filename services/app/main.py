@@ -17,7 +17,7 @@ class EntrenamientoRequest(BaseModel):
 class OrdenRequest(BaseModel):
     dia: int          # formato YYYYMMDD
     lat: float
-    lot: float
+    lon: float
 
 
 def get_db():

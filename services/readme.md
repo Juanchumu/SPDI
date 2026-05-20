@@ -38,6 +38,14 @@ curl -X POST http://localhost:8000/orden \
   -d '{ "dia": 20260318, "lat": -58.745420, "lon": -58.738992 }'
 ```
 
+```bash
+curl -X POST http://localhost:8000/api/v1/orden \
+  -H "Content-Type: application/json" \
+  -d '{ "dia": 20211124, "lat": -34.249801, "lon": -58.880148 }'
+```
+
+curl -X POST http://localhost:8000/api/v1/orden -H "Content-Type: application/json" -d '{ "dia": "20211124", "lat": "-34.249801", "lon": "-58.880148" }'
+
 ### Respuesta esperada
 
 ```json
