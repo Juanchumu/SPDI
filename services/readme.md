@@ -33,7 +33,7 @@ docker-compose up
 ## Crear orden
 
 ```bash
-curl -X POST http://localhost:8000/orden \
+curl -X POST http://localhost:8000/api/v1/orden \
   -H "Content-Type: application/json" \
   -d '{ "dia": 20260318, "lat": -58.745420, "lon": -58.738992 }'
 ```
@@ -60,7 +60,7 @@ curl -X POST http://localhost:8000/api/v1/orden -H "Content-Type: application/js
 ## Consultar orden
 
 ```bash
-curl -X GET http://localhost:8000/orden/1
+curl -X GET http://localhost:8000/api/v1/orden/1
 ```
 
 ### Si sale todo bien
@@ -160,4 +160,19 @@ Dentro del contenedor:
 ```python
 run("20260318", -58.745420, -58.738993, None)
 ```
+
+## TODO: 
+
+
+* 
+* DB de usuarios, con tokens para cada uno. 
+* Api -> seccion documentacion para saber como funciona la api
+* Healt -> tipo semaforos que muestre todos los servicios
+* MiniO para los archivos
+* Versionado de modelos de entrenamiento
+
+* 1 contar como funiona todo
+* 2 cuando va mejorando el modelo
+* 3 las respuestas de la api tienen que servir para que una fuente que la consuma pueda tomar decisiones
+
 
