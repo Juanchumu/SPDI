@@ -3,8 +3,9 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 import json
 
+
 from app.db import SessionLocal
-from app.models import Orden, Entrenamiento, Product, Download
+from app.models import Orden, Entrenamiento, Product, Descargas
 import os
 
 app = FastAPI()
@@ -31,18 +32,15 @@ def get_db():
 @app.post("/api/v1/orden")
 def crear_orden(request: OrdenRequest, db: Session = Depends(get_db)):
     dia_str = str(request.dia)
-    
     args = {
         "dia_de_la_imagen": dia_str,
         "lat": request.lat,
         "lon": request.lon,
     }
-    
     nueva = Orden(
         args=json.dumps(args),
         status="pending"
     )
-    
     db.add(nueva)
     db.commit()
     db.refresh(nueva)

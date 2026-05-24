@@ -28,7 +28,6 @@ class Entrenamiento(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-
 # 📦 Productos disponibles (Copernicus)
 class Product(Base):
     __tablename__ = "products"
@@ -39,9 +38,13 @@ class Product(Base):
 
 
 # 📥 Descargas realizadas
-class Download(Base):
-    __tablename__ = "downloads"
-
-    product_id = Column(String, primary_key=True)
-    filepath = Column(Text)
+class Descargas(Base):
+    __tablename__ = "descargas"
+    descarga_id = Column(Integer, primary_key=True, autoincrement=True)
+    nombreImagen = Column(Text)
+    diaDeLaImagen= Column(Text)
     fecha_descarga = Column(DateTime, default=datetime.utcnow)
+
+
+
+

@@ -15,8 +15,66 @@ import pyproj
 from shapely.geometry import shape
 from shapely.ops import transform
 
+from minio import Minio
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+from app.db import SessionLocal
+from app.models import Descargas
+
+import json
+
 load_dotenv()
 print("imports cargados...!")
+    
+def AlmacenarDescarga( nombre, dia ):
+    db = SessionLocal()
+    nuevoArchivo = Descargas(
+            nombreImagen=nombre,
+            diaDeLaImagen=dia
+            )
+    db.add(nuevoArchivo)
+    db.commit()
+    db.close()
+    #Ahora guardarlo en MiniO 
+    client = Minio(
+        "localhost:9000",
+        access_key=DB_MINIO_USER,
+        secret_key=DB_MINIO_PASS,
+        secure=False)
+    bucket_name = "imagenes"
+    #si el bucket no esta creado, se crea 
+    if not client.bucket_exists(bucket_name):
+        client.make_bucket(bucket_name)
+        print("Bucket para las imagenes creado")
+
+    #Subir el archivo 
+    client.fput_object(
+            "imagenes",
+            f"{nombre}.zip",
+            f"tmp/descargas/{nombre}.zip")
+    print(f"Archivo {nombre} subido")
+
+
+def ConsultarDescargas():
+    db = SessionLocal()
+    productos_descargados = db.query(Descargas).all()
+    lista = {x.nombreImagen for x in productos_descargados}
+    db.commit()
+    db.close()
+    return lista
+
+def TraerDeMiniO(nombre):
+    client = Minio(
+            "localhost:9000",
+            access_key=DB_MINIO_USER,
+            secret_key=DB_MINIO_PASS,
+            secure=False)
+    client.fget_object(
+            "imagenes",
+            f"{nombre}.zip",
+            f"tmp/descargas/{nombre}.zip")
+
+print("Archivo descargado")
 
 # ==================================================
 # FUNCIÓN PRINCIPAL que recibe los 5 argumentos
@@ -98,22 +156,38 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
     fechas = []
     bandas_stack = []
 
-    # ================= DESCARGA =================
+    # ================= DESCARGA ================= 
+    #aca tengo que meter codigo, para que consulte y 
+    #descargue unicamente los que no estan en la db
+    
+    listaProductosDescargados = ConsultarDescargas()
+
     for p in products:
         product_id = p["Id"]
         name = p["Name"]
+        # Si esta prescente en la lista, traelo desde
+        # minio 
+        if name in listaProductosDescargados:
+            #traer desde minio ese zip
+            TraerDeMiniO(name)
 
         fecha_img = datetime.fromisoformat(p["ContentDate"]["Start"].replace("Z", "+00:00"))
         fechas.append(fecha_img)
 
         zip_path = f"tmp/descargas/{name}.zip"
 
+        #Si el zip no esta, se descarga
         if not os.path.exists(zip_path):
             url = f"https://download.dataspace.copernicus.eu/odata/v1/Products({product_id})/$value"
             with requests.get(url, headers=headers, stream=True) as r:
                 with open(zip_path, "wb") as f:
                     for chunk in r.iter_content(8192):
-                        f.write(chunk)
+                        f.write(chunki)
+            #dentro del if
+            #Esto sube a la db el archivo descargado 
+            #Tambien almacena en miniO el zip 
+            AlmacenarDescarga(name, dia_de_la_imagen)
+
 
         with zipfile.ZipFile(zip_path, 'r') as z:
             z.extractall("tmp/data")

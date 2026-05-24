@@ -71,7 +71,19 @@ services:
       - ./descargas:/app/descargas     # 
 
     restart: unless-stopped
-
+  minio:
+    image: minio/minio
+    container_name: minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000" # API S3
+      - "9001:9001" # Panel web
+    environment:
+      MINIO_ROOT_USER: ${DB_MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${DB_MINIO_PASS}
+    volumes:
+      - minio_data:/datavolumes:
 
 volumes:
+  minio_data:
   postgres_data:

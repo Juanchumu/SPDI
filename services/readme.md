@@ -10,6 +10,15 @@ sudo docker-compose up --build
 sudo docker compose up --build
 ```
 
+
+## Listar Servicios
+
+En caso de levantar un unico servicio.
+
+```bash
+sudo docker compose config --services
+```
+
 ## Detener contenedores
 
 ```bash

@@ -10,3 +10,4 @@ matplotlib
 shapely
 torch
 scipy
+minio

@@ -49,9 +49,10 @@ with engine.connect() as conn:
         
         # Descargas | son las descargas de los archivos de sentinel
         conn.execute(text("""
-        CREATE TABLE IF NOT EXISTS downloads (
-            product_id TEXT PRIMARY KEY,
-            filepath TEXT,
+        CREATE TABLE IF NOT EXISTS descargas (
+            descarga_id TEXT PRIMARY KEY,
+            nombreImagen TEXT,
+            diaDeLaImagen TEXT,
             fecha_descarga TIMESTAMP
         )
         """))
