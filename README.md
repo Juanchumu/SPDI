@@ -1,3 +1,4 @@
+(Pasamos a jupyter notebook?)  
 # Repositorio del SPID
 
 Este repositorio contiene un sistema de predicción de incendios basado en procesamiento de datos satelitales y modelos de machine learning.
