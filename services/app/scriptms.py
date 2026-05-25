@@ -23,65 +23,30 @@ print("imports cargados...!")
 
 def AlmacenarDescarga(nombre, dia):
     db = SessionLocal()
-
     nuevoArchivo = Descargas(
         nombre_imagen=nombre,
         dia_de_la_imagen=dia
     )
-
     db.add(nuevoArchivo)
     db.commit()
     db.close()
-
     client = Minio(
         "localhost:9000",
         access_key=os.getenv("DB_MINIO_USER"),
         secret_key=os.getenv("DB_MINIO_PASS"),
         secure=False
     )
-
     bucket_name = "imagenes"
-
     if not client.bucket_exists(bucket_name):
         client.make_bucket(bucket_name)
         print("Bucket para las imagenes creado")
-
     client.fput_object(
         "imagenes",
         f"{nombre}.zip",
         f"tmp/descargas/{nombre}.zip"
     )
-
     print(f"Archivo {nombre} subido")
 
-
-def ConsultarDescargas():
-    db = SessionLocal()
-
-    productos_descargados = db.query(Descargas).all()
-    lista = {x.nombre_imagen for x in productos_descargados}
-
-    db.commit()
-    db.close()
-
-    return lista
-
-
-def TraerDeMiniO(nombre):
-    client = Minio(
-        "localhost:9000",
-        access_key=os.getenv("DB_MINIO_USER"),
-        secret_key=os.getenv("DB_MINIO_PASS"),
-        secure=False
-    )
-
-    client.fget_object(
-        "imagenes",
-        f"{nombre}.zip",
-        f"tmp/descargas/{nombre}.zip"
-    )
-
-    print("Archivo descargado")
 
 
 # ==================================================
@@ -94,9 +59,9 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
     fecha_inicio = (fecha_base - timedelta(days=40)).strftime("%Y-%m-%d")
     fecha_fin = fecha_base.strftime("%Y-%m-%d")
 
-    os.makedirs("tmp/descargas", exist_ok=True)
-    os.makedirs("tmp/data", exist_ok=True)
-    os.makedirs("ordenes/inputs", exist_ok=True)
+    #os.makedirs("/tmp/descargas", exist_ok=True)
+    #os.makedirs("tmp/data", exist_ok=True)
+    os.makedirs("/app/ordenes/inputs", exist_ok=True)
 
     # ==================================================
     # BBOX
@@ -128,10 +93,12 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
                 "lte": 100
             }
         },
-        limit=5
+        limit=6
     )
 
     items = list(search.items())
+    #Nota: No importa que tanto para atras se pregunte en el tiempo
+    #Siempre devuelve 4 elementos 
     print("lista")
     print(items)
     # ordenar por fecha descendente
@@ -139,8 +106,8 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
         key=lambda x: x.datetime,
         reverse=True
     )
-
-    items = items[:5]
+    #Por eso, solamente se piden 3 elementos para hacer el stack 
+    items = items[:3]
 
     if len(items) == 0:
         print("Sin imágenes")
@@ -152,13 +119,6 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
 
     fechas = []
     bandas_stack = []
-
-    # ==================================================
-    # CACHE / MINIO
-    # ==================================================
-    listaProductosDescargados = ConsultarDescargas()
-
-    print(f"Se consulto la db, hay {len(listaProductosDescargados)} elementos")
 
     # ==================================================
     # PROCESAMIENTO
@@ -209,26 +169,20 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
         ndbi = idx(swir_data, nir_data)
 
         nubes = np.isin(scl_data, [8, 9, 10]).astype("float32")
-
         # ==================================================
-        # NORMALIZACION FECHA
+        # NORMALIZACION FECHA (DIA DEL AÑO)
         # ==================================================
-        fecha_min = min([x.datetime for x in items])
-        fecha_max = max([x.datetime for x in items])
-
-        if fecha_max == fecha_min:
-            fecha_norm = 0
-        else:
-            fecha_norm = (
-                (fecha_img - fecha_min).total_seconds()
-                / (fecha_max - fecha_min).total_seconds()
-            )
-
+        dia_del_anio = fecha_img.timetuple().tm_yday
+        dias_en_el_anio = 366 if (
+                fecha_img.year % 4 == 0 and 
+                (fecha_img.year % 100 != 0 or fecha_img.year % 400 == 0)
+                ) else 365
+        fecha_norm = (dia_del_anio - 1) / (dias_en_el_anio - 1)
         fecha_band = np.full(
-            ndvi.shape,
-            fecha_norm,
-            dtype="float32"
-        )
+                ndvi.shape,
+                fecha_norm,
+                dtype="float32")
+       
 
         bandas_stack.extend([
             ndvi,
@@ -260,7 +214,7 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
     # ==================================================
     # GUARDAR STACK
     # ==================================================
-    ruta_stack = f"ordenes/inputs/{orden_id}.tif"
+    ruta_stack = f"/app/ordenes/inputs/{orden_id}.tif"
 
     profile["count"] = len(bandas_stack)
 

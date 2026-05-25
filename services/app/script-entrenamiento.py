@@ -1,28 +1,105 @@
-# imports
+# ==================================================
+# IMPORTS
+# ==================================================
 from dotenv import load_dotenv
 
-import requests
 import os
-import zipfile
 import numpy as np
 import rasterio
-from rasterio.enums import Resampling
+
 from datetime import datetime, timedelta, UTC
 
+import planetary_computer
+import pystac_client
+
+from odc.stac import stac_load
+
+from minio import Minio
+
+from app.db import SessionLocal
+from app.models import Descargas
+
 load_dotenv()
+
 print("imports cargados...!")
 
-def run(dia_de_la_imagen, lat, lon, orden_id=None):
-    client_id = os.getenv("client_id")
-    client_secret = os.getenv("client_secret")
-    email_user = os.getenv("email_user")
-    email_password = os.getenv("email_password")
 
-    fecha_base = datetime.strptime(dia_de_la_imagen, "%Y%m%d").replace(tzinfo=UTC)
+# ==================================================
+# ALMACENAR DESCARGA
+# ==================================================
+def AlmacenarDescarga(nombre, dia):
 
-    start_date = (fecha_base - timedelta(days=40)).strftime("%Y-%m-%dT00:00:00.000Z")
-    end_date = fecha_base.strftime("%Y-%m-%dT00:00:00.000Z")
+    db = SessionLocal()
 
+    nuevoArchivo = Descargas(
+        nombre_imagen=nombre,
+        dia_de_la_imagen=dia
+    )
+
+    db.add(nuevoArchivo)
+    db.commit()
+    db.close()
+
+    client = Minio(
+        "localhost:9000",
+        access_key=os.getenv("DB_MINIO_USER"),
+        secret_key=os.getenv("DB_MINIO_PASS"),
+        secure=False
+    )
+
+    bucket_name = "imagenes"
+
+    if not client.bucket_exists(bucket_name):
+        client.make_bucket(bucket_name)
+        print("Bucket para las imagenes creado")
+
+    client.fput_object(
+        "imagenes",
+        f"{nombre}.tif",
+        f"/app/dataset/train/inputs/{nombre}.tif"
+    )
+
+    print(f"Archivo {nombre} subido")
+
+
+# ==================================================
+# FUNCION AUXILIAR
+# ==================================================
+def idx(a, b):
+
+    return np.divide(
+        a - b,
+        a + b,
+        out=np.zeros_like(a),
+        where=(a + b) != 0
+    )
+
+
+# ==================================================
+# FUNCION PRINCIPAL
+# ==================================================
+def run(dia_de_la_imagen, lat, lon, orden_id):
+
+    fecha_base = datetime.strptime(
+        dia_de_la_imagen,
+        "%Y%m%d"
+    ).replace(tzinfo=UTC)
+
+    fecha_inicio = (
+        fecha_base - timedelta(days=40)
+    ).strftime("%Y-%m-%d")
+
+    fecha_fin = fecha_base.strftime("%Y-%m-%d")
+
+    # ==================================================
+    # DIRECTORIOS
+    # ==================================================
+    os.makedirs("/app/dataset/train/inputs", exist_ok=True)
+    os.makedirs("/app/dataset/train/masks", exist_ok=True)
+
+    # ==================================================
+    # BBOX
+    # ==================================================
     lat_buffer = 0.009
     lon_buffer = 0.011
 
@@ -31,181 +108,277 @@ def run(dia_de_la_imagen, lat, lon, orden_id=None):
     abajo = lat - lat_buffer
     arriba = lat + lat_buffer
 
-    poligono = f"{izquierda} {abajo},{izquierda} {arriba},{derecha} {arriba},{derecha} {abajo},{izquierda} {abajo}"
+    bbox = [
+        izquierda,
+        abajo,
+        derecha,
+        arriba
+    ]
 
-    token_url = "https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token"
+    # ==================================================
+    # STAC CLIENT
+    # ==================================================
+    catalog = pystac_client.Client.open(
+        "https://planetarycomputer.microsoft.com/api/stac/v1",
+        modifier=planetary_computer.sign_inplace
+    )
 
-    response = requests.post(token_url, data={
-        "grant_type": "client_credentials",
-        "client_id": client_id,
-        "client_secret": client_secret
-    })
-    access_token = response.json()["access_token"]
-    headers = {"Authorization": f"Bearer {access_token}"}
+    search = catalog.search(
+        collections=["sentinel-2-l2a"],
+        bbox=bbox,
+        datetime=f"{fecha_inicio}/{fecha_fin}",
+        query={
+            "eo:cloud_cover": {
+                "lte": 100
+            }
+        },
+        limit=6
+    )
 
-    url = "https://catalogue.dataspace.copernicus.eu/odata/v1/Products"
+    items = list(search.items())
 
-    params = {
-        "$filter": (
-            "Collection/Name eq 'SENTINEL-2' "
-            "and Attributes/OData.CSC.StringAttribute/any(a: a/Name eq 'productType' and a/Value eq 'S2MSI2A') "
-            f"and ContentDate/Start gt {start_date} "
-            f"and ContentDate/Start lt {end_date} "
-            "and OData.CSC.Intersects(area=geography'SRID=4326;"
-            f"POLYGON(({poligono}))') "
-            "and Attributes/OData.CSC.DoubleAttribute/any(a: a/Name eq 'cloudCover' and a/Value le 100)"
-        ),
-        "$top": 6,
-        "$orderby": "ContentDate/Start desc"
-    }
+    # ==================================================
+    # ORDENAR POR FECHA DESCENDENTE
+    # ==================================================
+    items.sort(
+        key=lambda x: x.datetime,
+        reverse=True
+    )
 
-    response = requests.get(url, headers=headers, params=params)
-    products = response.json().get("value", [])
+    # ==================================================
+    # USAR SOLO 4
+    # item[0] = mask
+    # item[1:] = stack
+    # ==================================================
+    items = items[:4]
 
-    if len(products) < 6:
-        print("No hay suficientes imágenes")
+    if len(items) < 4:
+        print("No hay suficientes imagenes")
         return None, None
 
-    producto_mask = products[0]
-    productos_stack = products[1:6]
+    print(f"Hay {len(items)} imagenes")
 
-    response = requests.post(token_url, data={
-        "grant_type": "password",
-        "client_id": "cdse-public",
-        "username": email_user,
-        "password": email_password
-    }, headers={"Content-Type": "application/x-www-form-urlencoded"})
+    # ==================================================
+    # SEPARAR MASK Y STACK
+    # ==================================================
+    item_mask = items[0]
 
-    access_token = response.json()["access_token"]
-    headers = {"Authorization": f"Bearer {access_token}"}
-
-    os.makedirs("descargas", exist_ok=True)
-    os.makedirs("data", exist_ok=True)
-
-    fechas = []
-
-    # descarga TODAS (stack + mask)
-    for p in products:
-        product_id = p["Id"]
-        name = p["Name"]
-        fecha_img = datetime.fromisoformat(p["ContentDate"]["Start"].replace("Z", "+00:00"))
-        fechas.append(fecha_img)
-
-        zip_path = f"descargas/{name}.zip"
-
-        if not os.path.exists(zip_path):
-            url = f"https://download.dataspace.copernicus.eu/odata/v1/Products({product_id})/$value"
-            with requests.get(url, headers=headers, stream=True) as r:
-                with open(zip_path, "wb") as f:
-                    for chunk in r.iter_content(8192):
-                        f.write(chunk)
-
-        with zipfile.ZipFile(zip_path, 'r') as z:
-            z.extractall("data")
-
-    fecha_min = min(fechas)
-    fecha_max = max(fechas)
-
-    def norm_fecha(f):
-        if fecha_max == fecha_min:
-            return 0
-        return (f - fecha_min).total_seconds() / (fecha_max - fecha_min).total_seconds()
+    items_stack = items[1:]
 
     bandas_stack = []
 
-    # ===== STACK (solo 5 escenas previas) =====
-    for p in productos_stack:
-        fecha_img = datetime.fromisoformat(p["ContentDate"]["Start"].replace("Z", "+00:00"))
-        fecha_norm = norm_fecha(fecha_img)
+    profile = None
 
-        B04 = B08 = B11 = SCL = None
+    # ==================================================
+    # STACK
+    # ==================================================
+    for item in items_stack:
 
-        for root, _, files in os.walk("data"):
-            for f in files:
-                if p["Name"] in root and f.endswith(".jp2"):
-                    if "B04_10m" in f: B04 = os.path.join(root, f)
-                    if "B08_10m" in f: B08 = os.path.join(root, f)
-                    if "B11_20m" in f: B11 = os.path.join(root, f)
-                    if "SCL_20m" in f: SCL = os.path.join(root, f)
+        product_id = item.id
 
-        if not all([B04, B08, B11, SCL]):
-            continue
+        fecha_img = item.datetime
 
-        with rasterio.open(B08) as nir:
-            nir_data = nir.read(1).astype("float32")
-            profile = nir.profile
+        print(f"Procesando stack: {product_id}")
 
-        with rasterio.open(B04) as red:
-            red_data = red.read(1).astype("float32")
+        # ==================================================
+        # CARGAR BANDAS
+        # ==================================================
+        ds = stac_load(
+            [item],
+            bands=[
+                "red",
+                "nir",
+                "swir16",
+                "SCL"
+            ],
+            bbox=bbox,
+            resolution=10,
+            chunks={},
+            dtype="uint16"
+        ).isel(time=0)
 
-        with rasterio.open(B11) as swir:
-            swir_data = swir.read(1, out_shape=nir_data.shape, resampling=Resampling.bilinear).astype("float32")
+        red_data = ds["red"].values.astype("float32")
 
-        with rasterio.open(SCL) as scl:
-            scl_data = scl.read(1, out_shape=nir_data.shape, resampling=Resampling.nearest)
+        nir_data = ds["nir"].values.astype("float32")
 
-        def idx(a, b):
-            return np.divide(a - b, a + b, out=np.zeros_like(a), where=(a + b) != 0)
+        swir_data = ds["swir16"].values.astype("float32")
 
+        scl_data = ds["SCL"].values.astype("float32")
+
+        # ==================================================
+        # INDICES
+        # ==================================================
         ndvi = idx(nir_data, red_data)
+
         nbr = idx(nir_data, swir_data)
+
         ndbi = idx(swir_data, nir_data)
-        nubes = np.isin(scl_data, [8, 9, 10]).astype("float32")
-        fecha_band = np.full(ndvi.shape, fecha_norm, dtype="float32")
 
-        bandas_stack.extend([ndvi, nbr, ndbi, nubes, fecha_band])
+        nubes = np.isin(
+            scl_data,
+            [8, 9, 10]
+        ).astype("float32")
 
-    if len(bandas_stack) < 25:
-        print("No hay suficientes imágenes útiles")
+        # ==================================================
+        # FECHA NORMALIZADA
+        # ==================================================
+        dia_del_anio = fecha_img.timetuple().tm_yday
+
+        dias_en_el_anio = (
+            366
+            if (
+                fecha_img.year % 4 == 0
+                and (
+                    fecha_img.year % 100 != 0
+                    or fecha_img.year % 400 == 0
+                )
+            )
+            else 365
+        )
+
+        fecha_norm = (
+            dia_del_anio - 1
+        ) / (
+            dias_en_el_anio - 1
+        )
+
+        fecha_band = np.full(
+            ndvi.shape,
+            fecha_norm,
+            dtype="float32"
+        )
+
+        # ==================================================
+        # AGREGAR BANDAS
+        # ==================================================
+        bandas_stack.extend([
+            ndvi,
+            nbr,
+            ndbi,
+            nubes,
+            fecha_band
+        ])
+
+        # ==================================================
+        # PERFIL
+        # ==================================================
+        transform = ds.odc.geobox.transform
+
+        profile = {
+            "driver": "GTiff",
+            "height": ndvi.shape[0],
+            "width": ndvi.shape[1],
+            "count": 15,
+            "dtype": "float32",
+            "crs": ds.odc.crs,
+            "transform": transform
+        }
+
+    # ==================================================
+    # VALIDAR STACK
+    # ==================================================
+    if len(bandas_stack) != 15:
+        print("Stack incompleto")
         return None, None
 
-    profile.update(count=25, dtype="float32")
+    # ==================================================
+    # GUARDAR STACK
+    # ==================================================
+    ruta_stack = (
+        f"/app/dataset/train/inputs/"
+        f"escena_{orden_id}.tif"
+    )
 
-    os.makedirs("dataset/train/inputs", exist_ok=True)
-    os.makedirs("dataset/train/masks", exist_ok=True)
+    with rasterio.open(
+        ruta_stack,
+        "w",
+        **profile
+    ) as dst:
 
-    ruta_stack = f"dataset/train/inputs/escena_{orden_id}.tif"
+        for i in range(len(bandas_stack)):
+            dst.write(
+                bandas_stack[i],
+                i + 1
+            )
 
-    with rasterio.open(ruta_stack, "w", **profile) as dst:
-        for i in range(25):
-            dst.write(bandas_stack[i], i + 1)
+    print("Stack generado OK")
 
-    # ===== MASK (escena del incendio) =====
-    p = producto_mask
+    # ==================================================
+    # GENERAR MASK
+    # ==================================================
+    print(f"Procesando mask: {item_mask.id}")
 
-    B04 = B08 = B11 = SCL = None
+    ds = stac_load(
+        [item_mask],
+        bands=[
+            "nir",
+            "swir16"
+        ],
+        bbox=bbox,
+        resolution=10,
+        chunks={},
+        dtype="uint16"
+    ).isel(time=0)
 
-    for root, _, files in os.walk("data"):
-        for f in files:
-            if p["Name"] in root and f.endswith(".jp2"):
-                if "B04_10m" in f: B04 = os.path.join(root, f)
-                if "B08_10m" in f: B08 = os.path.join(root, f)
-                if "B11_20m" in f: B11 = os.path.join(root, f)
-                if "SCL_20m" in f: SCL = os.path.join(root, f)
+    nir_data = ds["nir"].values.astype("float32")
 
-    if not all([B04, B08, B11, SCL]):
-        print("No se pudo generar mask")
-        return None, None
+    swir_data = ds["swir16"].values.astype("float32")
 
-    with rasterio.open(B08) as nir:
-        nir_data = nir.read(1).astype("float32")
-        profile = nir.profile
+    # ==================================================
+    # NBR MASK
+    # ==================================================
+    nbr_mask = idx(
+        nir_data,
+        swir_data
+    )
 
-    with rasterio.open(B11) as swir:
-        swir_data = swir.read(1, out_shape=nir_data.shape, resampling=Resampling.bilinear).astype("float32")
+    incendio = (
+        nbr_mask < 0.1
+    ).astype("uint8")
 
-    def idx(a, b):
-        return np.divide(a - b, a + b, out=np.zeros_like(a), where=(a + b) != 0)
+    # ==================================================
+    # PERFIL MASK
+    # ==================================================
+    transform = ds.odc.geobox.transform
 
-    nbr_mask = idx(nir_data, swir_data)
-    incendio = (nbr_mask < 0.1).astype("uint8")
+    profile_mask = {
+        "driver": "GTiff",
+        "height": incendio.shape[0],
+        "width": incendio.shape[1],
+        "count": 1,
+        "dtype": "uint8",
+        "crs": ds.odc.crs,
+        "transform": transform
+    }
 
-    profile.update(count=1, dtype="uint8")
+    # ==================================================
+    # GUARDAR MASK
+    # ==================================================
+    ruta_mask = (
+        f"/app/dataset/train/masks/"
+        f"escena_{orden_id}.tif"
+    )
 
-    ruta_mask = f"dataset/train/masks/escena_{orden_id}.tif"
+    with rasterio.open(
+        ruta_mask,
+        "w",
+        **profile_mask
+    ) as dst:
 
-    with rasterio.open(ruta_mask, "w", **profile) as dst:
-        dst.write(incendio, 1)
+        dst.write(
+            incendio,
+            1
+        )
+
+    print("Mask generada OK")
+
+    # ==================================================
+    # DB + MINIO
+    # ==================================================
+    AlmacenarDescarga(
+        f"escena_{orden_id}",
+        dia_de_la_imagen
+    )
 
     print("Dataset generado OK")
 

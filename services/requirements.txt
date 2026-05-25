@@ -9,3 +9,9 @@ rasterio
 matplotlib
 shapely
 minio
+
+planetary-computer
+pystac-client
+odc-stac 
+xarray
+dask
