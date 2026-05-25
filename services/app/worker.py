@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from .db import SessionLocal
 #from app.db import SessionLocal
 from app.models import Orden
-from app import script
+from app import scriptms
 
 
 def get_pending(db: Session):
@@ -26,7 +26,7 @@ def run():
 
             try:
                 # ejecutar script con los 3 argumentos + orden_id
-                ruta_safe, ruta_stack = script.run(
+                ruta_safe, ruta_stack = scriptms.run(
                     dia_de_la_imagen=args.get("dia_de_la_imagen"),
                     lat=args.get("lat"),
                     lon=args.get("lon"),
