@@ -1,0 +1,98 @@
+>>> run("20211124", -34.249801, -58.880148, None)
+Hay Imagenes
+Se consulto la db, hay 0 elementos
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1910, in _execute_context
+    self.dialect.do_execute(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 736, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.errors.NotNullViolation: null value in column "descarga_id" of relation "descargas" violates not-null constraint
+DETAIL:  Failing row contains (null, S2A_MSIL2A_20211119T135111_N0500_R024_T21HUC_20221231T024314.SAF..., 20211124, 2026-05-24 05:28:57.917914).
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/app/app/script.py", line 192, in run
+    AlmacenarDescarga(name, dia_de_la_imagen)
+  File "/app/app/script.py", line 36, in AlmacenarDescarga
+    db.commit()
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 1454, in commit
+    self._transaction.commit(_to_root=self.future)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 832, in commit
+    self._prepare_impl()
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 811, in _prepare_impl
+    self.session.flush()
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3449, in flush
+    self._flush(objects)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3588, in _flush
+    with util.safe_reraise():
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 70, in __exit__
+    compat.raise_(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/compat.py", line 211, in raise_
+    raise exception
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3549, in _flush
+    flush_context.execute()
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py", line 456, in execute
+    rec.execute(self)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py", line 630, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py", line 245, in save_obj
+    _emit_insert_statements(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py", line 1238, in _emit_insert_statements
+    result = connection._execute_20(
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1710, in _execute_20
+    return meth(self, args_10style, kwargs_10style, execution_options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 334, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1577, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1953, in _execute_context
+    self._handle_dbapi_exception(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2134, in _handle_dbapi_exception
+    util.raise_(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/compat.py", line 211, in raise_
+    raise exception
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1910, in _execute_context
+    self.dialect.do_execute(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 736, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.IntegrityError: (psycopg2.errors.NotNullViolation) null value in column "descarga_id" of relation "descargas" violates not-null constraint
+DETAIL:  Failing row contains (null, S2A_MSIL2A_20211119T135111_N0500_R024_T21HUC_20221231T024314.SAF..., 20211124, 2026-05-24 05:28:57.917914).
+
+[SQL: INSERT INTO descargas (nombre_imagen, dia_de_la_imagen, fecha_descarga) VALUES (%(nombre_imagen)s, %(dia_de_la_imagen)s, %(fecha_descarga)s) RETURNING descargas.descarga_id]
+[parameters: {'nombre_imagen': 'S2A_MSIL2A_20211119T135111_N0500_R024_T21HUC_20221231T024314.SAFE', 'dia_de_la_imagen': '20211124', 'fecha_descarga': datetime.datetime(2026, 5, 24, 5, 28, 57, 917914)}]
+(Background on this error at: https://sqlalche.me/e/14/gkpj)
+>>> 
+
+
+lo que se ejecuta al crear la db: 
+
+ # Descargas | son las descargas de los archivos de sentinel
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS descargas (
+            descarga_id TEXT PRIMARY KEY,
+            nombre_imagen TEXT,
+            dia_de_la_imagen TEXT,
+            fecha_descarga TIMESTAMP
+        )
+        """))
+        
+models.py :        
+
+# 📥 Descargas realizadas
+class Descargas(Base):
+    __tablename__ = "descargas"
+    descarga_id = Column(Integer, primary_key=True, autoincrement=True)
+    nombre_imagen = Column(Text)
+    dia_de_la_imagen= Column(Text)
+    fecha_descarga = Column(DateTime, default=datetime.utcnow)
+
+
+
+

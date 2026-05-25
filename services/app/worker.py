@@ -22,7 +22,6 @@ def run():
             # marcar como processing
             orden.status = "processing"
             db.commit()
-
             args = json.loads(orden.args)
 
             try:

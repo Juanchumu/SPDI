@@ -41,8 +41,8 @@ class Product(Base):
 class Descargas(Base):
     __tablename__ = "descargas"
     descarga_id = Column(Integer, primary_key=True, autoincrement=True)
-    nombreImagen = Column(Text)
-    diaDeLaImagen= Column(Text)
+    nombre_imagen = Column(Text)
+    dia_de_la_imagen= Column(Text)
     fecha_descarga = Column(DateTime, default=datetime.utcnow)
 
 

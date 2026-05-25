@@ -8,6 +8,9 @@ Utilizá uno de estos comandos según tu instalación de Docker:
 sudo docker-compose up --build
 # o
 sudo docker compose up --build
+
+sudo docker-compose up api db worker minio
+
 ```
 
 
@@ -161,14 +164,25 @@ sudo docker-compose up
 ## Entrar en el worker
 
 ```bash
-sudo docker exec -it captura_worker_1 /bin/bash
+sudo docker exec -it services-worker-1 /bin/bash
 ```
 
 Dentro del contenedor:
 
 ```python
-run("20260318", -58.745420, -58.738993, None)
+run("20211124", -34.249801, -58.880148, None)
 ```
+
+### Postgre
+
+si la db no se modifica al tocar el codigo,
+y permanece con datos antiguos:
+sudo docker compose down -v
+sudo docker volume prune -f
+
+
+
+
 
 ## TODO: 
 

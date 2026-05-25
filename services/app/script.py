@@ -29,8 +29,8 @@ print("imports cargados...!")
 def AlmacenarDescarga( nombre, dia ):
     db = SessionLocal()
     nuevoArchivo = Descargas(
-            nombreImagen=nombre,
-            diaDeLaImagen=dia
+            nombre_imagen=nombre,
+            dia_de_la_imagen=dia
             )
     db.add(nuevoArchivo)
     db.commit()
@@ -58,7 +58,7 @@ def AlmacenarDescarga( nombre, dia ):
 def ConsultarDescargas():
     db = SessionLocal()
     productos_descargados = db.query(Descargas).all()
-    lista = {x.nombreImagen for x in productos_descargados}
+    lista = {x.nombre_imagen for x in productos_descargados}
     db.commit()
     db.close()
     return lista
@@ -73,8 +73,7 @@ def TraerDeMiniO(nombre):
             "imagenes",
             f"{nombre}.zip",
             f"tmp/descargas/{nombre}.zip")
-
-print("Archivo descargado")
+    print("Archivo descargado")
 
 # ==================================================
 # FUNCIÓN PRINCIPAL que recibe los 5 argumentos
@@ -110,7 +109,11 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
         "client_id": client_id,
         "client_secret": client_secret
     })
-
+    print("respuesta al token:")
+    print("STATUS:", response.status_code)
+    print("HEADERS:", response.headers)
+    print("BODY:")
+    print(response.text)
     access_token = response.json()["access_token"]
     headers = {"Authorization": f"Bearer {access_token}"}
 
@@ -133,11 +136,17 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
 
     response = requests.get(url, headers=headers, params=params)
     products = response.json().get("value", [])
-
+    print("respuesta a la busqueda:")
+    print("STATUS:", response.status_code)
+    print("HEADERS:", response.headers)
+    print("BODY:")
+    print(response.text)
     if len(products) == 0:
         print("Sin imágenes")
+        #Esto tiene que hacer algo realmente
+        #como rechazar la orden, o intentar mas tarde
         return None
-
+    print("Hay Imagenes")
     # ================= TOKEN DESCARGA =================
     response = requests.post(token_url, data={
         "grant_type": "password",
@@ -161,6 +170,7 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
     #descargue unicamente los que no estan en la db
     
     listaProductosDescargados = ConsultarDescargas()
+    print(f"Se consulto la db, hay {len(listaProductosDescargados)} elementos")
 
     for p in products:
         product_id = p["Id"]
@@ -169,7 +179,10 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
         # minio 
         if name in listaProductosDescargados:
             #traer desde minio ese zip
+            print("Se intenta traer desde miniO ")
             TraerDeMiniO(name)
+            print("Se trajo desde miniO ")
+            
 
         fecha_img = datetime.fromisoformat(p["ContentDate"]["Start"].replace("Z", "+00:00"))
         fechas.append(fecha_img)
@@ -178,20 +191,23 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
 
         #Si el zip no esta, se descarga
         if not os.path.exists(zip_path):
+            print("El zip no existe, se procede a descargar")
             url = f"https://download.dataspace.copernicus.eu/odata/v1/Products({product_id})/$value"
             with requests.get(url, headers=headers, stream=True) as r:
                 with open(zip_path, "wb") as f:
                     for chunk in r.iter_content(8192):
-                        f.write(chunki)
+                        f.write(chunk)
             #dentro del if
             #Esto sube a la db el archivo descargado 
             #Tambien almacena en miniO el zip 
+            print("Se Procede a almacenar")
             AlmacenarDescarga(name, dia_de_la_imagen)
-
-
+            print("Almacenamiento con exito")
+        print("Se empieza a descomprimir un item")
         with zipfile.ZipFile(zip_path, 'r') as z:
             z.extractall("tmp/data")
-
+        print("Item Extraido se continua con el siguiente")
+    print("Se procede con Normalizacion")
     # ================= NORMALIZACION FECHA =================
     fecha_min = min(fechas)
     fecha_max = max(fechas)

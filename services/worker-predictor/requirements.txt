@@ -8,4 +8,6 @@ requests
 rasterio
 matplotlib
 shapely
+torch
+scipy
 minio
