@@ -52,8 +52,23 @@ services:
       - ./data:/app/data               # 
       - ./descargas:/app/descargas     # 
       - ./ordenes:/app/ordenes     # 
-
     restart: unless-stopped
+  entrenador:
+    build: .
+    command: python -m app.entrenador
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+    volumes:                           # 
+      - ./dataset:/app/dataset     # 
+    restart: unless-stopped
+
   minio:
     image: minio/minio
     container_name: minio

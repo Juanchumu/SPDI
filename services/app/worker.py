@@ -26,17 +26,21 @@ def run():
 
             try:
                 # ejecutar script con los 3 argumentos + orden_id
-                ruta_safe, ruta_stack = scriptms.run(
-                    dia_de_la_imagen=args.get("dia_de_la_imagen"),
-                    lat=args.get("lat"),
-                    lon=args.get("lon"),
-                    orden_id=orden.id
-                )
+                resultado = scriptms.run(
+                        dia_de_la_imagen=args.get("dia_de_la_imagen"),
+                        lat=args.get("lat"),
+                        lon=args.get("lon"),
+                        orden_id=orden.id)
+                if (resultado == 1):
+                    print("fallo la descarga de imagenes del worker")
+                    #aca tendria que hacer vuelta atras 
+                    orden.status = "pending"
+                    db.commit()
+                    db.close()
+                    time.sleep(5)
+                    continue
 
                 orden.status = "predict-ready"
-                orden.ruta_safe = ruta_safe
-                orden.ruta_stack = ruta_stack
-
             except Exception as e:
                 orden.status = "error"
                 print(f"Error: {e}")

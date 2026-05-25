@@ -68,7 +68,7 @@ def generar_datos(request: EntrenamientoRequest, db: Session = Depends(get_db)):
         "lat": request.lat,
         "lon": request.lon
         }
-    nueva = Entrenamientos(
+    nueva = Entrenamiento(
         args=json.dumps(args),
         status="pending"
     )
@@ -83,10 +83,8 @@ def generar_datos(request: EntrenamientoRequest, db: Session = Depends(get_db)):
 def obtener_entrenamiento(id: int, db: Session = Depends(get_db)):
     entrenamientos = db.query(Entrenamiento).filter(Entrenamiento.id == id).first()
     respuesta = f'Estado: {entrenamientos.status}'
-    if not orden:
-        raise HTTPException(status_code=404, detail="Generador no encontrado")
-    if (orden.status == 'done'):
-        respuesta = "Almacenado"
+    if not entrenamientos:
+        return "Generador no encontrado"
     return respuesta
 
 @app.get("/api/v1/health")  # liveness

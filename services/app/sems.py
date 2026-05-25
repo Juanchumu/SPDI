@@ -154,7 +154,7 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
 
     if len(items) < 4:
         print("No hay suficientes imagenes")
-        return None, None
+        return 1
 
     print(f"Hay {len(items)} imagenes")
 
@@ -279,7 +279,7 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
     # ==================================================
     if len(bandas_stack) != 15:
         print("Stack incompleto")
-        return None, None
+        return 1
 
     # ==================================================
     # GUARDAR STACK
@@ -375,11 +375,8 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
     # ==================================================
     # DB + MINIO
     # ==================================================
-    AlmacenarDescarga(
-        f"escena_{orden_id}",
-        dia_de_la_imagen
-    )
+    #AlmacenarDescarga(f"escena_{orden_id}",dia_de_la_imagen)
 
     print("Dataset generado OK")
 
-    return ruta_stack, ruta_mask
+    return 0

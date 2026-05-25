@@ -113,7 +113,7 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
         print("Sin imágenes")
         # Esto tendria que devolver un error o 
         # intentar mas tarde debido a la api 
-        return None
+        return 1
 
     print(f"Hay {len(items)} imagenes")
 
@@ -209,7 +209,7 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
 
     if len(bandas_stack) == 0:
         print("No hay datos válidos")
-        return None
+        return 1
 
     # ==================================================
     # GUARDAR STACK
@@ -225,4 +225,4 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
 
     print("Input generado OK")
 
-    return ruta_stack
+    return 0

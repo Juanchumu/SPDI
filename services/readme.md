@@ -1,5 +1,10 @@
 # Cómo usar
 
+se necesita hacer sudo chmod -R 777 dataset
+
+en los directorios
+
+
 ## Levantar servicios
 
 Utilizá uno de estos comandos según tu instalación de Docker:
@@ -56,7 +61,8 @@ curl -X POST http://localhost:8000/api/v1/orden \
   -d '{ "dia": 20211124, "lat": -34.249801, "lon": -58.880148 }'
 ```
 
-curl -X POST http://localhost:8000/api/v1/orden -H "Content-Type: application/json" -d '{ "dia": "20211124", "lat": "-34.249801", "lon": "-58.880148" }'
+curl -X POST http://localhost:8000/api/v1/orden -H "Content-Type: application/json" -d '{ "dia": "20211125", "lat": "-34.249801", "lon": "-58.880148" }'
+curl -X POST http://localhost:8000/api/v1/generar_datos -H "Content-Type: application/json" -d '{ "dia": "20211125", "lat": "-34.249801", "lon": "-58.880148" }'
 
 ### Respuesta esperada
 
@@ -73,6 +79,7 @@ curl -X POST http://localhost:8000/api/v1/orden -H "Content-Type: application/js
 
 ```bash
 curl -X GET http://localhost:8000/api/v1/orden/1
+curl -X GET http://localhost:8000/api/v1/generar_datos/1
 ```
 
 ### Si sale todo bien
