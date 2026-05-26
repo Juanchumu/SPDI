@@ -38,6 +38,22 @@ services:
       - ./data:/app/data               # 
       - ./descargas:/app/descargas     # 
     restart: unless-stopped
+  validador:
+    build:
+      context: .
+      dockerfile: ./validador/Dockerfile
+    command: python -m app.validador
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DATABASE_URL=${DATABASE_URL}
+    restart: unless-stopped
 
   worker:
     build:

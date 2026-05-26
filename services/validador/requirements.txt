@@ -1,0 +1,6 @@
+sqlalchemy
+shapely
+geopandas
+
+
+

@@ -3,13 +3,12 @@ import json
 from sqlalchemy.orm import Session
 
 from db.db import SessionLocal
-#from app.db import SessionLocal
 from db.models import Orden
 from app import scriptms
 
 
 def get_pending(db: Session):
-    return db.query(Orden).filter(Orden.status == "Lista para el worker..").first()
+    return db.query(Orden).filter(Orden.status == "Pendiente..").first()
 
 
 def run():
@@ -20,7 +19,7 @@ def run():
 
         if orden:
             # marcar como processing
-            orden.status = "Siendo procesada por worker.."
+            orden.status = "Validando.."
             db.commit()
             args = json.loads(orden.args)
 
@@ -32,15 +31,23 @@ def run():
                         lon=args.get("lon"),
                         orden_id=orden.id)
                 if (resultado == 1):
-                    print("fallo la descarga de imagenes del worker")
+                    print("Error en la Fecha")
                     #aca tendria que hacer vuelta atras 
-                    orden.status = "pending"
+                    orden.status = "Error en la fecha..."
+                    db.commit()
+                    db.close()
+                    time.sleep(5)
+                    continue
+                if (resultado == 2):
+                    print("Error en las coordenadas")
+                    #aca tendria que hacer vuelta atras 
+                    orden.status = "Error en las coordenadas..."
                     db.commit()
                     db.close()
                     time.sleep(5)
                     continue
 
-                orden.status = "Lista para predecir.."
+                orden.status = "Lista para el worker.."
             except Exception as e:
                 orden.status = "error"
                 print(f"Error: {e}")
