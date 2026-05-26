@@ -36,7 +36,7 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
     bbox_polygon = box(izquierda, abajo, derecha, arriba)
 
     # cargar polígono de Argentina
-    argentina = gpd.read_file("/app/argentina.geojson")
+    argentina = gpd.read_file("app/argentina.geojson")
 
     # unir todos los polígonos en uno solo
     argentina_polygon = argentina.union_all()

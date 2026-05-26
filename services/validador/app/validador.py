@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from db.db import SessionLocal
 from db.models import Orden
-from app import scriptms
+from app import script
 
 
 def get_pending(db: Session):
@@ -25,7 +25,7 @@ def run():
 
             try:
                 # ejecutar script con los 3 argumentos + orden_id
-                resultado = scriptms.run(
+                resultado = script.run(
                         dia_de_la_imagen=args.get("dia_de_la_imagen"),
                         lat=args.get("lat"),
                         lon=args.get("lon"),
@@ -49,7 +49,7 @@ def run():
 
                 orden.status = "Lista para el worker.."
             except Exception as e:
-                orden.status = "error"
+                orden.status = "error en validador"
                 print(f"Error: {e}")
 
             db.commit()

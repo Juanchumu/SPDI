@@ -39,13 +39,13 @@ def crear_orden(request: OrdenRequest, db: Session = Depends(get_db)):
     }
     nueva = Orden(
         args=json.dumps(args),
-        status="pending"
+        status="Pendiente.."
     )
     db.add(nueva)
     db.commit()
     db.refresh(nueva)
     
-    return {"id": nueva.id, "status": "pending"}
+    return {"id": nueva.id, "status": "Pendiente.."}
 
 
 @app.get("/api/v1/orden/{id}")

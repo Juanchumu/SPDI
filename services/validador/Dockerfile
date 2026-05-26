@@ -6,8 +6,7 @@ WORKDIR /app
 RUN useradd -m appuser
 
 # Instalar dependencias del sistema
-RUN apt-get update && apt-get install -y netcat-openbsd && rm -rf /var/lib/apt/lists/*
-
+RUN apt-get update && apt-get install -y netcat-openbsd gdal-bin libgdal-dev libgeos-dev libproj-dev build-essential && rm -rf /var/lib/apt/lists/*
 # Copiar requirements primero (mejor caching)
 COPY validador/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

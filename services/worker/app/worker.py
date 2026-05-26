@@ -42,7 +42,7 @@ def run():
 
                 orden.status = "Lista para predecir.."
             except Exception as e:
-                orden.status = "error"
+                orden.status = "error en worker"
                 print(f"Error: {e}")
 
             db.commit()

@@ -42,7 +42,7 @@ services:
     build:
       context: .
       dockerfile: ./validador/Dockerfile
-    command: python -m app.validador
+    command: python -u -m app.validador
     depends_on:
       db:
         condition: service_healthy

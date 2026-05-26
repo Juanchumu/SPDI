@@ -1,6 +1,7 @@
 sqlalchemy
 shapely
 geopandas
+psycopg2-binary
 
 
 
