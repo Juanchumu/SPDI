@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime
 from datetime import datetime
-from app.db import Base
+from db.db import Base
 
 
 class Orden(Base):

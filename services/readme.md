@@ -1,6 +1,11 @@
 # Cómo usar
 
-se necesita hacer sudo chmod -R 777 dataset
+dentro del directorio services se tiene que correr:
+
+```bash
+sudo chmod -R 777 .
+```
+esto es porque algunos contenedores generan archivos en local, de momento...
 
 en los directorios
 

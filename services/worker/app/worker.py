@@ -2,9 +2,9 @@ import time
 import json
 from sqlalchemy.orm import Session
 
-from .db import SessionLocal
+from db.db import SessionLocal
 #from app.db import SessionLocal
-from app.models import Orden
+from db.models import Orden
 from app import scriptms
 
 

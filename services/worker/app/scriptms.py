@@ -1,5 +1,4 @@
 # imports
-from dotenv import load_dotenv
 
 import os
 import zipfile
@@ -14,10 +13,9 @@ from odc.stac import stac_load
 
 from minio import Minio
 
-from app.db import SessionLocal
-from app.models import Descargas
+from db.db import SessionLocal
+from db.models import Descargas
 
-load_dotenv()
 print("imports cargados...!")
 
 

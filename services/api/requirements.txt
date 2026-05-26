@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+sqlalchemy>=1.4,<2.0
+psycopg2-binary
+
+
+pyproj 
+
+

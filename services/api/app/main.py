@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 import json
 
 
-from app.db import SessionLocal
-from app.models import Orden, Entrenamiento, Product, Descargas
+from db.db import SessionLocal
+from db.models import Orden, Entrenamiento, Product, Descargas
 import os
 
 app = FastAPI()
@@ -51,9 +51,11 @@ def crear_orden(request: OrdenRequest, db: Session = Depends(get_db)):
 @app.get("/api/v1/orden/{id}")
 def obtener_orden(id: int, db: Session = Depends(get_db)):
     orden = db.query(Orden).filter(Orden.id == id).first()
+
+    if orden is None: 
+        raise HTTPException(status_code=404, detail="Orden No encontrada")
+
     respuesta = f'Estado: {orden.status}'
-    if not orden:
-        respuesta = {"status": "404"}
     if (orden.status == 'done'):
         respuesta = orden.prediccion
     return respuesta
@@ -82,9 +84,10 @@ def generar_datos(request: EntrenamientoRequest, db: Session = Depends(get_db)):
 @app.get("/api/v1/generar_datos/{id}")
 def obtener_entrenamiento(id: int, db: Session = Depends(get_db)):
     entrenamientos = db.query(Entrenamiento).filter(Entrenamiento.id == id).first()
+    if entrenamientos is None: 
+        raise HTTPException(status_code=404, detail="Entrenamiento no encontrado")
+
     respuesta = f'Estado: {entrenamientos.status}'
-    if not entrenamientos:
-        return "Generador no encontrado"
     return respuesta
 
 @app.get("/api/v1/health")  # liveness

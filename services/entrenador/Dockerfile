@@ -9,18 +9,22 @@ RUN useradd -m appuser
 RUN apt-get update && apt-get install -y netcat-openbsd && rm -rf /var/lib/apt/lists/*
 
 # Copiar requirements primero (mejor caching)
-COPY requirements.txt .
+COPY entrenador/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar código
-COPY . .
+COPY entrenador/app ./app
+COPY db ./db
+
 
 # Dar permisos al usuario sobre /app
 RUN chown -R appuser:appuser /app
 
 # Script entrypoint
-COPY entrypoint.sh /entrypoint.sh
+COPY entrenador/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && chown appuser:appuser /entrypoint.sh
+RUN mkdir -p /app/dataset/train/inputs && chown -R appuser:appuser /app
+RUN mkdir -p /app/dataset/train/masks && chown -R appuser:appuser /app
 
 ENV PYTHONPATH=/app
 
@@ -29,4 +33,3 @@ USER appuser
 
 ENTRYPOINT ["/entrypoint.sh"]
 
-CMD ["sh", "-c", "python app/crearDB.py && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
