@@ -1,3 +1,4 @@
+detección de incendios basada en evolución temporal multibanda.
 # Cómo usar
 
 dentro del directorio services se tiene que correr:
