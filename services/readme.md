@@ -24,51 +24,21 @@ sudo docker-compose up api db worker minio
 
 ```
 
-
-## Listar Servicios
-
-En caso de levantar un unico servicio.
-
-```bash
-sudo docker compose config --services
-```
-
-## Detener contenedores
-
-```bash
-docker-compose down
-```
-
-## Reconstruir sin caché (para instalar nuevas dependencias)
-
-```bash
-docker-compose build --no-cache
-```
-
-## Levantar servicios (modo normal)
-
-```bash
-docker-compose up
-```
-
 ---
 
-## Crear orden
+# Interactuar con la API
+
+##  Crear orden o un archivo de entrenamiento
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/orden \
-  -H "Content-Type: application/json" \
-  -d '{ "dia": 20260318, "lat": -58.745420, "lon": -58.738992 }'
-```
-
-```bash
-curl -X POST http://localhost:8000/api/v1/orden \
-  -H "Content-Type: application/json" \
-  -d '{ "dia": 20211124, "lat": -34.249801, "lon": -58.880148 }'
-```
 
 curl -X POST http://localhost:8000/api/v1/orden -H "Content-Type: application/json" -d '{ "dia": "20211125", "lat": "-34.249801", "lon": "-58.880148" }'
+```
+```bash
+
 curl -X POST http://localhost:8000/api/v1/generar_datos -H "Content-Type: application/json" -d '{ "dia": "20211125", "lat": "-34.249801", "lon": "-58.880148" }'
+
+```
 
 ### Respuesta esperada
 
@@ -85,6 +55,8 @@ curl -X POST http://localhost:8000/api/v1/generar_datos -H "Content-Type: applic
 
 ```bash
 curl -X GET http://localhost:8000/api/v1/orden/1
+```
+```bash
 curl -X GET http://localhost:8000/api/v1/generar_datos/1
 ```
 
@@ -137,6 +109,38 @@ curl -X GET http://localhost:8000/api/v1/health
   "status": "200"
 }
 ```
+
+--- 
+
+# Cosas a cambiar:
+
+## Listar Servicios
+
+En caso de levantar un unico servicio.
+
+```bash
+sudo docker compose config --services
+```
+
+## Detener contenedores
+
+```bash
+docker-compose down
+```
+
+## Reconstruir sin caché (para instalar nuevas dependencias)
+
+```bash
+docker-compose build --no-cache
+```
+
+## Levantar servicios (modo normal)
+
+```bash
+docker-compose up
+```
+
+
 
 ---
 

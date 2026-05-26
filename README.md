@@ -19,19 +19,6 @@ Dentro de este directorio hay un `readme.md` con instrucciones para levantar tod
 
 ---
 
-### 🔹 `entrenamiento/`
-
-Entorno de entrenamiento del modelo (el cual no funciona por cambios):
-
-* Scripts de entrenamiento
-* Definición de modelos
-* Workers auxiliares
-* Dataset de ejemplo (`datos_reales/`)
-
-Incluye su propio `docker-compose.yml` para ejecutar procesos de entrenamiento de forma aislada.
-
----
-
 ### 🔹 `data/`
 
 Organización de datos siguiendo un flujo típico de ciencia de datos:
@@ -44,7 +31,10 @@ Organización de datos siguiendo un flujo típico de ciencia de datos:
 
 ### 🔹 `generador_dataset/`
 
-Scripts para generación de datasets, utilizados en etapas previas al entrenamiento.
+Scripts para generación de datasets, una vez levantado los servicios, 
+se puede correr un script para que genere unos datos de entrenamiento.
+
+que pueden ser con datos reales o generados
 
 ---
 
@@ -83,7 +73,6 @@ Pruebas y validaciones del sistema.
 
 1. Generación/descarga de datos (`generador_dataset/`, `data/`)
 2. Procesamiento de datos
-3. Entrenamiento del modelo (`entrenamiento/`)
 4. Despliegue del modelo y servicios (`services/`)
 5. Consulta mediante API
 
