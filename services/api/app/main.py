@@ -2,11 +2,16 @@ from fastapi import FastAPI, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 import json
-
+import time
+from datetime import timedelta
 
 from db.db import SessionLocal
 from db.models import Orden, Entrenamiento, Product, Descargas
 import os
+
+
+# Guardamos el timestamp al momento de cargar el script
+START_TIME = time.time()
 
 app = FastAPI()
 
@@ -92,6 +97,12 @@ def obtener_entrenamiento(id: int, db: Session = Depends(get_db)):
 
 @app.get("/api/v1/health")  # liveness
 def health():
-    return {"status": "200"}
+    # Calculamos cuánto tiempo pasó
+    uptime_seconds = int(time.time() - START_TIME)
+    # Formateamos a un formato legible (HH:MM:SS)
+    uptime_str = str(timedelta(seconds=uptime_seconds))
 
-
+    return {"status_code": 200,
+        "message": "Todo anda bien por acá.",
+        "uptime": uptime_str
+        }

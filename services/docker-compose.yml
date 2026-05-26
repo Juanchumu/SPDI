@@ -34,9 +34,11 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
       - DATABASE_URL=${DATABASE_URL}
-    volumes:                           # 
-      - ./data:/app/data               # 
-      - ./descargas:/app/descargas     # 
+    # Montamos el código fuente para Hot Reload
+    volumes:
+      - ./api/app:/app/app
+    # Lanzamos la API con --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     restart: unless-stopped
   validador:
     build:
@@ -106,6 +108,7 @@ services:
       MINIO_ROOT_PASSWORD: ${DB_MINIO_PASS}
     volumes:
       - minio_data:/data
+
 
 volumes:
   minio_data:
