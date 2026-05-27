@@ -105,9 +105,7 @@ curl -X GET http://localhost:8000/api/v1/health
 ### Respuesta esperada
 
 ```json
-{
-  "status": "200"
-}
+{"status_code":200,"message":"Todo anda bien por acá.","uptime":"0:05:51"}
 ```
 
 --- 

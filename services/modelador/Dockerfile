@@ -13,14 +13,13 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar código
-COPY predictor/app .
-COPY db ./db
+COPY modelador/app .
 
 # Dar permisos al usuario sobre /app
 RUN chown -R appuser:appuser /app
 
 # Script entrypoint
-COPY predictor/entrypoint.sh /entrypoint.sh
+COPY modelador/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && chown appuser:appuser /entrypoint.sh
 
 ENV PYTHONPATH=/app

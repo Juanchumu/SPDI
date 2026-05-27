@@ -108,6 +108,39 @@ services:
       MINIO_ROOT_PASSWORD: ${DB_MINIO_PASS}
     volumes:
       - minio_data:/data
+# modelador:
+#    build:
+#      context: .
+#      dockerfile: ./modelador/Dockerfile
+#    command: python -u -m app.modelador
+#    depends_on:
+#      db:
+#        condition: service_healthy
+#    environment:
+#      - DB_HOST=${DB_HOST}
+#      - DB_PORT=${DB_PORT}
+#      - DB_USER=${DB_USER}
+#      - DB_PASSWORD=${DB_PASSWORD}
+#      - DB_NAME=${DB_NAME}
+#      - DATABASE_URL=${DATABASE_URL}
+#    restart: unless-stopped
+# predictor:
+#    build:
+#      context: .
+#      dockerfile: ./predictor/Dockerfile
+#    command: python -u -m app.predictor
+#    depends_on:
+#      db:
+#        condition: service_healthy
+#    environment:
+#      - DB_HOST=${DB_HOST}
+#      - DB_PORT=${DB_PORT}
+#      - DB_USER=${DB_USER}
+#      - DB_PASSWORD=${DB_PASSWORD}
+#      - DB_NAME=${DB_NAME}
+#      - DATABASE_URL=${DATABASE_URL}
+#    restart: unless-stopped
+
 
 
 volumes:
