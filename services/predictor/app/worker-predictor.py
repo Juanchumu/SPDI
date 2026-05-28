@@ -9,6 +9,38 @@ from scipy.ndimage import label, find_objects
 from .db import SessionLocal
 from app.models import Orden
 
+def TraerDeMinioOrden(orden_nro):
+    db = SessionLocal()
+    #no es al, es solo los que no tengan error
+    # Listo para entrenar 
+    datos = db.query(Orden).all()
+    lista = {x.nombre_imagen for x in datos}
+    db.commit()
+    db.close()
+
+    if len(lista) == 0:
+        #no hay datos
+        return 1 
+
+    # si hay datos se trae desde minio 
+    client = Minio(
+            "localhost:9000",
+            access_key=DB_MINIO_USER,
+            secret_key=DB_MINIO_PASS,
+            secure=False)
+    client.fget_object(
+            "train-inputs",
+            f"{orden_nro}.tif",
+            f"tmp/descargas/{orden}.tif")
+    print("Archivo descargado")
+
+    # Todo sin problemas 
+    return 0 
+
+
+
+
+
 # =========================
 # 🔧 MODELO
 # =========================
