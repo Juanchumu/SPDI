@@ -36,12 +36,12 @@ with engine.connect() as conn:
     trans = conn.begin()
     
     try:
-        # Productos | son los productos disponibles de sentinel
+        # Modelos | son los modelos generados automaticamente
         conn.execute(text("""
-        CREATE TABLE IF NOT EXISTS products (
-            id TEXT PRIMARY KEY,
+        CREATE TABLE IF NOT EXISTS modelos (
+            id SERIAL PRIMARY KEY,
             name TEXT,
-            fecha TEXT
+            created_at TIMESTAMP
         )
         """))
         

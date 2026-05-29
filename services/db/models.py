@@ -28,13 +28,12 @@ class Entrenamiento(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-# 📦 Productos disponibles (Copernicus)
-class Product(Base):
-    __tablename__ = "products"
-
-    id = Column(String, primary_key=True)
+# 📦 Modelos disponibles
+class Modelos(Base):
+    __tablename__ = "modelos"
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(Text)
-    fecha = Column(Text)  # fecha del producto
+    created_at = Column(DateTime, default=datetime.utcnow) # fecha del modelo 
 
 
 # 📥 Descargas realizadas

@@ -1,30 +1,59 @@
-FROM python:3.11
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Crear usuario no root
+# ==================================================
+# Dependencias del sistema
+# ==================================================
+
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    netcat-openbsd \
+    gdal-bin \
+    libgdal-dev \
+    libproj-dev \
+    libgeos-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# ==================================================
+# Variables GDAL
+# ==================================================
+
+ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
+ENV C_INCLUDE_PATH=/usr/include/gdal
+
+# ==================================================
+# Usuario no root
+# ==================================================
+
 RUN useradd -m appuser
 
-# Instalar dependencias del sistema
-RUN apt-get update && apt-get install -y netcat-openbsd && rm -rf /var/lib/apt/lists/*
+# ==================================================
+# Python requirements
+# ==================================================
 
-# Copiar requirements primero (mejor caching)
-COPY requirements.txt .
+COPY modelador/requirements.txt .
+
+RUN pip install --upgrade pip
+
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar código
-COPY modelador/app .
+# ==================================================
+# Código
+# ==================================================
 
-# Dar permisos al usuario sobre /app
-RUN chown -R appuser:appuser /app
+COPY modelador/app ./app
+COPY db ./db
 
-# Script entrypoint
 COPY modelador/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh && chown appuser:appuser /entrypoint.sh
+
+RUN chmod +x /entrypoint.sh
+
+RUN chown -R appuser:appuser /app /entrypoint.sh
 
 ENV PYTHONPATH=/app
 
-# Cambiar a usuario no root 👇
 USER appuser
 
 ENTRYPOINT ["/entrypoint.sh"]
