@@ -13,6 +13,7 @@ class Orden(Base):
     ruta_safe = Column(Text, nullable=True)
     ruta_stack = Column(Text, nullable=True)
     prediccion = Column(Text, nullable=True)
+    modelo_utilizado = Column(Text, nullable=True)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -64,6 +64,7 @@ with engine.connect() as conn:
             ruta_safe TEXT,
             ruta_stack TEXT,
             prediccion TEXT,
+            modelo_utilizado TEXT,
             created_at TIMESTAMP,
             updated_at TIMESTAMP
         )

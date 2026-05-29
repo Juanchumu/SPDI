@@ -6,39 +6,97 @@ import numpy as np
 from sqlalchemy.orm import Session
 from scipy.ndimage import label, find_objects
 
-from .db import SessionLocal
-from app.models import Orden
+from db.db import SessionLocal
+from db.models import Orden
 
-def TraerDeMinioOrden(orden_nro):
+# ==================================================
+# MINIO
+# ==================================================
+def get_minio_client():
+    #Para que no cuelgue el contenedor si no hay miniO
+    http_client = urllib3.PoolManager(
+            timeout=urllib3.Timeout(
+                connect=5.0,
+                read=30.0))
+    return Minio(
+        "minio:9000",
+        access_key=DB_MINIO_USER,
+        secret_key=DB_MINIO_PASS,
+        secure=False
+    )
+
+# ==================================================
+# DESCARGA DE ORDDEN PARA PREDICCIÓN
+# ==================================================
+def TraerDeMiniOOrden(nro_orden_id):
     db = SessionLocal()
-    #no es al, es solo los que no tengan error
-    # Listo para entrenar 
-    datos = db.query(Orden).all()
-    lista = {x.nombre_imagen for x in datos}
+    datos = db.query(Orden).filter(Orden.id == nro_orden_id).first()
+    db.close()
+    if len(datos) == 0:
+        print("No hay nada que predecir.")
+        return 1
+    #Crear directorios en el contenedor:
+    #borrar archivos viejos del contenedor: 
+    shutil.rmtree("tmp/ordenes", ignore_errors=True)
+    os.makedirs("tmp/ordenes/inputs", exist_ok=True)
+    client = get_minio_client()
+    #Descargamos el inputs
+    client.fget_object(
+            "ordenes",
+            f"escena_{d.id}.tif",
+            f"tmp/ordenes/inputs/escena_{d.id}.tif"
+            )
+    print(f"Orden input {d.id} descargado") 
+    return 0
+
+def TraerDeMiniOModelos():
+    #esto tiene que traer el ultimo modelo o
+    # si es que hay modelos
+    db = SessionLocal()
+    datos = db.query(Modelos).last()
+    db.close()
+    if datos is None:
+        print("No hay modelos")
+        return 2 
+    if len(datos) == 0:
+        print("No hay modelos.")
+        return 2
+    #Crear directorios en el contenedor:
+    #borrar archivos viejos del contenedor: 
+    shutil.rmtree("tmp/modelos", ignore_errors=True)
+    #Creamos el directorio para los modelos
+    os.makedirs("tmp/modelos", exist_ok=True)
+    client = get_minio_client()
+    #Descargamos el modelo 
+    client.fget_object(
+            "modelos",
+            f"fire_model_ver_{datos.id}.tif",
+            f"tmp/modelos/fire_model_ver_{datos.id}.tif"
+            )
+    print(f"Modelo {datos.id} descargado") 
+    return 0
+# ==================================================
+# Almacenar PREDICCIÓN 
+# ==================================================
+def AlmacenarPrediccion(nro_id, modelo_id):
+    db = SessionLocal()
+    datos = db.query(Orden).filter(Orden.id == nro_id).first()
+    datos.status = f"Predicha"
+    datos.modelo_utilizado = f"fire_model_ver_{modelo_id}"
+    datos.archivo_prediccion = f"pred_{nro_id}.tiff"
     db.commit()
     db.close()
-
-    if len(lista) == 0:
-        #no hay datos
-        return 1 
-
-    # si hay datos se trae desde minio 
-    client = Minio(
-            "localhost:9000",
-            access_key=DB_MINIO_USER,
-            secret_key=DB_MINIO_PASS,
-            secure=False)
-    client.fget_object(
-            "train-inputs",
-            f"{orden_nro}.tif",
-            f"tmp/descargas/{orden}.tif")
-    print("Archivo descargado")
-
-    # Todo sin problemas 
-    return 0 
-
-
-
+    client = get_minio_client()
+    bucket_name = "predicciones"
+    if not client.bucket_exists(bucket_name):
+        client.make_bucket(bucket_name)
+        print("Bucket predicciones creado")
+    client.fput_object(
+        bucket_name,
+        f"pred_{nro_id}",
+        f"ordenes/predicciones/pred_{nro_id}.tif"
+    )
+    print(f"Prediccion {nro_id} subida")
 
 
 # =========================
@@ -137,18 +195,12 @@ def preprocess(data):
 
 def guardar_pred_tif(pred, profile, orden_id):
     profile.update(count=1, dtype="float32")
-
-    path = f"ordenes/predictions/pred_{orden_id}.tif"
-
+    path = f"ordenes/predicciones/pred_{orden_id}.tif"
     import os
-    os.makedirs("ordenes/predictions", exist_ok=True)
-
+    os.makedirs("ordenes/predicciones", exist_ok=True)
     with rasterio.open(path, "w", **profile) as dst:
         dst.write(pred.astype("float32"), 1)
-
     return path
-
-
 # =========================
 # 📊 % AREA EN RIESGO
 # =========================
@@ -241,7 +293,7 @@ def run():
         orden = get_pending(db)
 
         if orden:
-            orden.status = "predicting"
+            orden.status = "Prediciendo.."
             db.commit()
 
             try:
