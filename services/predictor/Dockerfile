@@ -1,32 +1,35 @@
-FROM python:3.11
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Crear usuario no root
+# Dependencias del sistema necesarias para rasterio
+RUN apt-get update && apt-get install -y netcat-openbsd \
+    gdal-bin \
+    libgdal-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Usuario no root
 RUN useradd -m appuser
 
-# Instalar dependencias del sistema
-RUN apt-get update && apt-get install -y netcat-openbsd && rm -rf /var/lib/apt/lists/*
+# Requirements primero (cache docker)
+COPY predictor/requirements.txt .
 
-# Copiar requirements primero (mejor caching)
-COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar código
-COPY predictor/app .
+# Código
+COPY predictor/app ./app
 COPY db ./db
 
-# Dar permisos al usuario sobre /app
-RUN chown -R appuser:appuser /app
-
-# Script entrypoint
+# Entrypoint
 COPY predictor/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh && chown appuser:appuser /entrypoint.sh
+
+RUN chmod +x /entrypoint.sh
+
+# Directorios temporales
+RUN mkdir -p /app/tmp && chown -R appuser:appuser /app /entrypoint.sh
 
 ENV PYTHONPATH=/app
 
-# Cambiar a usuario no root 👇
 USER appuser
 
 ENTRYPOINT ["/entrypoint.sh"]
-

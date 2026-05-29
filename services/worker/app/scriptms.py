@@ -19,32 +19,35 @@ from db.models import Descargas
 print("imports cargados...!")
 
 
-def AlmacenarDescarga(nombre, dia):
-    db = SessionLocal()
-    nuevoArchivo = Descargas(
-        nombre_imagen=nombre,
-        dia_de_la_imagen=dia
+# ==================================================
+# MINIO
+# ==================================================
+def get_minio_client():
+    http_client = urllib3.PoolManager(
+        timeout=urllib3.Timeout(
+            connect=5.0,
+            read=30.0
+        )
     )
-    db.add(nuevoArchivo)
-    db.commit()
-    db.close()
-    client = Minio(
-        "localhost:9000",
-        access_key=os.getenv("DB_MINIO_USER"),
-        secret_key=os.getenv("DB_MINIO_PASS"),
-        secure=False
+    return Minio(
+        "minio:9000",
+        access_key=DB_MINIO_USER,
+        secret_key=DB_MINIO_PASS,
+        secure=False,
+        http_client=http_client
     )
-    bucket_name = "imagenes"
+def AlmacenarOrdenLista(nro_orden):
+    client = get_minio_client()
+    bucket_name = "ordenes"
     if not client.bucket_exists(bucket_name):
         client.make_bucket(bucket_name)
-        print("Bucket para las imagenes creado")
+        print("Bucket para las ordenes creado")
     client.fput_object(
-        "imagenes",
-        f"{nombre}.zip",
-        f"tmp/descargas/{nombre}.zip"
+        "ordenes",
+        f"escena_{nro_orden}.tif",
+        f"/app/ordenes/inputs/escena_{nro_orden}.tif"
     )
-    print(f"Archivo {nombre} subido")
-
+    print(f"Archivo escena_{nro_orden}.tif subido")
 
 
 # ==================================================
@@ -212,7 +215,7 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
     # ==================================================
     # GUARDAR STACK
     # ==================================================
-    ruta_stack = f"/app/ordenes/inputs/{orden_id}.tif"
+    ruta_stack = f"/app/ordenes/inputs/escena_{orden_id}.tif"
 
     profile["count"] = len(bandas_stack)
 
@@ -220,6 +223,8 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
 
         for i in range(len(bandas_stack)):
             dst.write(bandas_stack[i], i + 1)
+
+    AlmacenarOrdenLista(orden_id)
 
     print("Input generado OK")
 

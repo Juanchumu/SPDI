@@ -21,58 +21,68 @@ from db.models import Descargas
 
 print("imports cargados...!")
 
+# ==================================================
+# MINIO
+# ==================================================
+def get_minio_client():
+    http_client = urllib3.PoolManager(
+        timeout=urllib3.Timeout(
+            connect=5.0,
+            read=30.0
+        )
+    )
+    return Minio(
+        "minio:9000",
+        access_key=DB_MINIO_USER,
+        secret_key=DB_MINIO_PASS,
+        secure=False,
+        http_client=http_client
+    )
 
 # ==================================================
-# ALMACENAR DESCARGA
+# ALMACENAR ENTRENAMIENTOS
 # ==================================================
-def AlmacenarDescarga(nombre, dia):
-
+def AlmacenarEntrenamiento(nombre, dia):
     db = SessionLocal()
-
     nuevoArchivo = Descargas(
         nombre_imagen=nombre,
         dia_de_la_imagen=dia
     )
-
     db.add(nuevoArchivo)
     db.commit()
     db.close()
-
-    client = Minio(
-        "localhost:9000",
-        access_key=os.getenv("DB_MINIO_USER"),
-        secret_key=os.getenv("DB_MINIO_PASS"),
-        secure=False
-    )
-
-    bucket_name = "imagenes"
-
+    client = get_minio_client()
+    bucket_name = "train-inputs"
     if not client.bucket_exists(bucket_name):
         client.make_bucket(bucket_name)
-        print("Bucket para las imagenes creado")
-
+        print("Bucket para los inputs creado")
     client.fput_object(
-        "imagenes",
-        f"{nombre}.tif",
-        f"/app/dataset/train/inputs/{nombre}.tif"
+        bucket_name,
+        f"escena_{nombre}.tif",
+        f"/app/dataset/train/inputs/escena_{nombre}.tif"
     )
-
-    print(f"Archivo {nombre} subido")
-
+    print(f"Archivo escena {nombre} subido")
+    bucket_name = "train-masks"
+    if not client.bucket_exists(bucket_name):
+        client.make_bucket(bucket_name)
+        print("Bucket para los masks creado")
+    client.fput_object(
+        bucket_name,
+        f"escena_{nombre}.tif",
+        f"/app/dataset/train/inputs/escena_{nombre}.tif"
+    )
+    print(f"Archivo mask {nombre} subido")
 
 # ==================================================
 # FUNCION AUXILIAR
 # ==================================================
 def idx(a, b):
-
     return np.divide(
         a - b,
         a + b,
         out=np.zeros_like(a),
         where=(a + b) != 0
     )
-
-
 # ==================================================
 # FUNCION PRINCIPAL
 # ==================================================
@@ -373,7 +383,7 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
     # ==================================================
     # DB + MINIO
     # ==================================================
-    #AlmacenarDescarga(f"escena_{orden_id}",dia_de_la_imagen)
+    AlmacenarEntrenamiento(orden_id,dia_de_la_imagen)
 
     print("Dataset generado OK")
 

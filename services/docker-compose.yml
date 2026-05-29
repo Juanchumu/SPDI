@@ -147,39 +147,26 @@ services:
     volumes:
       - ./tmp:/app/tmp
     restart: unless-stopped
+  predictor:
+    build:
+      context: .
+      dockerfile: ./predictor/Dockerfile
+    command: python -u -m app.predictor
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DATABASE_URL=${DATABASE_URL}
 
-# modelador:
-#    build:
-#      context: .
-#      dockerfile: ./modelador/Dockerfile
-#    command: python -u -m app.modelador
-#    depends_on:
-#      db:
-#        condition: service_healthy
-#    environment:
-#      - DB_HOST=${DB_HOST}
-#      - DB_PORT=${DB_PORT}
-#      - DB_USER=${DB_USER}
-#      - DB_PASSWORD=${DB_PASSWORD}
-#      - DB_NAME=${DB_NAME}
-#      - DATABASE_URL=${DATABASE_URL}
-#    restart: unless-stopped
-# predictor:
-#    build:
-#      context: .
-#      dockerfile: ./predictor/Dockerfile
-#    command: python -u -m app.predictor
-#    depends_on:
-#      db:
-#        condition: service_healthy
-#    environment:
-#      - DB_HOST=${DB_HOST}
-#      - DB_PORT=${DB_PORT}
-#      - DB_USER=${DB_USER}
-#      - DB_PASSWORD=${DB_PASSWORD}
-#      - DB_NAME=${DB_NAME}
-#      - DATABASE_URL=${DATABASE_URL}
-#    restart: unless-stopped
+      - DB_MINIO_USER=${DB_MINIO_USER}
+      - DB_MINIO_PASS=${DB_MINIO_PASS}
+
+    restart: unless-stopped
 
 
 
