@@ -61,8 +61,6 @@ with engine.connect() as conn:
             id SERIAL PRIMARY KEY,
             args TEXT,
             status TEXT,
-            ruta_safe TEXT,
-            ruta_stack TEXT,
             prediccion TEXT,
             modelo_utilizado TEXT,
             created_at TIMESTAMP,

@@ -1,113 +1,67 @@
+import os
 import time
 import json
+import shutil
+import urllib3
+
 import torch
+import torch.nn as nn
 import rasterio
 import numpy as np
+
+from minio import Minio
 from sqlalchemy.orm import Session
 from scipy.ndimage import label, find_objects
 
 from db.db import SessionLocal
-from db.models import Orden
+from db.models import Orden, Modelos
+
+# ==================================================
+# CONFIG
+# ==================================================
+
+DB_MINIO_USER = os.getenv("MINIO_ROOT_USER", "minioadmin")
+DB_MINIO_PASS = os.getenv("MINIO_ROOT_PASSWORD", "minioadmin")
+
+TMP_DIR = "tmp"
+ORDERS_DIR = f"{TMP_DIR}/ordenes"
+MODELS_DIR = f"{TMP_DIR}/modelos"
+PRED_DIR = f"{TMP_DIR}/predicciones"
+
+os.makedirs(ORDERS_DIR, exist_ok=True)
+os.makedirs(MODELS_DIR, exist_ok=True)
+os.makedirs(PRED_DIR, exist_ok=True)
+
+device = torch.device("cpu")
 
 # ==================================================
 # MINIO
 # ==================================================
+
 def get_minio_client():
-    #Para que no cuelgue el contenedor si no hay miniO
     http_client = urllib3.PoolManager(
-            timeout=urllib3.Timeout(
-                connect=5.0,
-                read=30.0))
+        timeout=urllib3.Timeout(
+            connect=5.0,
+            read=30.0
+        )
+    )
+
     return Minio(
         "minio:9000",
         access_key=DB_MINIO_USER,
         secret_key=DB_MINIO_PASS,
-        secure=False
+        secure=False,
+        http_client=http_client
     )
 
 # ==================================================
-# DESCARGA DE ORDDEN PARA PREDICCIÓN
+# MODELO
 # ==================================================
-def TraerDeMiniOOrden(nro_orden_id):
-    db = SessionLocal()
-    datos = db.query(Orden).filter(Orden.id == nro_orden_id).first()
-    db.close()
-    if len(datos) == 0:
-        print("No hay nada que predecir.")
-        return 1
-    #Crear directorios en el contenedor:
-    #borrar archivos viejos del contenedor: 
-    shutil.rmtree("tmp/ordenes", ignore_errors=True)
-    os.makedirs("tmp/ordenes/inputs", exist_ok=True)
-    client = get_minio_client()
-    #Descargamos el inputs
-    client.fget_object(
-            "ordenes",
-            f"escena_{d.id}.tif",
-            f"tmp/ordenes/inputs/escena_{d.id}.tif"
-            )
-    print(f"Orden input {d.id} descargado") 
-    return 0
-
-def TraerDeMiniOModelos():
-    #esto tiene que traer el ultimo modelo o
-    # si es que hay modelos
-    db = SessionLocal()
-    datos = db.query(Modelos).last()
-    db.close()
-    if datos is None:
-        print("No hay modelos")
-        return 2 
-    if len(datos) == 0:
-        print("No hay modelos.")
-        return 2
-    #Crear directorios en el contenedor:
-    #borrar archivos viejos del contenedor: 
-    shutil.rmtree("tmp/modelos", ignore_errors=True)
-    #Creamos el directorio para los modelos
-    os.makedirs("tmp/modelos", exist_ok=True)
-    client = get_minio_client()
-    #Descargamos el modelo 
-    client.fget_object(
-            "modelos",
-            f"fire_model_ver_{datos.id}.tif",
-            f"tmp/modelos/fire_model_ver_{datos.id}.tif"
-            )
-    print(f"Modelo {datos.id} descargado") 
-    return 0
-# ==================================================
-# Almacenar PREDICCIÓN 
-# ==================================================
-def AlmacenarPrediccion(nro_id, modelo_id):
-    db = SessionLocal()
-    datos = db.query(Orden).filter(Orden.id == nro_id).first()
-    datos.status = f"Predicha"
-    datos.modelo_utilizado = f"fire_model_ver_{modelo_id}"
-    datos.archivo_prediccion = f"pred_{nro_id}.tiff"
-    db.commit()
-    db.close()
-    client = get_minio_client()
-    bucket_name = "predicciones"
-    if not client.bucket_exists(bucket_name):
-        client.make_bucket(bucket_name)
-        print("Bucket predicciones creado")
-    client.fput_object(
-        bucket_name,
-        f"pred_{nro_id}",
-        f"ordenes/predicciones/pred_{nro_id}.tif"
-    )
-    print(f"Prediccion {nro_id} subida")
-
-
-# =========================
-# 🔧 MODELO
-# =========================
-
-import torch.nn as nn
 
 class ConvBlock(nn.Module):
     def __init__(self, in_c, out_c):
         super().__init__()
+
         self.net = nn.Sequential(
             nn.Conv2d(in_c, out_c, 3, padding=1),
             nn.ReLU(),
@@ -124,7 +78,13 @@ class TemporalFireNet(nn.Module):
         super().__init__()
 
         self.encoder = ConvBlock(5, 32)
-        self.lstm = nn.LSTM(input_size=32, hidden_size=64, batch_first=True)
+
+        self.lstm = nn.LSTM(
+            input_size=32,
+            hidden_size=64,
+            batch_first=True
+        )
+
         self.decoder = nn.Sequential(
             nn.Conv2d(64, 32, 3, padding=1),
             nn.ReLU(),
@@ -136,104 +96,157 @@ class TemporalFireNet(nn.Module):
         B, T, C, H, W = x.shape
 
         feats = []
+
         for t in range(T):
             ft = self.encoder(x[:, t])
-            ft = ft.mean(dim=[2,3])
+            ft = ft.mean(dim=[2, 3])
             feats.append(ft)
 
         feats = torch.stack(feats, dim=1)
 
         out, _ = self.lstm(feats)
-        last = out[:, -1]
 
+        last = out[:, -1]
         last = last[:, :, None, None].expand(-1, -1, H, W)
 
         return self.decoder(last)
 
+# ==================================================
+# DESCARGAR MODELO
+# ==================================================
 
-# =========================
-# 🚀 CARGA
-# =========================
-
-MODEL_PATH = "model.pth"
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-model = TemporalFireNet()
-model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
-model.to(device)
-model.eval()
-
-print("Modelo cargado OK")
-
-
-# =========================
-# 📦 DATA
-# =========================
-
+def descargar_ultimo_modelo():
+    db = SessionLocal()
+    try:
+        modelo = (
+            db.query(Modelos)
+            .order_by(Modelos.id.desc())
+            .first()
+        )
+        if modelo is None:
+            raise Exception("No hay modelos en la DB")
+        model_path = f"{MODELS_DIR}/fire_model_ver_{modelo.id}.pth"
+        if not os.path.exists(model_path):
+            client = get_minio_client()
+            client.fget_object(
+                "modelos",
+                f"fire_model_ver_{modelo.id}.pth",
+                model_path
+            )
+            print(f"Modelo descargado: {model_path}")
+        return modelo.id, model_path
+    finally:
+        db.close()
+# ==================================================
+# CARGAR MODELO
+# ==================================================
+def cargar_modelo(model_path):
+    model = TemporalFireNet()
+    model.load_state_dict(
+        torch.load(
+            model_path,
+            map_location=device
+        )
+    )
+    model.to(device)
+    model.eval()
+    print("Modelo cargado OK")
+    return model
+# ==================================================
+# DESCARGAR ORDEN
+# ==================================================
+def descargar_orden(orden_id):
+    client = get_minio_client()
+    local_path = f"{ORDERS_DIR}/escena_{orden_id}.tif"
+    client.fget_object(
+        "ordenes",
+        f"escena_{orden_id}.tif",
+        local_path
+    )
+    print(f"Orden descargada: {local_path}")
+    return local_path
+# ==================================================
+# CARGAR STACK
+# ==================================================
 def cargar_stack(ruta):
     with rasterio.open(ruta) as src:
         data = src.read().astype(np.float32)
         profile = src.profile
     return data, profile
-
-
+# ==================================================
+# PREPROCESS
+# ==================================================
 def preprocess(data):
-    x = data.reshape(5, 5, data.shape[1], data.shape[2])
+    if data.shape[0] != 15:
+        raise Exception(
+            f"El TIFF debe tener 15 bandas y tiene {data.shape[0]}"
+        )
+    H = data.shape[1]
+    W = data.shape[2]
+
+    # 3 tiempos, 5 canales
+    x = data.reshape(3, 5, H, W)
 
     x_min = x.min()
     x_max = x.max()
+
     x = (x - x_min) / (x_max - x_min + 1e-6)
 
-    x = torch.tensor(x, dtype=torch.float32).unsqueeze(0)
+    x = torch.tensor(
+        x,
+        dtype=torch.float32
+    ).unsqueeze(0)
+
     return x
 
-
-# =========================
-# 🗺️ GUARDAR TIF
-# =========================
-
+# ==================================================
+# GUARDAR PREDICCION
+# ==================================================
 def guardar_pred_tif(pred, profile, orden_id):
-    profile.update(count=1, dtype="float32")
-    path = f"ordenes/predicciones/pred_{orden_id}.tif"
-    import os
-    os.makedirs("ordenes/predicciones", exist_ok=True)
+    profile.update(
+        count=1,
+        dtype="float32"
+    )
+    path = f"{PRED_DIR}/pred_{orden_id}.tif"
     with rasterio.open(path, "w", **profile) as dst:
         dst.write(pred.astype("float32"), 1)
     return path
-# =========================
-# 📊 % AREA EN RIESGO
-# =========================
-
+# ==================================================
+# SUBIR PREDICCION
+# ==================================================
+def subir_prediccion(orden_id, local_path):
+    client = get_minio_client()
+    bucket_name = "predicciones"
+    if not client.bucket_exists(bucket_name):
+        client.make_bucket(bucket_name)
+    client.fput_object(
+        bucket_name,
+        f"pred_{orden_id}.tif",
+        local_path
+    )
+    print(f"Prediccion subida: pred_{orden_id}.tif")
+# ==================================================
+# METRICAS
+# ==================================================
 def calcular_porcentaje(pred, threshold=0.5):
     mask = pred > threshold
     return float(mask.mean()) * 100
-
-
-# =========================
-# 📦 BOUNDING BOXES
-# =========================
-
+# ==================================================
+# ZONAS
+# ==================================================
 def detectar_zonas(pred, threshold=0.5, min_pixels=50):
     binary = pred > threshold
-
     labeled, num = label(binary)
     slices = find_objects(labeled)
-
     boxes = []
-
     for i, slc in enumerate(slices):
         if slc is None:
             continue
-
         region = labeled[slc] == (i + 1)
-
         if region.sum() < min_pixels:
             continue
-
         y1, y2 = slc[0].start, slc[0].stop
         x1, x2 = slc[1].start, slc[1].stop
-
         boxes.append({
             "x1": int(x1),
             "y1": int(y1),
@@ -241,76 +254,87 @@ def detectar_zonas(pred, threshold=0.5, min_pixels=50):
             "y2": int(y2),
             "pixels": int(region.sum())
         })
-
     return boxes
-
-
-# =========================
-# 🔮 PREDICCIÓN COMPLETA
-# =========================
-
-def predecir(ruta_stack, orden_id):
+# ==================================================
+# PREDICCION
+# ==================================================
+def predecir(model, ruta_stack, orden_id):
     data, profile = cargar_stack(ruta_stack)
-
     x = preprocess(data).to(device)
-
     with torch.no_grad():
         pred = model(x)
-
     pred = pred.cpu().numpy()[0, 0]
-
-    # 🗺️ guardar tif
-    tif_path = guardar_pred_tif(pred, profile, orden_id)
-
-    # 📊 porcentaje
+    tif_path = guardar_pred_tif(
+        pred,
+        profile,
+        orden_id
+    )
     porcentaje = calcular_porcentaje(pred)
-
-    # 📦 zonas
     zonas = detectar_zonas(pred)
-
     resultado = {
         "riesgo": "alto" if porcentaje > 10 else "bajo",
         "porcentaje_area_riesgo": porcentaje,
         "zonas_criticas": zonas,
-        "archivo_prediccion": tif_path
+        "archivo_prediccion": f"pred_{orden_id}.tif"
     }
-
-    return json.dumps(resultado)
-
-
-# =========================
-# 🔁 WORKER
-# =========================
-
+    return resultado, tif_path
+# ==================================================
+# BUSCAR ORDEN PENDIENTE
+# ==================================================
 def get_pending(db: Session):
-    return db.query(Orden).filter(Orden.status == "predict-ready").first()
-
-
+    return (
+        db.query(Orden)
+        .filter(
+            Orden.status == "Lista para predecir.."
+        )
+        .order_by(Orden.id.asc())
+        .first()
+    )
+# ==================================================
+# WORKER
+# ==================================================
 def run():
+    modelo_id, model_path = descargar_ultimo_modelo()
+    model = cargar_modelo(model_path)
     while True:
         db = SessionLocal()
-
-        orden = get_pending(db)
-
-        if orden:
+        try:
+            orden = get_pending(db)
+            if orden is None:
+                time.sleep(5)
+                continue
+            print(f"Procesando orden {orden.id}")
             orden.status = "Prediciendo.."
             db.commit()
-
             try:
-                pred = predecir(orden.ruta_stack, orden.id)
-
-                orden.status = "done"
-                orden.prediccion = pred
-
+                ruta_stack = descargar_orden(orden.id)
+                resultado, tif_path = predecir(
+                    model,
+                    ruta_stack,
+                    orden.id
+                )
+                subir_prediccion(
+                    orden.id,
+                    tif_path
+                )
+                orden.status = "Predicha"
+                orden.prediccion = json.dumps(resultado)
+                orden.modelo_utilizado = f"fire_model_ver_{modelo_id}"
+                db.commit()
+                print(f"Orden {orden.id} completada")
             except Exception as e:
-                orden.status = "error"
-                print(f"Error: {e}")
-
-            db.commit()
-
-        db.close()
+                db.rollback()
+                orden.status = "Error"
+                db.commit()
+                print(f"Error procesando orden {orden.id}: {e}")
+        except Exception as e:
+            print(f"Error general worker: {e}")
+        finally:
+            db.close()
         time.sleep(5)
 
-
+# ==================================================
+# MAIN
+# ==================================================
 if __name__ == "__main__":
     run()
