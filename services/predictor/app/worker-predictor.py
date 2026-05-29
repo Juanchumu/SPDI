@@ -37,7 +37,6 @@ device = torch.device("cpu")
 # ==================================================
 # MINIO
 # ==================================================
-
 def get_minio_client():
     http_client = urllib3.PoolManager(
         timeout=urllib3.Timeout(
@@ -45,7 +44,6 @@ def get_minio_client():
             read=30.0
         )
     )
-
     return Minio(
         "minio:9000",
         access_key=DB_MINIO_USER,
@@ -53,7 +51,6 @@ def get_minio_client():
         secure=False,
         http_client=http_client
     )
-
 # ==================================================
 # MODELO
 # ==================================================
