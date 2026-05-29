@@ -9,9 +9,6 @@ class Orden(Base):
     id = Column(Integer, primary_key=True)
     args = Column(Text)  # JSON en string
     status = Column(String, default="pending")
-
-    ruta_safe = Column(Text, nullable=True)
-    ruta_stack = Column(Text, nullable=True)
     prediccion = Column(Text, nullable=True)
     modelo_utilizado = Column(Text, nullable=True)
 
