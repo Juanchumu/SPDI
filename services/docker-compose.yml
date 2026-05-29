@@ -24,6 +24,11 @@ services:
       dockerfile: ./api/Dockerfile
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD","curl", "-f", "http://localhost:8000/docs"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     depends_on:
       db:
         condition: service_healthy
@@ -48,6 +53,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      api:
+        condition: service_healthy
+
     environment:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
@@ -65,6 +73,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      api:
+        condition: service_healthy
+
     environment:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
@@ -85,6 +96,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      api:
+        condition: service_healthy
+
     environment:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
@@ -115,6 +129,8 @@ services:
     command: python -u -m app.modelador
     depends_on:
       db:
+        condition: service_healthy
+      api:
         condition: service_healthy
       minio:
         condition: service_started

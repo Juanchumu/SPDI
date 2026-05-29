@@ -6,7 +6,7 @@ import time
 from datetime import timedelta
 
 from db.db import SessionLocal
-from db.models import Orden, Entrenamiento, Product, Descargas
+from db.models import Orden, Entrenamiento, Modelos, Descargas
 import os
 
 

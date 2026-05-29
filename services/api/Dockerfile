@@ -30,4 +30,5 @@ USER appuser
 
 ENTRYPOINT ["/entrypoint.sh"]
 
-CMD ["sh", "-c", "python app/crearDB.py && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+#hay problemas al crear la db
+CMD ["sh", "-c", "python app/crearDB.py; uvicorn app.main:app --host 0.0.0.0 --port 8000"]

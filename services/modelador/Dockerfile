@@ -33,7 +33,7 @@ RUN useradd -m appuser
 # Python requirements
 # ==================================================
 
-COPY requirements.txt .
+COPY modelador/requirements.txt .
 
 RUN pip install --upgrade pip
 
@@ -43,7 +43,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Código
 # ==================================================
 
-COPY modelador/app .
+COPY modelador/app ./app
+COPY db ./db
 
 COPY modelador/entrypoint.sh /entrypoint.sh
 
