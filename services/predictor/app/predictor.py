@@ -121,7 +121,8 @@ def descargar_ultimo_modelo():
             .first()
         )
         if modelo is None:
-            raise Exception("No hay modelos en la DB")
+            print("No hay modelos en la DB")
+            return None, None
         model_path = f"{MODELS_DIR}/fire_model_ver_{modelo.id}.pth"
         if not os.path.exists(model_path):
             client = get_minio_client()
@@ -291,9 +292,12 @@ def get_pending(db: Session):
 # WORKER
 # ==================================================
 def run():
-    modelo_id, model_path = descargar_ultimo_modelo()
-    model = cargar_modelo(model_path)
     while True:
+        modelo_id, model_path = descargar_ultimo_modelo()
+        model = cargar_modelo(model_path)
+        if modelo_id == None:
+            time.sleep(5)
+            continue
         db = SessionLocal()
         try:
             orden = get_pending(db)
