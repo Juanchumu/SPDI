@@ -1,6 +1,7 @@
 detección de incendios basada en evolución temporal multibanda.
 # Cómo usar
 
+## 1 
 dentro del directorio services se tiene que correr:
 
 ```bash
@@ -10,11 +11,27 @@ esto es porque algunos contenedores generan archivos en local, de momento...
 
 en los directorios
 
+## 2 
+### Levantar servicios
+Por primera vez solo hay que levantar 
+la api y la db 
 
-## Levantar servicios
+```bash
+sudo docker compose up --build db api 
+sudo docker-compose up api db worker minio
 
-Utilizá uno de estos comandos según tu instalación de Docker:
+```
+y despues entrar al contenedor de la api y correr  
 
+```bash
+sudo docker exec -it services-api-1 
+
+python app/crearDB.py 
+
+```
+Con esto ya estarian creadas las tablas 
+
+Ctrl + C para detener todo y ahi recien  levantar todo según tu instalación de Docker:
 ```bash
 sudo docker-compose up --build
 # o
@@ -23,7 +40,6 @@ sudo docker compose up --build
 sudo docker-compose up api db worker minio
 
 ```
-
 ---
 
 # Interactuar con la API
