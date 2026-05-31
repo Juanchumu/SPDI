@@ -33,31 +33,67 @@ device = "cpu"
 # ==================================================
 # DATASET
 # ==================================================
-
 class FireDataset(Dataset):
+    TARGET_H = 200
+    TARGET_W = 200
+
     def __init__(self, root):
         self.root = root
         self.inputs_dir = os.path.join(root, "inputs")
         self.masks_dir = os.path.join(root, "masks")
         self.files = sorted(os.listdir(self.inputs_dir))
+
     def __len__(self):
         return len(self.files)
+
     def _load_tif(self, path):
         with rasterio.open(path) as src:
             return src.read().astype(np.float32)
+
+    def _center_crop(self, arr):
+        """
+        arr: (bandas, H, W)
+        devuelve: (bandas, 200, 200)
+        """
+        _, h, w = arr.shape
+
+        if h < self.TARGET_H or w < self.TARGET_W:
+            raise ValueError(
+                f"Imagen demasiado pequeña: {h}x{w}. "
+                f"Mínimo requerido: {self.TARGET_H}x{self.TARGET_W}"
+            )
+
+        start_h = (h - self.TARGET_H) // 2
+        start_w = (w - self.TARGET_W) // 2
+
+        end_h = start_h + self.TARGET_H
+        end_w = start_w + self.TARGET_W
+
+        return arr[:, start_h:end_h, start_w:end_w]
+
     def __getitem__(self, idx):
         fname = self.files[idx]
+
         x_path = os.path.join(self.inputs_dir, fname)
         y_path = os.path.join(self.masks_dir, fname)
+
         x = self._load_tif(x_path)
         y = self._load_tif(y_path)
-        # 15 bandas = 3 tiempos × 5 variables
-        x = x.reshape(3, 5, x.shape[1], x.shape[2])
+
+        # Recorte central a 200x200
+        x = self._center_crop(x)
+        y = self._center_crop(y)
+
+        # 15 bandas -> (3 tiempos, 5 variables, 200, 200)
+        x = x.reshape(3, 5, 200, 200)
+
         x_min = x.min()
         x_max = x.max()
         x = (x - x_min) / (x_max - x_min + 1e-6)
+
         x = torch.tensor(x, dtype=torch.float32)
         y = torch.tensor(y, dtype=torch.float32)
+
         return x, y
 # ==================================================
 # MODELO
@@ -122,7 +158,7 @@ def get_minio_client():
 def TraerDeMiniOEntrenamientos():
     db = SessionLocal()
     datos = db.query(Entrenamiento).filter(
-        Entrenamiento.status == "Lista para entrenar.."
+        Entrenamiento.status == "lista-para-entrenar"
     ).all()
     db.close()
     if len(datos) == 0:
@@ -158,7 +194,7 @@ def TraerDeMiniOEntrenamientos():
 def ConsultarNroDeEntrenamientos():
     db = SessionLocal()
     datos = db.query(Entrenamiento).filter(
-        Entrenamiento.status == "Lista para entrenar.."
+        Entrenamiento.status == "lista-para-entrenar"
     ).all()
     db.close()
     return len(datos)
@@ -167,15 +203,27 @@ def ConsultarNroDeEntrenamientos():
 # ==================================================
 def ConsultarModelosNroDeEntrenamiento(nro):
     db = SessionLocal()
-    nombre_modelo = f"fire_model_ver_{nro}.pth"
-    modelo = db.query(Modelos).filter(
-        Modelos.name == nombre_modelo
-    ).first()
-    db.close()
-    if modelo is None:
-        #No existe la tabla modelos o no hay modelos
+    try:
+        nombre_modelo = f"fire_model_ver_{nro}.pth"
+        ultimo_modelo = (
+            db.query(Modelos)
+            .order_by(Modelos.id.desc())
+            .first()
+        )
+        if ultimo_modelo is None:
+            print("No hay modelos")
+            return 1
+        modelo = (
+            db.query(Modelos)
+            .filter(Modelos.name == nombre_modelo)
+            .first()
+        )
+        if modelo is None:
+            print(f"El modelo {nro} no existe")
+            return 2
         return 0
-    return 1
+    finally:
+        db.close()
 # ==================================================
 # SUBIR MODELO
 # ==================================================
@@ -263,9 +311,16 @@ def run():
         try:
             nro = ConsultarNroDeEntrenamientos()
             print(f"Entrenamientos disponibles: {nro}")
+            if nro > 0 and ConsultarModelosNroDeEntrenamiento(nro) == 1:
+                print("Nuevo modelo inicial requerido")
+                descarga = TraerDeMiniOEntrenamientos()
+                if descarga == 0:
+                    EntrenarModelo(nro)
             if nro > 0 and (nro % 10) == 0:
+                #aca tendria que ser, si no hay modelos, y hay 10 registros
+                #se empieza a modelar 
                 estado = ConsultarModelosNroDeEntrenamiento(nro)
-                if estado == 0:
+                if estado == 2:
                     print("Nuevo modelo requerido")
                     descarga = TraerDeMiniOEntrenamientos()
                     if descarga == 0:

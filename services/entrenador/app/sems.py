@@ -13,6 +13,7 @@ import pystac_client
 
 from odc.stac import stac_load
 
+import urllib3
 from minio import Minio
 
 from db.db import SessionLocal
@@ -24,6 +25,8 @@ print("imports cargados...!")
 # ==================================================
 # MINIO
 # ==================================================
+DB_MINIO_USER = os.getenv("DB_MINIO_USER")
+DB_MINIO_PASS = os.getenv("DB_MINIO_PASS")
 def get_minio_client():
     http_client = urllib3.PoolManager(
         timeout=urllib3.Timeout(
@@ -69,7 +72,7 @@ def AlmacenarEntrenamiento(nombre, dia):
     client.fput_object(
         bucket_name,
         f"escena_{nombre}.tif",
-        f"/app/dataset/train/inputs/escena_{nombre}.tif"
+        f"/app/dataset/train/masks/escena_{nombre}.tif"
     )
     print(f"Archivo mask {nombre} subido")
 

@@ -18,13 +18,12 @@ la api y la db
 
 ```bash
 sudo docker compose up --build db api 
-sudo docker-compose up api db worker minio
 
 ```
 y despues entrar al contenedor de la api y correr  
 
 ```bash
-sudo docker exec -it services-api-1 
+sudo docker exec -it services-api-1  bash
 
 python app/crearDB.py 
 
