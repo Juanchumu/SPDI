@@ -31,10 +31,16 @@ python app/crearDB.py
 Con esto ya estarian creadas las tablas 
 
 Ctrl + C para detener todo y ahi recien  levantar todo según tu instalación de Docker:
+
+nota: el gion o espacio, determina el funcionamiento, se crea con uno o con otro
+pero no se puede levantar denuevo con el otro comando porque da error 
+
+demora +1500 segundos = 25 minutos
+
 ```bash
 sudo docker-compose up --build
 # o
-sudo docker compose up --build
+sudo docker compose up --build 
 
 sudo docker-compose up api db worker minio
 

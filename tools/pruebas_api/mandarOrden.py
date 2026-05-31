@@ -31,7 +31,7 @@ while True:
     )
     if r.status_code != 200:
         print("Error consultando estado:", r.status_code)
-        continue
+        break
     print(r.json())
     time.sleep(1)
 

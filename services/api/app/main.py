@@ -62,7 +62,7 @@ def obtener_orden(id: int, db: Session = Depends(get_db)):
 
     respuesta = f'Estado: {orden.status}'
     if (orden.status == 'Predicha'):
-        respuesta = orden.prediccion
+        respuesta = respuesta +"\n"+ orden.prediccion +"\n"+ "Modelo Utilizado:"+ orden.modelo_utilizado
     return respuesta
 
 
