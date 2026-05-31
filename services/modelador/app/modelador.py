@@ -205,29 +205,23 @@ def ConsultarModelosNroDeEntrenamiento(nro):
     db = SessionLocal()
     try:
         nombre_modelo = f"fire_model_ver_{nro}.pth"
-
         ultimo_modelo = (
             db.query(Modelos)
             .order_by(Modelos.id.desc())
             .first()
         )
-
         if ultimo_modelo is None:
             print("No hay modelos")
-            return False
-
+            return 1
         modelo = (
             db.query(Modelos)
             .filter(Modelos.name == nombre_modelo)
             .first()
         )
-
         if modelo is None:
-            print("Este modelo no existe")
-            return False
-
-        return True
-
+            print(f"El modelo {nro} no existe")
+            return 2
+        return 0
     finally:
         db.close()
 # ==================================================
@@ -317,7 +311,7 @@ def run():
         try:
             nro = ConsultarNroDeEntrenamientos()
             print(f"Entrenamientos disponibles: {nro}")
-            if nro > 0 and ConsultarModelosNroDeEntrenamiento(nro) == False:
+            if nro > 0 and ConsultarModelosNroDeEntrenamiento(nro) == 1:
                 print("Nuevo modelo inicial requerido")
                 descarga = TraerDeMiniOEntrenamientos()
                 if descarga == 0:
@@ -326,7 +320,7 @@ def run():
                 #aca tendria que ser, si no hay modelos, y hay 10 registros
                 #se empieza a modelar 
                 estado = ConsultarModelosNroDeEntrenamiento(nro)
-                if estado == False:
+                if estado == 2:
                     print("Nuevo modelo requerido")
                     descarga = TraerDeMiniOEntrenamientos()
                     if descarga == 0:

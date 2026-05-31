@@ -6,6 +6,7 @@ import numpy as np
 import rasterio
 from rasterio.enums import Resampling
 from datetime import datetime, timedelta, UTC
+import urllib3
 
 import planetary_computer
 import pystac_client
@@ -22,6 +23,8 @@ print("imports cargados...!")
 # ==================================================
 # MINIO
 # ==================================================
+DB_MINIO_USER = os.getenv("DB_MINIO_USER")
+DB_MINIO_PASS = os.getenv("DB_MINIO_PASS")
 def get_minio_client():
     http_client = urllib3.PoolManager(
         timeout=urllib3.Timeout(

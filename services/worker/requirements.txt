@@ -6,3 +6,4 @@ odc-stac
 minio
 SQLAlchemy
 psycopg2-binary
+urllib3
