@@ -122,7 +122,7 @@ def get_minio_client():
 def TraerDeMiniOEntrenamientos():
     db = SessionLocal()
     datos = db.query(Entrenamiento).filter(
-        Entrenamiento.status == "Lista para entrenar.."
+        Entrenamiento.status == "lista-para-entrenar"
     ).all()
     db.close()
     if len(datos) == 0:
@@ -158,7 +158,7 @@ def TraerDeMiniOEntrenamientos():
 def ConsultarNroDeEntrenamientos():
     db = SessionLocal()
     datos = db.query(Entrenamiento).filter(
-        Entrenamiento.status == "Lista para entrenar.."
+        Entrenamiento.status == "lista-para-entrenar"
     ).all()
     db.close()
     return len(datos)
@@ -167,15 +167,33 @@ def ConsultarNroDeEntrenamientos():
 # ==================================================
 def ConsultarModelosNroDeEntrenamiento(nro):
     db = SessionLocal()
-    nombre_modelo = f"fire_model_ver_{nro}.pth"
-    modelo = db.query(Modelos).filter(
-        Modelos.name == nombre_modelo
-    ).first()
-    db.close()
-    if modelo is None:
-        #No existe la tabla modelos o no hay modelos
-        return 0
-    return 1
+    try:
+        nombre_modelo = f"fire_model_ver_{nro}.pth"
+
+        ultimo_modelo = (
+            db.query(Modelos)
+            .order_by(Modelos.id.desc())
+            .first()
+        )
+
+        if ultimo_modelo is None:
+            print("No hay modelos")
+            return False
+
+        modelo = (
+            db.query(Modelos)
+            .filter(Modelos.name == nombre_modelo)
+            .first()
+        )
+
+        if modelo is None:
+            print("Este modelo no existe")
+            return False
+
+        return True
+
+    finally:
+        db.close()
 # ==================================================
 # SUBIR MODELO
 # ==================================================
@@ -263,9 +281,16 @@ def run():
         try:
             nro = ConsultarNroDeEntrenamientos()
             print(f"Entrenamientos disponibles: {nro}")
+            if nro > 0 and ConsultarModelosNroDeEntrenamiento(nro) == False:
+                print("Nuevo modelo inicial requerido")
+                descarga = TraerDeMiniOEntrenamientos()
+                if descarga == 0:
+                    EntrenarModelo(nro)
             if nro > 0 and (nro % 10) == 0:
+                #aca tendria que ser, si no hay modelos, y hay 10 registros
+                #se empieza a modelar 
                 estado = ConsultarModelosNroDeEntrenamiento(nro)
-                if estado == 0:
+                if estado == False:
                     print("Nuevo modelo requerido")
                     descarga = TraerDeMiniOEntrenamientos()
                     if descarga == 0:

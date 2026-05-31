@@ -24,11 +24,11 @@ services:
       dockerfile: ./api/Dockerfile
     ports:
       - "8000:8000"
-    healthcheck:
-      test: ["CMD","curl", "-f", "http://localhost:8000/docs"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+    #healthcheck:
+      #test: ["CMD","curl", "-f", "http://localhost:8000/docs"]
+      #interval: 5s
+      #timeout: 5s
+      #retries: 10
     depends_on:
       db:
         condition: service_healthy
@@ -53,8 +53,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      api:
-        condition: service_healthy
+          #api:
+        #condition: service_healthy
 
     environment:
       - DB_HOST=${DB_HOST}
@@ -73,8 +73,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      api:
-        condition: service_healthy
+          #api:
+          #condition: service_healthy
 
     environment:
       - DB_HOST=${DB_HOST}
@@ -96,8 +96,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      api:
-        condition: service_healthy
+          #api:
+          #condition: service_healthy
 
     environment:
       - DB_HOST=${DB_HOST}
@@ -106,6 +106,8 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
       - DATABASE_URL=${DATABASE_URL}
+      - DB_MINIO_USER=${DB_MINIO_USER}
+      - DB_MINIO_PASS=${DB_MINIO_PASS}
     volumes:                           # 
       - ./dataset:/app/dataset     # 
     restart: unless-stopped
@@ -130,8 +132,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      api:
-        condition: service_healthy
+          #api:
+          #condition: service_healthy
       minio:
         condition: service_started
     environment:

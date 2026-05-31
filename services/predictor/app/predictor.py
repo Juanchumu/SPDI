@@ -294,10 +294,10 @@ def get_pending(db: Session):
 def run():
     while True:
         modelo_id, model_path = descargar_ultimo_modelo()
-        model = cargar_modelo(model_path)
         if modelo_id == None:
             time.sleep(5)
             continue
+        model = cargar_modelo(model_path)
         db = SessionLocal()
         try:
             orden = get_pending(db)
