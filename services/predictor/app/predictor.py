@@ -20,8 +20,8 @@ from db.models import Orden, Modelos
 # CONFIG
 # ==================================================
 
-DB_MINIO_USER = os.getenv("MINIO_ROOT_USER", "minioadmin")
-DB_MINIO_PASS = os.getenv("MINIO_ROOT_PASSWORD", "minioadmin")
+DB_MINIO_USER = os.getenv("DB_MINIO_USER")
+DB_MINIO_PASS = os.getenv("DB_MINIO_PASS")
 
 TMP_DIR = "tmp"
 ORDERS_DIR = f"{TMP_DIR}/ordenes"
@@ -113,6 +113,8 @@ class TemporalFireNet(nn.Module):
 # ==================================================
 
 def descargar_ultimo_modelo():
+    #Un tiempo largo para que no interfiera 
+    time.sleep(5)
     db = SessionLocal()
     try:
         modelo = (
@@ -128,7 +130,8 @@ def descargar_ultimo_modelo():
             client = get_minio_client()
             client.fget_object(
                 "modelos",
-                f"fire_model_ver_{modelo.id}.pth",
+                #f"fire_model_ver_{modelo.id}.pth",
+                modelo.name,
                 model_path
             )
             print(f"Modelo descargado: {model_path}")

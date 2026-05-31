@@ -33,31 +33,67 @@ device = "cpu"
 # ==================================================
 # DATASET
 # ==================================================
-
 class FireDataset(Dataset):
+    TARGET_H = 200
+    TARGET_W = 200
+
     def __init__(self, root):
         self.root = root
         self.inputs_dir = os.path.join(root, "inputs")
         self.masks_dir = os.path.join(root, "masks")
         self.files = sorted(os.listdir(self.inputs_dir))
+
     def __len__(self):
         return len(self.files)
+
     def _load_tif(self, path):
         with rasterio.open(path) as src:
             return src.read().astype(np.float32)
+
+    def _center_crop(self, arr):
+        """
+        arr: (bandas, H, W)
+        devuelve: (bandas, 200, 200)
+        """
+        _, h, w = arr.shape
+
+        if h < self.TARGET_H or w < self.TARGET_W:
+            raise ValueError(
+                f"Imagen demasiado pequeña: {h}x{w}. "
+                f"Mínimo requerido: {self.TARGET_H}x{self.TARGET_W}"
+            )
+
+        start_h = (h - self.TARGET_H) // 2
+        start_w = (w - self.TARGET_W) // 2
+
+        end_h = start_h + self.TARGET_H
+        end_w = start_w + self.TARGET_W
+
+        return arr[:, start_h:end_h, start_w:end_w]
+
     def __getitem__(self, idx):
         fname = self.files[idx]
+
         x_path = os.path.join(self.inputs_dir, fname)
         y_path = os.path.join(self.masks_dir, fname)
+
         x = self._load_tif(x_path)
         y = self._load_tif(y_path)
-        # 15 bandas = 3 tiempos × 5 variables
-        x = x.reshape(3, 5, x.shape[1], x.shape[2])
+
+        # Recorte central a 200x200
+        x = self._center_crop(x)
+        y = self._center_crop(y)
+
+        # 15 bandas -> (3 tiempos, 5 variables, 200, 200)
+        x = x.reshape(3, 5, 200, 200)
+
         x_min = x.min()
         x_max = x.max()
         x = (x - x_min) / (x_max - x_min + 1e-6)
+
         x = torch.tensor(x, dtype=torch.float32)
         y = torch.tensor(y, dtype=torch.float32)
+
         return x, y
 # ==================================================
 # MODELO

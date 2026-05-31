@@ -72,7 +72,7 @@ def AlmacenarEntrenamiento(nombre, dia):
     client.fput_object(
         bucket_name,
         f"escena_{nombre}.tif",
-        f"/app/dataset/train/inputs/escena_{nombre}.tif"
+        f"/app/dataset/train/masks/escena_{nombre}.tif"
     )
     print(f"Archivo mask {nombre} subido")
 
