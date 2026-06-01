@@ -18,7 +18,32 @@ from db.db import SessionLocal
 from db.models import Descargas
 
 print("imports cargados...!")
+def logearDB(descripcion):
+    db = SessionLocal()
+    try:
+        registro = (
+            db.query(WorkersLogs)
+            .filter(WorkersLogs.name == "worker")
+            .first()
+        )
 
+        if registro is None:
+            registro = WorkersLogs(
+                name=WORKER_NAME,
+                descripcion=descripcion
+            )
+            db.add(registro)
+        else:
+            registro.descripcion = descripcion
+
+        db.commit()
+
+    except Exception as e:
+        db.rollback()
+        print(f"Error guardando heartbeat: {e}")
+
+    finally:
+        db.close()
 
 # ==================================================
 # MINIO
