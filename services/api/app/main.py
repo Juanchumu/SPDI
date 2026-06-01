@@ -170,22 +170,23 @@ def health():
     uptime_str = str(timedelta(seconds=uptime_seconds))
 
     #return {"status_code": 200,"message": "Todo anda bien por acá.","uptime": uptime_str}
-  return {
-          "status": "DEGRADED",
-          "services": {
-              "api": {
-                  "status": "UP",
-                  "uptime": uptime_str
-                  },
-              "worker": workerVida("worker"),
-              "validador": workerVida("validador"),
-              "entrenador": workerVida("entrenador"),
-              "modelador":workerVida("modelador"),
-              "predictor": workerVida("predictor"),
-              },
-          "dependencies": {
-              "database": dbVida(),
-              "minio": minioVida()
-              }
-          }
+    respuesta = {
+            "status": "DEGRADED",
+            "services": {
+                "api": {
+                    "status": "UP",
+                    "uptime": uptime_str
+                    },
+                "worker": workerVida("worker"),
+                "validador": workerVida("validador"),
+                "entrenador": workerVida("entrenador"),
+                "modelador":workerVida("modelador"),
+                "predictor": workerVida("predictor"),
+                },
+            "dependencies": {
+                "database": dbVida(),
+                "minio": minioVida()
+                }
+            }
+    return respuesta 
 

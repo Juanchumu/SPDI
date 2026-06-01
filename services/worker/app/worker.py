@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from db.db import SessionLocal
 #from app.db import SessionLocal
-from db.models import Orden
+from db.models import Orden, WorkersLogs
 from app import scriptms
 
 
@@ -21,7 +21,7 @@ def logearDB(descripcion):
         )
         if registro is None:
             registro = WorkersLogs(
-                name=WORKER_NAME,
+                name="worker",
                 descripcion=descripcion
             )
             db.add(registro)

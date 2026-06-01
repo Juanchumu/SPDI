@@ -46,7 +46,6 @@ class WorkersLogs(Base):
     __tablename__ = "workerslogs"
     id = Column(Integer, primary_key=True)
     name = Column(Text) 
-    status = Column(Text)
     descripcion = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
 
