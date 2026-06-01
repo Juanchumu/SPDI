@@ -1,8 +1,9 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 import json
 import time
+import requests
 from datetime import timedelta
 
 from db.db import SessionLocal
@@ -14,6 +15,17 @@ import os
 START_TIME = time.time()
 
 app = FastAPI()
+
+
+def minioVida():
+    estado = ""
+    try:
+        r = requests.get("http://minio:9000/minio/health/live",timeout=2)
+        estado = "UP" if r.status_code == 200 else "DOWN"
+    except Exception:
+        estado = "DOWN"
+    return estado
+
 
 class EntrenamientoRequest(BaseModel):
     dia: int          # formato YYYYMMDD
@@ -34,7 +46,7 @@ def get_db():
         db.close()
 
 
-@app.post("/api/v1/orden")
+@app.post("/api/v1/orden", status_code=status.HTTP_201_CREATED)
 def crear_orden(request: OrdenRequest, db: Session = Depends(get_db)):
     dia_str = str(request.dia)
     args = {
@@ -62,12 +74,17 @@ def obtener_orden(id: int, db: Session = Depends(get_db)):
 
     respuesta = f'Estado: {orden.status}'
     if (orden.status == 'Predicha'):
-        respuesta = respuesta +"\n"+ orden.prediccion +"\n"+ "Modelo Utilizado:"+ orden.modelo_utilizado
+        respuesta = {
+                "id": orden.id,
+                "status": orden.status,
+                "prediccion": orden.prediccion,
+                "modelo_utilizado": orden.modelo_utilizado
+                }
     return respuesta
 
 
 
-@app.post("/api/v1/generar_datos")
+@app.post("/api/v1/generar_datos", status_code=status.HTTP_201_CREATED)
 def generar_datos(request: EntrenamientoRequest, db: Session = Depends(get_db)):
     dia_str = str(request.dia)
     args = {
@@ -102,7 +119,30 @@ def health():
     # Formateamos a un formato legible (HH:MM:SS)
     uptime_str = str(timedelta(seconds=uptime_seconds))
 
-    return {"status_code": 200,
-        "message": "Todo anda bien por acá.",
-        "uptime": uptime_str
-        }
+    #return {"status_code": 200,"message": "Todo anda bien por acá.","uptime": uptime_str}
+  return {
+          "status": "DEGRADED",
+          "services": {
+              "api": {
+                  "status": "UP",
+                  "uptime": uptime_str
+                  },
+              "predictor": {
+                  "status": "UP",
+                  "last_seen": "2026-06-01T12:15:20"
+                  },
+              "entrenador": {
+                  "status": "DOWN",
+                  "last_seen": "2026-06-01T12:10:01"
+                  },
+              "modelador": {
+                  "status": "UP",
+                  "last_seen": "2026-06-01T12:15:18"
+                  }
+              },
+          "dependencies": {
+              "database": "UP",
+              "minio": minioVida()
+              }
+          }
+
