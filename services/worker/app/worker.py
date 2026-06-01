@@ -8,6 +8,34 @@ from db.models import Orden
 from app import scriptms
 
 
+# ==================================================
+# logs de estado en la db (actualiza)
+# ==================================================
+def logearDB(descripcion):
+    db = SessionLocal()
+    try:
+        registro = (
+            db.query(WorkersLogs)
+            .filter(WorkersLogs.name == "worker")
+            .first()
+        )
+        if registro is None:
+            registro = WorkersLogs(
+                name=WORKER_NAME,
+                descripcion=descripcion
+            )
+            db.add(registro)
+        else:
+            registro.descripcion = descripcion
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"Error guardando heartbeat: {e}")
+    finally:
+        db.close()
+
+
+
 def get_pending(db: Session):
     return db.query(Orden).filter(Orden.status == "Lista para el worker..").first()
 
@@ -15,12 +43,12 @@ def get_pending(db: Session):
 def run():
     while True:
         db = SessionLocal()
-
+        logearDB("Tomando Orden")
         orden = get_pending(db)
-
         if orden:
             # marcar como processing
             orden.status = "Siendo procesada por worker.."
+            logearDB("Procesando")
             db.commit()
             args = json.loads(orden.args)
 

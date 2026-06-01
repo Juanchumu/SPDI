@@ -29,11 +29,10 @@ Organización de datos siguiendo un flujo típico de ciencia de datos:
 
 ---
 
-### 🔹 `generador_dataset/`
+### 🔹 `tools/`
 
-Scripts para generación de datasets, una vez levantado los servicios, 
+Scripts para generación de datasets o probar la api, una vez levantado los servicios, 
 se puede correr un script para que genere unos datos de entrenamiento.
-
 que pueden ser con datos reales o generados
 
 ---
@@ -69,13 +68,5 @@ Pruebas y validaciones del sistema.
 
 ---
 
-## Flujo general del sistema
-
-1. Generación/descarga de datos (`generador_dataset/`, `data/`)
-2. Procesamiento de datos
-4. Despliegue del modelo y servicios (`services/`)
-5. Consulta mediante API
-
----
 
 
