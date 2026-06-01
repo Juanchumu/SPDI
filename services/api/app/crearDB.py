@@ -77,6 +77,15 @@ with engine.connect() as conn:
             updated_at TIMESTAMP
         )
         """))
+        # WorkersLogs 
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS workerslogs (
+            id SERIAL PRIMARY KEY,
+            name TEXT,
+            descripcion TEXT,
+            created_at TIMESTAMP
+        )
+        """))
         
         # Confirmar la transacción
         trans.commit()

@@ -1,9 +1,11 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 import json
 import time
-from datetime import timedelta
+import requests
+from datetime import timedelta, datetime, timezone
 
 from db.db import SessionLocal
 from db.models import Orden, Entrenamiento, Modelos, Descargas
@@ -14,6 +16,66 @@ import os
 START_TIME = time.time()
 
 app = FastAPI()
+
+
+def minioVida():
+    try:
+        r = requests.get("http://minio:9000/minio/health/live",timeout=2)
+        estado = "UP" if r.status_code == 200 else "DOWN"
+        return estado 
+    except Exception:
+        return "DOWN"
+def dbVida():
+    db = SessionLocal()
+    try:
+        db.execute(text("SELECT 1"))
+        return "UP"
+    except Exception as e:
+        print(e)
+        return "DOWN"
+    finally:
+        db.close()
+
+def workerVida(nombre):
+    db = SessionLocal()
+    try:
+        dato = (
+            db.query(WorkersLogs)
+            .filter(WorkersLogs.name == nombre)
+            .order_by(WorkersLogs.id.desc())
+            .first()
+        )
+        if dato is None:
+            return {
+                "status": "UNKNOWN",
+                "descripcion": "Sin registros",
+                "last_seen": None
+            }
+        ahora = datetime.now(timezone.utc)
+        #ahora = datetime.utcnow()
+        # Ajustá este valor según la frecuencia de heartbeat
+        timeout = timedelta(seconds=30)
+        if ahora - dato.created_at > timeout:
+            estado = "DOWN"
+        else:
+            estado = "UP"
+        return {
+            "status": estado,
+            "descripcion": dato.descripcion,
+            "last_seen": dato.created_at.isoformat(),
+            "seconds_since_last_heartbeat": int(
+                (ahora - dato.created_at).total_seconds()
+            )
+        }
+    except Exception as e:
+        print(e)
+        return {
+            "status": "ERROR",
+            "descripcion": str(e),
+            "last_seen": None
+        }
+    finally:
+        db.close()
 
 class EntrenamientoRequest(BaseModel):
     dia: int          # formato YYYYMMDD
@@ -34,7 +96,7 @@ def get_db():
         db.close()
 
 
-@app.post("/api/v1/orden")
+@app.post("/api/v1/orden", status_code=status.HTTP_201_CREATED)
 def crear_orden(request: OrdenRequest, db: Session = Depends(get_db)):
     dia_str = str(request.dia)
     args = {
@@ -62,12 +124,17 @@ def obtener_orden(id: int, db: Session = Depends(get_db)):
 
     respuesta = f'Estado: {orden.status}'
     if (orden.status == 'Predicha'):
-        respuesta = respuesta +"\n"+ orden.prediccion +"\n"+ "Modelo Utilizado:"+ orden.modelo_utilizado
+        respuesta = {
+                "id": orden.id,
+                "status": orden.status,
+                "prediccion": orden.prediccion,
+                "modelo_utilizado": orden.modelo_utilizado
+                }
     return respuesta
 
 
 
-@app.post("/api/v1/generar_datos")
+@app.post("/api/v1/generar_datos", status_code=status.HTTP_201_CREATED)
 def generar_datos(request: EntrenamientoRequest, db: Session = Depends(get_db)):
     dia_str = str(request.dia)
     args = {
@@ -102,7 +169,23 @@ def health():
     # Formateamos a un formato legible (HH:MM:SS)
     uptime_str = str(timedelta(seconds=uptime_seconds))
 
-    return {"status_code": 200,
-        "message": "Todo anda bien por acá.",
-        "uptime": uptime_str
-        }
+    #return {"status_code": 200,"message": "Todo anda bien por acá.","uptime": uptime_str}
+  return {
+          "status": "DEGRADED",
+          "services": {
+              "api": {
+                  "status": "UP",
+                  "uptime": uptime_str
+                  },
+              "worker": workerVida("worker"),
+              "validador": workerVida("validador"),
+              "entrenador": workerVida("entrenador"),
+              "modelador":workerVida("modelador"),
+              "predictor": workerVida("predictor"),
+              },
+          "dependencies": {
+              "database": dbVida(),
+              "minio": minioVida()
+              }
+          }
+
