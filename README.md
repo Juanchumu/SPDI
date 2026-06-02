@@ -4,7 +4,6 @@ Este repositorio contiene un proyecto desarrollado para la materia **Proyecto In
 
 El proyecto consiste en un sistema de predicción de incendios basado en el procesamiento de datos satelitales históricos y modelos de *Machine Learning*.
 
-> **Nota:** Es posible que algunas implementaciones parezcan innecesarias o excesivamente complejas. Esto se debe a que el proyecto tiene que cumplir determinados requisitos académicos establecidos por la materia.
 
 ---
 

@@ -33,32 +33,102 @@ Con esto ya estarian creadas las tablas
 Ctrl + C para detener todo y ahi recien  levantar todo según tu instalación de Docker:
 
 nota: el gion o espacio, determina el funcionamiento, se crea con uno o con otro
-pero no se puede levantar denuevo con el otro comando porque da error 
+pero no se puede levantar denuevo con el otro comando porque da error. 
 
-demora +1500 segundos = 25 minutos
+Levantar todos estos servicios desde cero demora 1500+ segundos = 25 minutos.
 
 ```bash
 sudo docker-compose up --build
 # o
 sudo docker compose up --build 
 
-sudo docker-compose up api db worker minio
-
 ```
 ---
 
 # Interactuar con la API
 
-##  Crear orden o un archivo de entrenamiento
+## Documentación interactiva (Swagger)
+
+Una vez iniciada la API:
+
+http://localhost:8000/docs
+
+Documentación OpenAPI:
+
+http://localhost:8000/openapi.json
+
+
+
+## Crear orden de predicción
+
+Genera una nueva orden para evaluar riesgo de incendio en una ubicación y fecha determinada.
 
 ```bash
-
-curl -X POST http://localhost:8000/api/v1/orden -H "Content-Type: application/json" -d '{ "dia": "20211125", "lat": "-34.249801", "lon": "-58.880148" }'
+curl -X POST http://localhost:8000/api/v1/orden \
+-H "Content-Type: application/json" \
+-d '{
+  "dia": 20211125,
+  "lat": -34.249801,
+  "lon": -58.880148
+}'
 ```
+
+### Respuesta esperada
+
+```json
+{
+  "id": 1,
+  "status": "Pendiente.."
+}
+```
+
+---
+
+## Consultar orden
+
 ```bash
+curl -X GET http://localhost:8000/api/v1/orden/1
+```
 
-curl -X POST http://localhost:8000/api/v1/generar_datos -H "Content-Type: application/json" -d '{ "dia": "20211125", "lat": "-34.249801", "lon": "-58.880148" }'
+### Mientras se procesa
 
+```text
+Estado: Pendiente..
+```
+
+### Cuando la predicción está lista
+
+```json
+{
+  "id": 1,
+  "status": "Predicha",
+  "prediccion": "Riesgo Alto",
+  "modelo_utilizado": "fire_model_ver_10.pth"
+}
+```
+
+### Si no existe
+
+```json
+{
+  "detail": "Orden No encontrada"
+}
+```
+
+---
+
+## Generar datos de entrenamiento
+
+Crea una orden para descargar y procesar datos históricos que luego podrán utilizarse para entrenamiento.
+
+```bash
+curl -X POST http://localhost:8000/api/v1/generar_datos \
+-H "Content-Type: application/json" \
+-d '{
+  "dia": 20211125,
+  "lat": -34.249801,
+  "lon": -58.880148
+}'
 ```
 
 ### Respuesta esperada
@@ -72,52 +142,37 @@ curl -X POST http://localhost:8000/api/v1/generar_datos -H "Content-Type: applic
 
 ---
 
-## Consultar orden
+## Consultar estado de generación de datos
 
-```bash
-curl -X GET http://localhost:8000/api/v1/orden/1
-```
 ```bash
 curl -X GET http://localhost:8000/api/v1/generar_datos/1
 ```
 
-### Si sale todo bien
+### Respuesta posible
 
-```json
-{
-  "riesgo": "alto",
-  "porcentaje_area_riesgo": 23.78,
-  "zonas_criticas": [
-    {
-      "x1": 120,
-      "y1": 45,
-      "x2": 180,
-      "y2": 110,
-      "pixels": 3500
-    },
-    {
-      "x1": 300,
-      "y1": 200,
-      "x2": 360,
-      "y2": 260,
-      "pixels": 1800
-    }
-  ],
-  "archivo_prediccion": "ordenes/predictions/pred_42.tif"
-}
+```text
+Estado: pending
 ```
 
-### En caso de error
+o
+
+```text
+Estado: completado
+```
+
+### Si no existe
 
 ```json
 {
-  "status": "404"
+  "detail": "Entrenamiento no encontrado"
 }
 ```
 
 ---
 
-## Health check (estado de la API)
+## Health Check
+
+Permite verificar el estado general del sistema y sus dependencias.
 
 ```bash
 curl -X GET http://localhost:8000/api/v1/health
@@ -126,11 +181,44 @@ curl -X GET http://localhost:8000/api/v1/health
 ### Respuesta esperada
 
 ```json
-{"services":{"api":{"status":"UP","uptime":"0:00:23"},"worker":{"status":"UP","descripcion":"Buscando Ordenes","last_seen":"2026-06-02T07:11:26.355989","seconds_since_last_heartbeat":4},"validador":{"status":"UP","descripcion":"Esperando Ordenes","last_seen":"2026-06-02T07:11:29.506941","seconds_since_last_heartbeat":1},"entrenador":{"status":"UP","descripcion":"Esperando nuevas ordenes de entrenamiento..","last_seen":"2026-06-02T07:11:26.127934","seconds_since_last_heartbeat":4},"modelador":{"status":"UP","descripcion":"Consultando Entrenamientos","last_seen":"2026-06-02T07:11:27.938703","seconds_since_last_heartbeat":2},"predictor":{"status":"UP","descripcion":"No hay Modelos, me pongo a dormir...","last_seen":"2026-06-02T07:11:23.574454","seconds_since_last_heartbeat":7}},"dependencies":{"database":"UP","minio":"UP"}}```
+{
+  "services": {
+    "api": {
+      "status": "UP",
+      "uptime": "0:15:42"
+    },
+    "worker": {
+      "status": "UP",
+      "descripcion": "Buscando Ordenes",
+      "last_seen": "2026-06-02T07:11:26.355989",
+      "seconds_since_last_heartbeat": 4
+    },
+    "validador": {
+      "status": "UP"
+    },
+    "entrenador": {
+      "status": "UP"
+    },
+    "modelador": {
+      "status": "UP"
+    },
+    "predictor": {
+      "status": "UP"
+    },
+    "analista": {
+      "status": "UP"
+    }
+  },
+  "dependencies": {
+    "database": "UP",
+    "minio": "UP"
+  }
+}
+```
 
---- 
+---
 
-## Modelos (de la API)
+## Listar modelos entrenados
 
 ```bash
 curl -X GET http://localhost:8000/api/v1/modelos
@@ -139,12 +227,84 @@ curl -X GET http://localhost:8000/api/v1/modelos
 ### Respuesta esperada
 
 ```json
-curl -X GET http://localhost:8000/api/v1/modelos
-[{"id":2,"name":"fire_model_ver_10.pth","final_loss":0.5877327084541321,"best_loss":0.5877327084541321,"pred_mean":0.7220344185829163,"pred_min":0.6190575957298279,"pred_max":0.7255396842956543,"accuracy":0.7256024999999818,"precision":0.7256024999999818,"recall":0.9999999999999655,"f1_score":0.8409845208210539,"iou":0.7256024999999818,"dice":0.8409845256946364,"dataset_size":10,"created_at":"2026-06-02T07:22:49.181331"},{"id":1,"name":"fire_model_ver_1.pth","final_loss":0.6676583290100098,"best_loss":0.6676583290100098,"pred_mean":0.6082870960235596,"pred_min":0.5562573075294495,"pred_max":0.6088927984237671,"accuracy":0.6189249999998453,"precision":0.6189249999998453,"recall":0.999999999999596,"f1_score":0.7646123151804405,"iou":0.6189249999998453,"dice":0.7646123199035217,"dataset_size":1,"created_at":"2026-06-02T07:20:36.640302"}]```
+[
+  {
+    "id": 2,
+    "name": "fire_model_ver_10.pth",
+    "final_loss": 0.5877,
+    "best_loss": 0.5877,
+    "pred_mean": 0.7220,
+    "pred_min": 0.6190,
+    "pred_max": 0.7255,
+    "accuracy": 0.7256,
+    "precision": 0.7256,
+    "recall": 1.0,
+    "f1_score": 0.8409,
+    "iou": 0.7256,
+    "dice": 0.8409,
+    "dataset_size": 10,
+    "created_at": "2026-06-02T07:22:49.181331"
+  }
+]
+```
+
+### Si todavía no existen modelos
+
+```json
+{
+  "Error": "No hay Modelos"
+}
+```
+
+---
+
+## Obtener últimos informes analíticos
+
+Devuelve los 20 informes más recientes generados por el analista.
+
+```bash
+curl -X GET http://localhost:8000/api/v1/informes
+```
+
+### Respuesta esperada
+
+```json
+[
+  {
+    "id": 5,
+    "created_at": "2026-06-02T20:47:40.623231",
+    "contenido": "Resumen Ejecutivo..."
+  }
+]
+```
+
+---
+
+## Obtener último informe
+
+```bash
+curl -X GET http://localhost:8000/api/v1/informes/ultimo
+```
+
+### Respuesta esperada
+
+```json
+{
+  "id": 5,
+  "created_at": "2026-06-02T20:47:40.623231",
+  "contenido": "Resumen Ejecutivo..."
+}
+```
+
+### Si no existen informes
+
+```json
+{
+  "error": "sin informes"
+}
+```
 
 --- 
-
-
 
 # Cosas a cambiar:
 

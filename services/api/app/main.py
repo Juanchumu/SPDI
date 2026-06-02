@@ -8,7 +8,7 @@ import requests
 from datetime import timedelta, datetime, timezone
 
 from db.db import SessionLocal
-from db.models import Orden, Entrenamiento, Modelos, Descargas, WorkersLogs
+from db.models import Orden, Entrenamiento, Modelos, Descargas, WorkersLogs, Informes
 import os
 
 
@@ -223,7 +223,7 @@ def listar_modelos(db: Session = Depends(get_db)):
 def informes(db: Session = Depends(get_db)):
     informes = (
             db.query(Informes)
-            .order_by(Informe.created_at.desc())
+            .order_by(Informes.created_at.desc())
             .limit(20).all()
             )
     return [{
@@ -235,7 +235,7 @@ def informes(db: Session = Depends(get_db)):
 def ultimo_informe(db: Session = Depends(get_db)):
     informe = (
             db.query(Informes)
-            .order_by(Informe.created_at.desc())
+            .order_by(Informes.created_at.desc())
             .first()
             )
     if not informe:
