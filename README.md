@@ -1,64 +1,96 @@
 # Repositorio del SPID
 
-Este repositorio contiene un sistema de predicción de incendios basado en procesamiento de datos satelitales historicos y modelos de machine learning.
+Este repositorio contiene un proyecto desarrollado para la materia **Proyecto Integrador de Ciencias de Datos**.
 
-## Hipotesis:
- Utilizar Imagenes Satelitales de amplio espectro historicas para entrenar modelos y predecir incendios.
+El proyecto consiste en un sistema de predicción de incendios basado en el procesamiento de datos satelitales históricos y modelos de *Machine Learning*.
 
-## Resultado:
-Despues de modelar utilizando todos los registros de incendios en argentina respondemos:
+> **Nota:** Es posible que algunas implementaciones parezcan innecesarias o excesivamente complejas. Esto se debe a que el proyecto tiene que cumplir determinados requisitos académicos establecidos por la materia.
 
-* Utilizar unicamente imagenes satelitales para predecir incendios no entrega un modelo que
-prediga algun incendio.
+---
 
-## Imformacion importante para los interesados: 
-* Se necesita incluir mas fuentes de datos en los entrenamientos 
-- Rayos en tiempo real, pronosticos clima.. etc. 
+# Estructura del proyecto
 
-* La utilizacion de los datos en bruto de sentinelHub te puede bloquear la ip 
-- Procura descargan una unica vez cada archivo .safe .
-- La api de MS solo da datos ya calculados (que utilizamos debido al bloqueo).
+El proyecto sigue una arquitectura modular, separando las distintas etapas del procesamiento de datos, entrenamiento y despliegue.
 
-
-## Estructura del proyecto
-
-El proyecto sigue una arquitectura modular, separando las distintas etapas del pipeline de datos y despliegue:
-
-### 🔹 `services/`
+## 🔹 `services/`
 
 Contiene los servicios principales del sistema en producción:
 
-* API, Workers, todos independientes.
-* Configuración Docker
+- API
+- Workers
+- Servicios independientes
+- Configuración Docker
 
-📌 **Punto de entrada recomendado**
-Dentro de este directorio hay un `readme.md` con instrucciones para levantar todo el sistema con Docker.
+### 📌 Punto de entrada recomendado
 
----
-
-### 🔹 `tools/`
-
-Scripts para generación de datasets o probar la api, una vez levantado los servicios, 
-se puede correr un script para que genere unos datos de entrenamiento.
-que pueden ser con datos reales o generados
+Dentro de este directorio se encuentra un archivo `README.md` con las instrucciones necesarias para desplegar todo el sistema utilizando Docker.
 
 ---
 
-### 🔹 `notebooks/`
+## 🔹 `tools/`
 
-Notebooks de experimentación:
+Contiene scripts auxiliares para:
 
-* Entrenamiento del modelo
-* Archivo del modelo (`fire_model.pth`)
+- Generación de datasets
+- Pruebas de la API
+- Creación de datos de entrenamiento
+
+Una vez levantados los servicios, pueden ejecutarse scripts para generar conjuntos de entrenamiento utilizando datos reales o datos sintéticos.
 
 ---
 
+## 🔹 `notebooks/`
 
-### 🔹 `test/`
+Notebooks utilizados durante la etapa de experimentación:
+
+- Entrenamiento del modelo
+- Evaluación de resultados
+- Generación del archivo del modelo (`fire_model.pth`)
+
+---
+
+## 🔹 `test/`
 
 Pruebas y validaciones del sistema.
 
 ---
 
+# Notas finales
 
+## Hipótesis planteada
 
+Utilizar imágenes satelitales históricas de amplio espectro para entrenar modelos capaces de predecir incendios.
+
+## Resultado obtenido
+
+Tras entrenar y evaluar modelos utilizando la totalidad de los registros históricos de incendios disponibles para Argentina, se concluye que:
+
+- El uso exclusivo de imágenes satelitales no permite construir un modelo con capacidad predictiva suficiente para anticipar incendios de manera útil.
+
+## Información importante para quienes deseen continuar el proyecto
+
+### Fuentes de datos adicionales
+
+Para mejorar los resultados es necesario incorporar nuevas fuentes de información, por ejemplo:
+
+- Detección de rayos en tiempo real.
+- Pronósticos meteorológicos.
+- Variables atmosféricas y climáticas.
+- Información topográfica y de vegetación.
+
+### Requisitos de hardware
+
+Se recomienda disponer de al menos **64 GB de RAM** para procesar imágenes satelitales en formato bruto (`.SAFE`).
+
+### Consideraciones sobre las fuentes de datos
+
+Durante el desarrollo del proyecto se utilizaron principalmente datos obtenidos mediante otra api, ya que el acceso masivo a imágenes satelitales sin procesar generó restricciones y bloqueos por IP.
+
+Según lo indicado por el profesor de la materia, estos datos presentan una menor precisión que los datos satelitales originales, debido a que son distribuidos con una menor cantidad de decimales y ya procesados previamente. Esto puede haber afectado negativamente la calidad de los entrenamientos y los resultados obtenidos.
+
+Se recomienda, cuando sea posible:
+
+- Descargar cada archivo `.SAFE` una única vez.
+- Mantener una copia local de los datos descargados.
+- Trabajar directamente con las imágenes satelitales originales para conservar la máxima precisión disponible.
+- Utilizar las fuentes procesadas únicamente cuando existan limitaciones de acceso o recursos de hardware.
