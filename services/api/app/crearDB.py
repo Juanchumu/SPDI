@@ -36,6 +36,14 @@ with engine.connect() as conn:
     trans = conn.begin()
     
     try:
+        # ==========================
+        # ALTER TABLES (Migraciones)
+        # ==========================
+        # WorkersLogs
+        #conn.execute(text("""
+        #ALTER TABLE workerslogs
+        #ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP
+        #"""))
         # Modelos | son los modelos generados automaticamente
         conn.execute(text("""
         CREATE TABLE IF NOT EXISTS modelos (
@@ -98,6 +106,7 @@ with engine.connect() as conn:
             id SERIAL PRIMARY KEY,
             name TEXT,
             descripcion TEXT,
+            updated_at TIMESTAMP,
             created_at TIMESTAMP
         )
         """))

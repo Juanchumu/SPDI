@@ -2,6 +2,8 @@ import time
 import json
 from sqlalchemy.orm import Session
 
+from datetime import datetime
+
 from db.db import SessionLocal
 #from app.db import SessionLocal
 from db.models import Orden, WorkersLogs
@@ -27,6 +29,7 @@ def logearDB(descripcion):
             db.add(registro)
         else:
             registro.descripcion = descripcion
+            registro.updated_at = datetime.utcnow()
         db.commit()
     except Exception as e:
         db.rollback()
@@ -43,7 +46,7 @@ def get_pending(db: Session):
 def run():
     while True:
         db = SessionLocal()
-        logearDB("Tomando Orden")
+        logearDB("Buscando Ordenes")
         orden = get_pending(db)
         if orden:
             # marcar como processing

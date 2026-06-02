@@ -8,13 +8,16 @@ import torch.nn as nn
 import shutil
 import urllib3
 
+from datetime import datetime
+
+
 
 from tqdm import tqdm
 from minio import Minio
 from torch.utils.data import Dataset, DataLoader
 
 from db.db import SessionLocal
-from db.models import Entrenamiento, Modelos
+from db.models import Entrenamiento, Modelos, WorkersLogs
 
 
 # ==================================================
@@ -28,6 +31,33 @@ DB_MINIO_USER = os.getenv("DB_MINIO_USER")
 DB_MINIO_PASS = os.getenv("DB_MINIO_PASS")
 
 device = "cpu"
+
+# ==================================================
+# logs de estado en la db (actualiza)
+# ==================================================
+def logearDB(descripcion):
+    db = SessionLocal()
+    try:
+        registro = (
+            db.query(WorkersLogs)
+            .filter(WorkersLogs.name == "modelador")
+            .first()
+        )
+        if registro is None:
+            registro = WorkersLogs(
+                name="modelador",
+                descripcion=descripcion
+            )
+            db.add(registro)
+        else:
+            registro.descripcion = descripcion
+            registro.updated_at = datetime.utcnow()
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"Error guardando heartbeat: {e}")
+    finally:
+        db.close()
 
 # ==================================================
 # DATASET
@@ -380,8 +410,10 @@ def run():
         try:
             nro = ConsultarNroDeEntrenamientos()
             print(f"Entrenamientos disponibles: {nro}")
+            logearDB("Consultando Entrenamientos")
             if nro > 0 and ConsultarModelosNroDeEntrenamiento(nro) == 1:
                 print("Nuevo modelo inicial requerido")
+                logearDB("Modelando")
                 descarga = TraerDeMiniOEntrenamientos()
                 if descarga == 0:
                     EntrenarModelo(nro)
@@ -391,6 +423,7 @@ def run():
                 estado = ConsultarModelosNroDeEntrenamiento(nro)
                 if estado == 2:
                     print("Nuevo modelo requerido")
+                    logearDB("Modelando")
                     descarga = TraerDeMiniOEntrenamientos()
                     if descarga == 0:
                         EntrenarModelo(nro)

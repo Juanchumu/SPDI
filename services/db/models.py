@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime
+from sqlalchemy import Column, Integer, String, Text, DateTime, Float, func
 from datetime import datetime
 from db.db import Base
 
@@ -60,6 +60,7 @@ class WorkersLogs(Base):
     id = Column(Integer, primary_key=True)
     name = Column(Text) 
     descripcion = Column(Text)
+    updated_at = Column(DateTime,server_default=func.now(),onupdate=func.now())
     created_at = Column(DateTime, default=datetime.utcnow)
 
 

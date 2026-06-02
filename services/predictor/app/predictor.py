@@ -9,12 +9,17 @@ import torch.nn as nn
 import rasterio
 import numpy as np
 
+
+from datetime import datetime
+
+
+
 from minio import Minio
 from sqlalchemy.orm import Session
 from scipy.ndimage import label, find_objects
 
 from db.db import SessionLocal
-from db.models import Orden, Modelos
+from db.models import Orden, Modelos, WorkersLogs
 
 # ==================================================
 # CONFIG
@@ -33,6 +38,37 @@ os.makedirs(MODELS_DIR, exist_ok=True)
 os.makedirs(PRED_DIR, exist_ok=True)
 
 device = torch.device("cpu")
+
+# ==================================================
+# logs de estado en la db (actualiza)
+# ==================================================
+def logearDB(descripcion):
+    db = SessionLocal()
+    try:
+        registro = (
+            db.query(WorkersLogs)
+            .filter(WorkersLogs.name == "predictor")
+            .first()
+        )
+        if registro is None:
+            registro = WorkersLogs(
+                name="predictor",
+                descripcion=descripcion
+            )
+            db.add(registro)
+        else:
+            registro.descripcion = descripcion
+            registro.updated_at = datetime.utcnow()
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"Error guardando heartbeat: {e}")
+    finally:
+        db.close()
+
+
+
+
 
 # ==================================================
 # MINIO
@@ -297,7 +333,9 @@ def get_pending(db: Session):
 def run():
     while True:
         modelo_id, model_path = descargar_ultimo_modelo()
+        logearDB("Buscando Modelos Nuevos...")
         if modelo_id == None:
+            logearDB("No hay Modelos, me pongo a dormir...")
             time.sleep(5)
             continue
         model = cargar_modelo(model_path)
@@ -309,6 +347,7 @@ def run():
                 continue
             print(f"Procesando orden {orden.id}")
             orden.status = "Prediciendo.."
+            logearDB("Prediciendo...")
             db.commit()
             try:
                 ruta_stack = descargar_orden(orden.id)
