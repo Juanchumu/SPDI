@@ -16,8 +16,7 @@ El proyecto sigue una arquitectura modular, separando las distintas etapas del p
 Contiene los servicios principales del sistema en producción:
 
 - API
-- Workers
-- Servicios independientes
+- Workers.. Servicios independientes
 - Configuración Docker
 
 ### 📌 Punto de entrada recomendado
