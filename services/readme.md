@@ -126,10 +126,25 @@ curl -X GET http://localhost:8000/api/v1/health
 ### Respuesta esperada
 
 ```json
-{"status_code":200,"message":"Todo anda bien por acá.","uptime":"0:05:51"}
-```
+{"services":{"api":{"status":"UP","uptime":"0:00:23"},"worker":{"status":"UP","descripcion":"Buscando Ordenes","last_seen":"2026-06-02T07:11:26.355989","seconds_since_last_heartbeat":4},"validador":{"status":"UP","descripcion":"Esperando Ordenes","last_seen":"2026-06-02T07:11:29.506941","seconds_since_last_heartbeat":1},"entrenador":{"status":"UP","descripcion":"Esperando nuevas ordenes de entrenamiento..","last_seen":"2026-06-02T07:11:26.127934","seconds_since_last_heartbeat":4},"modelador":{"status":"UP","descripcion":"Consultando Entrenamientos","last_seen":"2026-06-02T07:11:27.938703","seconds_since_last_heartbeat":2},"predictor":{"status":"UP","descripcion":"No hay Modelos, me pongo a dormir...","last_seen":"2026-06-02T07:11:23.574454","seconds_since_last_heartbeat":7}},"dependencies":{"database":"UP","minio":"UP"}}```
 
 --- 
+
+## Modelos (de la API)
+
+```bash
+curl -X GET http://localhost:8000/api/v1/modelos
+```
+
+### Respuesta esperada
+
+```json
+curl -X GET http://localhost:8000/api/v1/modelos
+[{"id":2,"name":"fire_model_ver_10.pth","final_loss":0.5877327084541321,"best_loss":0.5877327084541321,"pred_mean":0.7220344185829163,"pred_min":0.6190575957298279,"pred_max":0.7255396842956543,"accuracy":0.7256024999999818,"precision":0.7256024999999818,"recall":0.9999999999999655,"f1_score":0.8409845208210539,"iou":0.7256024999999818,"dice":0.8409845256946364,"dataset_size":10,"created_at":"2026-06-02T07:22:49.181331"},{"id":1,"name":"fire_model_ver_1.pth","final_loss":0.6676583290100098,"best_loss":0.6676583290100098,"pred_mean":0.6082870960235596,"pred_min":0.5562573075294495,"pred_max":0.6088927984237671,"accuracy":0.6189249999998453,"precision":0.6189249999998453,"recall":0.999999999999596,"f1_score":0.7646123151804405,"iou":0.6189249999998453,"dice":0.7646123199035217,"dataset_size":1,"created_at":"2026-06-02T07:20:36.640302"}]```
+
+--- 
+
+
 
 # Cosas a cambiar:
 

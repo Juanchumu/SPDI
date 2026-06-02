@@ -8,7 +8,7 @@ import requests
 from datetime import timedelta, datetime, timezone
 
 from db.db import SessionLocal
-from db.models import Orden, Entrenamiento, Modelos, Descargas
+from db.models import Orden, Entrenamiento, Modelos, Descargas, WorkersLogs
 import os
 
 
@@ -51,20 +51,20 @@ def workerVida(nombre):
                 "descripcion": "Sin registros",
                 "last_seen": None
             }
-        ahora = datetime.now(timezone.utc)
-        #ahora = datetime.utcnow()
+        #ahora = datetime.now(timezone.utc)
+        ahora = datetime.utcnow()
         # Ajustá este valor según la frecuencia de heartbeat
         timeout = timedelta(seconds=30)
-        if ahora - dato.created_at > timeout:
+        if ahora - dato.updated_at > timeout:
             estado = "DOWN"
         else:
             estado = "UP"
         return {
             "status": estado,
             "descripcion": dato.descripcion,
-            "last_seen": dato.created_at.isoformat(),
+            "last_seen": dato.updated_at.isoformat(),
             "seconds_since_last_heartbeat": int(
-                (ahora - dato.created_at).total_seconds()
+                (ahora - dato.updated_at).total_seconds()
             )
         }
     except Exception as e:
@@ -171,7 +171,6 @@ def health():
 
     #return {"status_code": 200,"message": "Todo anda bien por acá.","uptime": uptime_str}
     respuesta = {
-            "status": "DEGRADED",
             "services": {
                 "api": {
                     "status": "UP",
@@ -190,3 +189,32 @@ def health():
             }
     return respuesta 
 
+
+@app.get("/api/v1/modelos")
+def listar_modelos(db: Session = Depends(get_db)):
+    modelos = (
+        db.query(Modelos)
+        .order_by(Modelos.created_at.desc())
+        .all()
+    )
+    if modelos is None:
+        return {"Error":"No hay Modelos"}
+    if len(modelos) < 1:
+        return {"Error":"No hay Modelos"}
+    return [{
+        "id": modelo.id,
+        "name": modelo.name,
+        "final_loss": modelo.final_loss,
+        "best_loss": modelo.best_loss,
+        "pred_mean": modelo.pred_mean,
+        "pred_min": modelo.pred_min,
+        "pred_max": modelo.pred_max,
+        "accuracy": modelo.accuracy,
+        "precision": modelo.precision,
+        "recall": modelo.recall,
+        "f1_score": modelo.f1_score,
+        "iou": modelo.iou,
+        "dice": modelo.dice,
+        "dataset_size": modelo.dataset_size,
+        "created_at": modelo.created_at.isoformat() if modelo.created_at else None
+        } for modelo in modelos ]

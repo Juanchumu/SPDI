@@ -2,9 +2,40 @@ import time
 import json
 from sqlalchemy.orm import Session
 
+from datetime import datetime
+
+
 from db.db import SessionLocal
-from db.models import Orden
+from db.models import Orden, WorkersLogs
 from app import script
+
+# ==================================================
+# logs de estado en la db (actualiza)
+# ==================================================
+def logearDB(descripcion):
+    db = SessionLocal()
+    try:
+        registro = (
+            db.query(WorkersLogs)
+            .filter(WorkersLogs.name == "validador")
+            .first()
+        )
+        if registro is None:
+            registro = WorkersLogs(
+                name="validador",
+                descripcion=descripcion
+            )
+            db.add(registro)
+        else:
+            registro.descripcion = descripcion
+            registro.updated_at = datetime.utcnow()
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"Error guardando heartbeat: {e}")
+    finally:
+        db.close()
+
 
 
 def get_pending(db: Session):
@@ -14,11 +45,12 @@ def get_pending(db: Session):
 def run():
     while True:
         db = SessionLocal()
-
+        logearDB("Esperando Ordenes")
         orden = get_pending(db)
 
         if orden:
             # marcar como processing
+            logearDB("Validando...")
             orden.status = "Validando.."
             db.commit()
             args = json.loads(orden.args)

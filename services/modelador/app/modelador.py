@@ -8,13 +8,16 @@ import torch.nn as nn
 import shutil
 import urllib3
 
+from datetime import datetime
+
+
 
 from tqdm import tqdm
 from minio import Minio
 from torch.utils.data import Dataset, DataLoader
 
 from db.db import SessionLocal
-from db.models import Entrenamiento, Modelos
+from db.models import Entrenamiento, Modelos, WorkersLogs
 
 
 # ==================================================
@@ -29,6 +32,32 @@ DB_MINIO_PASS = os.getenv("DB_MINIO_PASS")
 
 device = "cpu"
 
+# ==================================================
+# logs de estado en la db (actualiza)
+# ==================================================
+def logearDB(descripcion):
+    db = SessionLocal()
+    try:
+        registro = (
+            db.query(WorkersLogs)
+            .filter(WorkersLogs.name == "modelador")
+            .first()
+        )
+        if registro is None:
+            registro = WorkersLogs(
+                name="modelador",
+                descripcion=descripcion
+            )
+            db.add(registro)
+        else:
+            registro.descripcion = descripcion
+            registro.updated_at = datetime.utcnow()
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"Error guardando heartbeat: {e}")
+    finally:
+        db.close()
 
 # ==================================================
 # DATASET
@@ -227,9 +256,23 @@ def ConsultarModelosNroDeEntrenamiento(nro):
 # ==================================================
 # SUBIR MODELO
 # ==================================================
-def AlmacenarModelo(nombre):
+def AlmacenarModelo(nombre,final_loss,best_loss,dataset_size,metricas):
     db = SessionLocal()
-    nuevoModelo = Modelos(name=nombre)
+    nuevoModelo = Modelos(
+        name=nombre,
+        final_loss=final_loss,
+        best_loss=best_loss,
+        pred_mean=metricas["pred_mean"],
+        pred_min=metricas["pred_min"],
+        pred_max=metricas["pred_max"],
+        accuracy=metricas["accuracy"],
+        precision=metricas["precision"],
+        recall=metricas["recall"],
+        f1_score=metricas["f1_score"],
+        iou=metricas["iou"],
+        dice=metricas["dice"],
+        dataset_size=dataset_size
+    )
     db.add(nuevoModelo)
     db.commit()
     db.close()
@@ -237,37 +280,40 @@ def AlmacenarModelo(nombre):
     bucket_name = "modelos"
     if not client.bucket_exists(bucket_name):
         client.make_bucket(bucket_name)
-        print("Bucket modelos creado")
     client.fput_object(
         bucket_name,
         nombre,
         f"{MODEL_ROOT}/{nombre}"
     )
     print(f"Modelo {nombre} subido")
+
+
+
 # ==================================================
 # ENTRENAMIENTO
 # ==================================================
+
 def EntrenarModelo(nro):
     print("Iniciando entrenamiento...")
     dataset = FireDataset(DATASET_ROOT)
-    loader = DataLoader(
-        dataset,
-        batch_size=2,
-        shuffle=True
-    )
+    loader = DataLoader(dataset,batch_size=2,shuffle=True)
     model = TemporalFireNet().to(device)
     criterion = nn.BCELoss()
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=1e-3
     )
-    #Utilizamos 5 porque no necesitamos un modelo cientificamente preciso
-    #Necesitamos un modelo en 2 minutos o menos, ya que tenemos una
-    #Cafetera con systemd+gnu+linux y quedar bien con david.
+    # Utilizamos 5 porque no necesitamos un modelo cientificamente preciso
+    # Necesitamos un modelo en 2 minutos o menos
     max_epochs = 5
     best_loss = float("inf")
+    final_loss = None
     patience = 2
     no_improve = 0
+    # Métricas de diagnóstico
+    last_pred_mean = None
+    last_pred_min = None
+    last_pred_max = None
     for epoch in range(max_epochs):
         model.train()
         total_loss = 0
@@ -276,12 +322,16 @@ def EntrenarModelo(nro):
             y = y.to(device)
             pred = model(x)
             loss = criterion(pred, y)
+            with torch.no_grad():
+                last_pred_mean = pred.mean().item()
+                last_pred_min = pred.min().item()
+                last_pred_max = pred.max().item()
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
         avg_loss = total_loss / len(loader)
-        print(f"Epoch {epoch}: loss={avg_loss:.6f}")
+        final_loss = avg_loss
         if avg_loss < best_loss:
             best_loss = avg_loss
             no_improve = 0
@@ -294,15 +344,64 @@ def EntrenarModelo(nro):
             print("Early stop: sin mejora")
             break
     nombre_modelo = f"fire_model_ver_{nro}.pth"
-    #Crear el directorio para el modelo 
     os.makedirs(MODEL_ROOT, exist_ok=True)
     model_path = f"{MODEL_ROOT}/{nombre_modelo}"
-    torch.save(
-        model.state_dict(),
-        model_path
-    )
+    torch.save(model.state_dict(),model_path)
     print(f"Modelo guardado: {model_path}")
-    AlmacenarModelo(nombre_modelo)
+    metricas = EvaluarModelo(model,loader)
+    AlmacenarModelo(
+            nombre_modelo,
+            final_loss,
+            best_loss,
+            len(dataset),
+            metricas
+            )
+
+
+# ==================================================
+# EVALUAR MODELO 
+# ==================================================
+def EvaluarModelo(model, loader):
+    model.eval()
+    TP = 0
+    TN = 0
+    FP = 0
+    FN = 0
+    pred_means = []
+    pred_mins = []
+    pred_maxs = []
+    with torch.no_grad():
+        for x, y in loader:
+            x = x.to(device)
+            y = y.to(device)
+            pred = model(x)
+            pred_means.append(pred.mean().item())
+            pred_mins.append(pred.min().item())
+            pred_maxs.append(pred.max().item())
+            pred_bin = (pred > 0.5).float()
+            TP += ((pred_bin == 1) & (y == 1)).sum().item()
+            TN += ((pred_bin == 0) & (y == 0)).sum().item()
+            FP += ((pred_bin == 1) & (y == 0)).sum().item()
+            FN += ((pred_bin == 0) & (y == 1)).sum().item()
+    accuracy = (TP + TN) / (TP + TN + FP + FN + 1e-8)
+    precision = TP / (TP + FP + 1e-8)
+    recall = TP / (TP + FN + 1e-8)
+    f1_score = ( 2 * precision * recall/ (precision + recall + 1e-8))
+    iou = TP / (TP + FP + FN + 1e-8)
+    dice = (2 * TP / (2 * TP + FP + FN + 1e-8))
+    return {
+        "pred_mean": float(np.mean(pred_means)),
+        "pred_min": float(np.min(pred_mins)),
+        "pred_max": float(np.max(pred_maxs)),
+        "accuracy": float(accuracy),
+        "precision": float(precision),
+        "recall": float(recall),
+        "f1_score": float(f1_score),
+        "iou": float(iou),
+        "dice": float(dice),
+    }
+
+
 # ==================================================
 # LOOP PRINCIPAL
 # ==================================================
@@ -311,8 +410,10 @@ def run():
         try:
             nro = ConsultarNroDeEntrenamientos()
             print(f"Entrenamientos disponibles: {nro}")
+            logearDB("Consultando Entrenamientos")
             if nro > 0 and ConsultarModelosNroDeEntrenamiento(nro) == 1:
                 print("Nuevo modelo inicial requerido")
+                logearDB("Modelando")
                 descarga = TraerDeMiniOEntrenamientos()
                 if descarga == 0:
                     EntrenarModelo(nro)
@@ -322,6 +423,7 @@ def run():
                 estado = ConsultarModelosNroDeEntrenamiento(nro)
                 if estado == 2:
                     print("Nuevo modelo requerido")
+                    logearDB("Modelando")
                     descarga = TraerDeMiniOEntrenamientos()
                     if descarga == 0:
                         EntrenarModelo(nro)

@@ -1,72 +1,96 @@
 # Repositorio del SPID
 
-Este repositorio contiene un sistema de predicción de incendios basado en procesamiento de datos satelitales y modelos de machine learning.
+Este repositorio contiene un proyecto desarrollado para la materia **Proyecto Integrador de Ciencias de Datos**.
 
-## Estructura del proyecto
+El proyecto consiste en un sistema de predicción de incendios basado en el procesamiento de datos satelitales históricos y modelos de *Machine Learning*.
 
-El proyecto sigue una arquitectura modular, separando las distintas etapas del pipeline de datos y despliegue:
+> **Nota:** Es posible que algunas implementaciones parezcan innecesarias o excesivamente complejas. Esto se debe a que el proyecto tiene que cumplir determinados requisitos académicos establecidos por la materia.
 
-### 🔹 `services/`
+---
+
+# Estructura del proyecto
+
+El proyecto sigue una arquitectura modular, separando las distintas etapas del procesamiento de datos, entrenamiento y despliegue.
+
+## 🔹 `services/`
 
 Contiene los servicios principales del sistema en producción:
 
-* API (FastAPI)
-* Workers (generación de datos y predicción)
-* Configuración Docker
+- API
+- Workers
+- Servicios independientes
+- Configuración Docker
 
-📌 **Punto de entrada recomendado**
-Dentro de este directorio hay un `readme.md` con instrucciones para levantar todo el sistema con Docker.
+### 📌 Punto de entrada recomendado
 
----
-
-### 🔹 `data/`
-
-Organización de datos siguiendo un flujo típico de ciencia de datos:
-
-* `raw/` → datos originales sin procesar
-* `interim/` → datos intermedios
-* `processed/` → datos listos para modelado
+Dentro de este directorio se encuentra un archivo `README.md` con las instrucciones necesarias para desplegar todo el sistema utilizando Docker.
 
 ---
 
-### 🔹 `tools/`
+## 🔹 `tools/`
 
-Scripts para generación de datasets o probar la api, una vez levantado los servicios, 
-se puede correr un script para que genere unos datos de entrenamiento.
-que pueden ser con datos reales o generados
+Contiene scripts auxiliares para:
 
----
+- Generación de datasets
+- Pruebas de la API
+- Creación de datos de entrenamiento
 
-### 🔹 `notebooks/`
-
-Notebooks de experimentación:
-
-* Entrenamiento del modelo
-* Pruebas exploratorias
-* Archivo del modelo (`fire_model.pth`)
+Una vez levantados los servicios, pueden ejecutarse scripts para generar conjuntos de entrenamiento utilizando datos reales o datos sintéticos.
 
 ---
 
-### 🔹 `reports/`
+## 🔹 `notebooks/`
 
-Resultados y visualizaciones:
+Notebooks utilizados durante la etapa de experimentación:
 
-* Figuras generadas
-* Análisis y resúmenes
-
----
-
-### 🔹 `src/`
-
-Código fuente auxiliar o en desarrollo.
+- Entrenamiento del modelo
+- Evaluación de resultados
+- Generación del archivo del modelo (`fire_model.pth`)
 
 ---
 
-### 🔹 `test/`
+## 🔹 `test/`
 
 Pruebas y validaciones del sistema.
 
 ---
 
+# Notas finales
 
+## Hipótesis planteada
 
+Utilizar imágenes satelitales históricas de amplio espectro para entrenar modelos capaces de predecir incendios.
+
+## Resultado obtenido
+
+Tras entrenar y evaluar modelos utilizando la totalidad de los registros históricos de incendios disponibles para Argentina, se concluye que:
+
+- El uso exclusivo de imágenes satelitales no permite construir un modelo con capacidad predictiva suficiente para anticipar incendios de manera útil.
+
+## Información importante para quienes deseen continuar el proyecto
+
+### Fuentes de datos adicionales
+
+Para mejorar los resultados es necesario incorporar nuevas fuentes de información, por ejemplo:
+
+- Detección de rayos en tiempo real.
+- Pronósticos meteorológicos.
+- Variables atmosféricas y climáticas.
+- Información topográfica y de vegetación.
+
+### Requisitos de hardware
+
+Se recomienda disponer de al menos **64 GB de RAM** para procesar imágenes satelitales en formato bruto (`.SAFE`).
+
+### Consideraciones sobre las fuentes de datos
+
+Durante el desarrollo del proyecto se utilizaron principalmente datos obtenidos mediante otra api, ya que el acceso masivo a imágenes satelitales sin procesar generó restricciones y bloqueos por IP.
+
+Según lo indicado por el profesor de la materia, estos datos presentan una menor precisión que los datos satelitales originales, debido a que son distribuidos con una menor cantidad de decimales y ya procesados previamente. Esto puede haber afectado negativamente la calidad de los entrenamientos y los resultados obtenidos.
+
+Se recomienda, cuando sea posible:
+
+- Descargar cada archivo `.SAFE` una única vez.
+- Mantener una copia local de los datos descargados.
+- Trabajar directamente con las imágenes satelitales originales para conservar la máxima precisión disponible.
+- Utilizar las fuentes procesadas únicamente cuando existan limitaciones de acceso o recursos de hardware.

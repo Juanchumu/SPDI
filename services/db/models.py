@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime
+from sqlalchemy import Column, Integer, String, Text, DateTime, Float, func
 from datetime import datetime
 from db.db import Base
 
@@ -31,6 +31,19 @@ class Modelos(Base):
     __tablename__ = "modelos"
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(Text)
+    final_loss = Column(Float)
+    best_loss = Column(Float)
+    pred_mean = Column(Float)
+    pred_min = Column(Float)
+    pred_max = Column(Float)
+    
+    accuracy = Column(Float)
+    precision = Column(Float)
+    recall = Column(Float)
+    f1_score = Column(Float)
+    iou = Column(Float)
+    dice = Column(Float)
+    dataset_size = Column(Integer)
     created_at = Column(DateTime, default=datetime.utcnow) # fecha del modelo 
 
 
@@ -47,6 +60,7 @@ class WorkersLogs(Base):
     id = Column(Integer, primary_key=True)
     name = Column(Text) 
     descripcion = Column(Text)
+    updated_at = Column(DateTime,server_default=func.now(),onupdate=func.now())
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
