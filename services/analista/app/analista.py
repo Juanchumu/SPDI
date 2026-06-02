@@ -124,9 +124,10 @@ def logearDB(descripcion):
 
 def run():
     while True:
+        print("Arranco el run")
         logearDB("Iniciado.")
         #Para que no haga un informe apenas inicia la api 
-        time.sleep(3600)
+        time.sleep(120)
         try:
             logearDB("Generando Reporte.")
             metricas = recolectar_metricas()
@@ -137,7 +138,7 @@ def run():
         except Exception as e:
             print(e)
             logearDB("No pude reportar, lo intentare la proxima.")
-        time.sleep(3600)
+        time.sleep(300)
 
 if __name__ == "__main__":
     run()

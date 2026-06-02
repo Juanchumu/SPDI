@@ -131,7 +131,13 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
       - DATABASE_URL=${DATABASE_URL}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+        #MiniO 
+      - DB_MINIO_USER=${DB_MINIO_USER}
+      - DB_MINIO_PASS=${DB_MINIO_PASS}
+        #ollama  
+      - OLLAMA_URL_A=${OLLAMA_URL_A}
+      - OLLAMA_URL_B=${OLLAMA_URL_B}
+      - OLLAMA_TOKEN=${OLLAMA_TOKEN}
     restart: unless-stopped
 
   minio:
