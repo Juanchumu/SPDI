@@ -44,11 +44,7 @@ Durante las pruebas iniciales se verificó la conectividad con el servicio y la 
 Se obtuvo correctamente un informe almacenado en la base de datos con la siguiente estructura:
 
 ```json
-{
-  "id": 1,
-  "created_at": "2026-06-02T20:47:40.623231",
-  "contenido": "Resumen Ejecutivo, Estado General del Sistema, Problemas Detectados, Riesgos y Recomendaciones."
-}
+{"id":1,"created_at":"2026-06-02T20:47:40.623231","contenido":"**Resumen Ejecutivo**\n\nEl sistema distribuido analizado presentaba un estado operativo general de satisfacción, con una brecha significativa entre el número predictedo de órdenes y las órdenes reales. Esta diferencia se debe en gran parte a la alta tasa de errores detectados.\n\n**Estado General del Sistema**\n\nEl sistema distribuido presenta los siguientes factores relevantes:\n\n*   **Órdenes:** El sistema tiene un total de 2 órdenes pendientes y 2 predicte, lo que sugiere una brecha significativa entre la información predicta y real.\n*   **Errores:** Se detectaron 0 errores durante el estado revisión realizado al momento del examen.\n\n**Problemas Detectados**\n\nAl analizar el sistema distribuido se detectan los siguientes problemas en este caso:\n\n*   **Difera entre órdenes predita y órdenes reales**\n\n**Riesgos**\n\nLos riesgos más significativos incluyen la alta tasa de erroresdetectados, la brecha significant entre el número predictedo de ordenes y las órdenes reales y la posibilidad que los elementos que realizan estas operaciones tengan alguna falla en su funcionamiento.\n\n**Recomendaciones**\n\nPara abordar estos problemas se recomienda:\n\n*   **Desarrollar un sistema más preciso:** La implementación de algoritmos avanzados y técnicas de aprendizaje automático.\n*   **Validar la información prioralmente:** Para asegurarse que las órdenes sean validadas antes de implementarse en el sistema.\n*   **Diseñar un sistema de alerta para errores:** Para detectar los posibles errores antes de que afecten al público.\n*   **Entrenar a los trabajadores:** sobre la importancia de los datos precisos y cómo identificar errores cuando ocurren."}
 ```
 
 El informe generado incluyó:
