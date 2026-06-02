@@ -41,6 +41,21 @@ with engine.connect() as conn:
         CREATE TABLE IF NOT EXISTS modelos (
             id SERIAL PRIMARY KEY,
             name TEXT,
+            final_loss DOUBLE PRECISION,
+            best_loss DOUBLE PRECISION,
+            pred_mean DOUBLE PRECISION,
+            pred_min DOUBLE PRECISION,
+            pred_max DOUBLE PRECISION,
+            
+            accuracy DOUBLE PRECISION,
+            precision DOUBLE PRECISION,
+            recall DOUBLE PRECISION,
+            f1_score DOUBLE PRECISION,
+            iou DOUBLE PRECISION,
+            dice DOUBLE PRECISION,
+
+            dataset_size INTEGER,
+            
             created_at TIMESTAMP
         )
         """))
