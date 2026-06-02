@@ -113,6 +113,26 @@ services:
     volumes:                           # 
       - ./dataset:/app/dataset     # 
     restart: unless-stopped
+  analista:
+    build:
+      context: .
+      dockerfile: ./analista/Dockerfile
+    command: python -u -m app.analista
+    depends_on:
+      db:
+        condition: service_healthy
+          #api:
+        #condition: service_healthy
+
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DATABASE_URL=${DATABASE_URL}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    restart: unless-stopped
 
   minio:
     image: minio/minio

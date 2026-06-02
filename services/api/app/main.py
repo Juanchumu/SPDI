@@ -181,6 +181,7 @@ def health():
                 "entrenador": workerVida("entrenador"),
                 "modelador":workerVida("modelador"),
                 "predictor": workerVida("predictor"),
+                "analista": workerVida("analista"),
                 },
             "dependencies": {
                 "database": dbVida(),
@@ -218,3 +219,29 @@ def listar_modelos(db: Session = Depends(get_db)):
         "dataset_size": modelo.dataset_size,
         "created_at": modelo.created_at.isoformat() if modelo.created_at else None
         } for modelo in modelos ]
+@app.get("/api/v1/informes")
+def informes(db: Session = Depends(get_db)):
+    informes = (
+            db.query(Informes)
+            .order_by(Informe.created_at.desc())
+            .limit(20).all()
+            )
+    return [{
+        "id": i.id,
+        "created_at": i.created_at.isoformat(),
+        "contenido": i.contenido
+        }for i in informes]
+@app.get("/api/v1/informes/ultimo")
+def ultimo_informe(db: Session = Depends(get_db)):
+    informe = (
+            db.query(Informes)
+            .order_by(Informe.created_at.desc())
+            .first()
+            )
+    if not informe:
+        return {"error": "sin informes"}
+    return {
+            "id": informe.id,
+            "created_at": informe.created_at.isoformat(),
+            "contenido": informe.contenido
+            }
