@@ -126,7 +126,7 @@ curl -X GET http://localhost:8000/api/v1/health
 ### Respuesta esperada
 
 ```json
-{"status_code":200,"message":"Todo anda bien por acá.","uptime":"0:05:51"}
+{"status":"DEGRADED","services":{"api":{"status":"UP","uptime":"0:00:09"},"worker":{"status":"ERROR","descripcion":"can't subtract offset-naive and offset-aware datetimes","last_seen":null},"validador":{"status":"UNKNOWN","descripcion":"Sin registros","last_seen":null},"entrenador":{"status":"UNKNOWN","descripcion":"Sin registros","last_seen":null},"modelador":{"status":"UNKNOWN","descripcion":"Sin registros","last_seen":null},"predictor":{"status":"UNKNOWN","descripcion":"Sin registros","last_seen":null}},"dependencies":{"database":"UP","minio":"UP"}}
 ```
 
 --- 

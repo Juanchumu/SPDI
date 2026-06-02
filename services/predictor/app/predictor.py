@@ -119,7 +119,7 @@ def descargar_ultimo_modelo():
     try:
         modelo = (
             db.query(Modelos)
-            .order_by(Modelos.id.desc())
+            .order_by(Modelos.id.desc()) #Modelos.max_acuracy.desc().first()
             .first()
         )
         if modelo is None:

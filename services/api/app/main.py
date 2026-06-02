@@ -8,7 +8,7 @@ import requests
 from datetime import timedelta, datetime, timezone
 
 from db.db import SessionLocal
-from db.models import Orden, Entrenamiento, Modelos, Descargas
+from db.models import Orden, Entrenamiento, Modelos, Descargas, WorkersLogs
 import os
 
 
