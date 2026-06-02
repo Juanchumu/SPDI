@@ -62,6 +62,12 @@ class WorkersLogs(Base):
     descripcion = Column(Text)
     updated_at = Column(DateTime,server_default=func.now(),onupdate=func.now())
     created_at = Column(DateTime, default=datetime.utcnow)
+class Informes(Base):
+    __tablename__ = "informes"
+    id = Column(Integer, primary_key=True)
+    contenido = Column(Text) 
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 
 
 
