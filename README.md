@@ -17,7 +17,7 @@ Aclaración: El valor de 0.42 km cuadrados tiene que ver con una decisión técn
 ### Diagrama C2
 
 El siguiente diagrama permite una visión en detalle de los distintos componentes del sistema y como se interrelacionan entre sí. Para verlo en detalle, pueden acceder a `/diagramas`.
-<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/3547abdf846184c2ec9e81f5e100dce5406014ff/diagramas/C2.svg">
+![Diagrama C2](/diagramas/C2.png)
 
 A nivel técnico, el proyecto sigue una arquitectura modular, separando las distintas etapas del procesamiento de datos, entrenamiento y despliegue.
 Los componentes (organizados en contenedores docker) son:
