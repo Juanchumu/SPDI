@@ -5,6 +5,8 @@ Este repositorio contiene un proyecto desarrollado para la materia **Proyecto In
 El proyecto consiste en un sistema de predicción de incendios basado en el procesamiento de datos satelitales históricos y modelos de *Machine Learning*.
 
 
+<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/e9f17bf140584c73542d7b34e4e5b3df9219dd31/C1.svg" >
+
 ---
 
 # Estructura del proyecto
