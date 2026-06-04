@@ -2,6 +2,8 @@
 
 Este repositorio contiene un sistema de predicción de incendios basado en procesamiento de datos satelitales y modelos de machine learning.
 
+<img src="https://github.com/Juanchumu/SPDI/blob/main/C1.svg" >
+
 ## Estructura del proyecto
 
 El proyecto sigue una arquitectura modular, separando las distintas etapas del pipeline de datos y despliegue:
