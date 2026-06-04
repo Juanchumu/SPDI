@@ -1,6 +1,7 @@
 detección de incendios basada en evolución temporal multibanda.
 # Cómo usar
 
+## 1 
 dentro del directorio services se tiene que correr:
 
 ```bash
@@ -10,34 +11,124 @@ esto es porque algunos contenedores generan archivos en local, de momento...
 
 en los directorios
 
+## 2 
+### Levantar servicios
+Por primera vez solo hay que levantar 
+la api y la db 
 
-## Levantar servicios
+```bash
+sudo docker compose up --build db api 
 
-Utilizá uno de estos comandos según tu instalación de Docker:
+```
+y despues entrar al contenedor de la api y correr  
+
+```bash
+sudo docker exec -it services-api-1  bash
+
+python app/crearDB.py 
+
+```
+Con esto ya estarian creadas las tablas 
+
+Ctrl + C para detener todo y ahi recien  levantar todo según tu instalación de Docker:
+
+nota: el gion o espacio, determina el funcionamiento, se crea con uno o con otro
+pero no se puede levantar denuevo con el otro comando porque da error. 
+
+Levantar todos estos servicios desde cero demora 1500+ segundos = 25 minutos.
 
 ```bash
 sudo docker-compose up --build
 # o
-sudo docker compose up --build
-
-sudo docker-compose up api db worker minio
+sudo docker compose up --build 
 
 ```
-
 ---
 
 # Interactuar con la API
 
-##  Crear orden o un archivo de entrenamiento
+## Documentación interactiva (Swagger)
+
+Una vez iniciada la API:
+
+http://localhost:8000/docs
+
+Documentación OpenAPI:
+
+http://localhost:8000/openapi.json
+
+
+
+## Crear orden de predicción
+
+Genera una nueva orden para evaluar riesgo de incendio en una ubicación y fecha determinada.
 
 ```bash
-
-curl -X POST http://localhost:8000/api/v1/orden -H "Content-Type: application/json" -d '{ "dia": "20211125", "lat": "-34.249801", "lon": "-58.880148" }'
+curl -X POST http://localhost:8000/api/v1/orden \
+-H "Content-Type: application/json" \
+-d '{
+  "dia": 20211125,
+  "lat": -34.249801,
+  "lon": -58.880148
+}'
 ```
+
+### Respuesta esperada
+
+```json
+{
+  "id": 1,
+  "status": "Pendiente.."
+}
+```
+
+---
+
+## Consultar orden
+
 ```bash
+curl -X GET http://localhost:8000/api/v1/orden/1
+```
 
-curl -X POST http://localhost:8000/api/v1/generar_datos -H "Content-Type: application/json" -d '{ "dia": "20211125", "lat": "-34.249801", "lon": "-58.880148" }'
+### Mientras se procesa
 
+```text
+Estado: Pendiente..
+```
+
+### Cuando la predicción está lista
+
+```json
+{
+  "id": 1,
+  "status": "Predicha",
+  "prediccion": "Riesgo Alto",
+  "modelo_utilizado": "fire_model_ver_10.pth"
+}
+```
+
+### Si no existe
+
+```json
+{
+  "detail": "Orden No encontrada"
+}
+```
+
+---
+
+## Generar datos de entrenamiento
+
+Crea una orden para descargar y procesar datos históricos que luego podrán utilizarse para entrenamiento.
+
+```bash
+curl -X POST http://localhost:8000/api/v1/generar_datos \
+-H "Content-Type: application/json" \
+-d '{
+  "dia": 20211125,
+  "lat": -34.249801,
+  "lon": -58.880148
+}'
 ```
 
 ### Respuesta esperada
@@ -51,52 +142,37 @@ curl -X POST http://localhost:8000/api/v1/generar_datos -H "Content-Type: applic
 
 ---
 
-## Consultar orden
+## Consultar estado de generación de datos
 
-```bash
-curl -X GET http://localhost:8000/api/v1/orden/1
-```
 ```bash
 curl -X GET http://localhost:8000/api/v1/generar_datos/1
 ```
 
-### Si sale todo bien
+### Respuesta posible
 
-```json
-{
-  "riesgo": "alto",
-  "porcentaje_area_riesgo": 23.78,
-  "zonas_criticas": [
-    {
-      "x1": 120,
-      "y1": 45,
-      "x2": 180,
-      "y2": 110,
-      "pixels": 3500
-    },
-    {
-      "x1": 300,
-      "y1": 200,
-      "x2": 360,
-      "y2": 260,
-      "pixels": 1800
-    }
-  ],
-  "archivo_prediccion": "ordenes/predictions/pred_42.tif"
-}
+```text
+Estado: pending
 ```
 
-### En caso de error
+o
+
+```text
+Estado: completado
+```
+
+### Si no existe
 
 ```json
 {
-  "status": "404"
+  "detail": "Entrenamiento no encontrado"
 }
 ```
 
 ---
 
-## Health check (estado de la API)
+## Health Check
+
+Permite verificar el estado general del sistema y sus dependencias.
 
 ```bash
 curl -X GET http://localhost:8000/api/v1/health
@@ -106,7 +182,125 @@ curl -X GET http://localhost:8000/api/v1/health
 
 ```json
 {
-  "status": "200"
+  "services": {
+    "api": {
+      "status": "UP",
+      "uptime": "0:15:42"
+    },
+    "worker": {
+      "status": "UP",
+      "descripcion": "Buscando Ordenes",
+      "last_seen": "2026-06-02T07:11:26.355989",
+      "seconds_since_last_heartbeat": 4
+    },
+    "validador": {
+      "status": "UP"
+    },
+    "entrenador": {
+      "status": "UP"
+    },
+    "modelador": {
+      "status": "UP"
+    },
+    "predictor": {
+      "status": "UP"
+    },
+    "analista": {
+      "status": "UP"
+    }
+  },
+  "dependencies": {
+    "database": "UP",
+    "minio": "UP"
+  }
+}
+```
+
+---
+
+## Listar modelos entrenados
+
+```bash
+curl -X GET http://localhost:8000/api/v1/modelos
+```
+
+### Respuesta esperada
+
+```json
+[
+  {
+    "id": 2,
+    "name": "fire_model_ver_10.pth",
+    "final_loss": 0.5877,
+    "best_loss": 0.5877,
+    "pred_mean": 0.7220,
+    "pred_min": 0.6190,
+    "pred_max": 0.7255,
+    "accuracy": 0.7256,
+    "precision": 0.7256,
+    "recall": 1.0,
+    "f1_score": 0.8409,
+    "iou": 0.7256,
+    "dice": 0.8409,
+    "dataset_size": 10,
+    "created_at": "2026-06-02T07:22:49.181331"
+  }
+]
+```
+
+### Si todavía no existen modelos
+
+```json
+{
+  "Error": "No hay Modelos"
+}
+```
+
+---
+
+## Obtener últimos informes analíticos
+
+Devuelve los 20 informes más recientes generados por el analista.
+
+```bash
+curl -X GET http://localhost:8000/api/v1/informes
+```
+
+### Respuesta esperada
+
+```json
+[
+  {
+    "id": 5,
+    "created_at": "2026-06-02T20:47:40.623231",
+    "contenido": "Resumen Ejecutivo..."
+  }
+]
+```
+
+---
+
+## Obtener último informe
+
+```bash
+curl -X GET http://localhost:8000/api/v1/informes/ultimo
+```
+
+### Respuesta esperada
+
+```json
+{
+  "id": 5,
+  "created_at": "2026-06-02T20:47:40.623231",
+  "contenido": "Resumen Ejecutivo..."
+}
+```
+
+### Si no existen informes
+
+```json
+{
+  "error": "sin informes"
 }
 ```
 

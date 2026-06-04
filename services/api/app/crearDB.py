@@ -36,12 +36,35 @@ with engine.connect() as conn:
     trans = conn.begin()
     
     try:
-        # Productos | son los productos disponibles de sentinel
+        # ==========================
+        # ALTER TABLES (Migraciones)
+        # ==========================
+        # WorkersLogs
+        #conn.execute(text("""
+        #ALTER TABLE workerslogs
+        #ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP
+        #"""))
+        # Modelos | son los modelos generados automaticamente
         conn.execute(text("""
-        CREATE TABLE IF NOT EXISTS products (
-            id TEXT PRIMARY KEY,
+        CREATE TABLE IF NOT EXISTS modelos (
+            id SERIAL PRIMARY KEY,
             name TEXT,
-            fecha TEXT
+            final_loss DOUBLE PRECISION,
+            best_loss DOUBLE PRECISION,
+            pred_mean DOUBLE PRECISION,
+            pred_min DOUBLE PRECISION,
+            pred_max DOUBLE PRECISION,
+            
+            accuracy DOUBLE PRECISION,
+            precision DOUBLE PRECISION,
+            recall DOUBLE PRECISION,
+            f1_score DOUBLE PRECISION,
+            iou DOUBLE PRECISION,
+            dice DOUBLE PRECISION,
+
+            dataset_size INTEGER,
+            
+            created_at TIMESTAMP
         )
         """))
         
@@ -61,9 +84,8 @@ with engine.connect() as conn:
             id SERIAL PRIMARY KEY,
             args TEXT,
             status TEXT,
-            ruta_safe TEXT,
-            ruta_stack TEXT,
             prediccion TEXT,
+            modelo_utilizado TEXT,
             created_at TIMESTAMP,
             updated_at TIMESTAMP
         )
@@ -76,6 +98,24 @@ with engine.connect() as conn:
             status TEXT,
             created_at TIMESTAMP,
             updated_at TIMESTAMP
+        )
+        """))
+        # WorkersLogs 
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS workerslogs (
+            id SERIAL PRIMARY KEY,
+            name TEXT,
+            descripcion TEXT,
+            updated_at TIMESTAMP,
+            created_at TIMESTAMP
+        )
+        """))
+        # WorkersLogs 
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS informes (
+            id SERIAL PRIMARY KEY,
+            contenido TEXT,
+            created_at TIMESTAMP
         )
         """))
         

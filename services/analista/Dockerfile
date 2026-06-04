@@ -6,22 +6,22 @@ WORKDIR /app
 RUN useradd -m appuser
 
 # Instalar dependencias del sistema
-RUN apt-get update && apt-get install -y netcat-openbsd && rm -rf /var/lib/apt/lists/*
-
+RUN apt-get update && apt-get install -y netcat-openbsd  && rm -rf /var/lib/apt/lists/*
 # Copiar requirements primero (mejor caching)
-COPY api/requirements.txt .
+COPY analista/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar código
-COPY api/app ./app
+COPY analista/app ./app
 COPY db ./db
 
 # Dar permisos al usuario sobre /app
 RUN chown -R appuser:appuser /app
 
 # Script entrypoint
-COPY api/entrypoint.sh /entrypoint.sh
+COPY analista/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && chown appuser:appuser /entrypoint.sh
+
 
 ENV PYTHONPATH=/app
 
@@ -30,5 +30,22 @@ USER appuser
 
 ENTRYPOINT ["/entrypoint.sh"]
 
-#hay problemas al crear la db
-CMD ["sh", "-c", "python app/crearDB.py; uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

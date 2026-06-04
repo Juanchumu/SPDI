@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime
+from sqlalchemy import Column, Integer, String, Text, DateTime, Float, func
 from datetime import datetime
 from db.db import Base
 
@@ -9,10 +9,8 @@ class Orden(Base):
     id = Column(Integer, primary_key=True)
     args = Column(Text)  # JSON en string
     status = Column(String, default="pending")
-
-    ruta_safe = Column(Text, nullable=True)
-    ruta_stack = Column(Text, nullable=True)
     prediccion = Column(Text, nullable=True)
+    modelo_utilizado = Column(Text, nullable=True)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -28,13 +26,25 @@ class Entrenamiento(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-# 📦 Productos disponibles (Copernicus)
-class Product(Base):
-    __tablename__ = "products"
-
-    id = Column(String, primary_key=True)
+# 📦 Modelos disponibles
+class Modelos(Base):
+    __tablename__ = "modelos"
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(Text)
-    fecha = Column(Text)  # fecha del producto
+    final_loss = Column(Float)
+    best_loss = Column(Float)
+    pred_mean = Column(Float)
+    pred_min = Column(Float)
+    pred_max = Column(Float)
+    
+    accuracy = Column(Float)
+    precision = Column(Float)
+    recall = Column(Float)
+    f1_score = Column(Float)
+    iou = Column(Float)
+    dice = Column(Float)
+    dataset_size = Column(Integer)
+    created_at = Column(DateTime, default=datetime.utcnow) # fecha del modelo 
 
 
 # 📥 Descargas realizadas
@@ -44,6 +54,21 @@ class Descargas(Base):
     nombre_imagen = Column(Text)
     dia_de_la_imagen= Column(Text)
     fecha_descarga = Column(DateTime, default=datetime.utcnow)
+
+class WorkersLogs(Base):
+    __tablename__ = "workerslogs"
+    id = Column(Integer, primary_key=True)
+    name = Column(Text) 
+    descripcion = Column(Text)
+    updated_at = Column(DateTime,server_default=func.now(),onupdate=func.now())
+    created_at = Column(DateTime, default=datetime.utcnow)
+class Informes(Base):
+    __tablename__ = "informes"
+    id = Column(Integer, primary_key=True)
+    contenido = Column(Text) 
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 
 
 

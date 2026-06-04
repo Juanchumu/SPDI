@@ -5,12 +5,14 @@ descargas2/
 ordenes/
 dataset/
 stacks/
+services/tmp/
 
 # Archivos generados por el script
 *.tif
 *.tiff
 *.SAFE/
 *.zip
+*.pth
 
 # Archivos temporales de Python
 __pycache__/
