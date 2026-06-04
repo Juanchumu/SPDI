@@ -23,7 +23,8 @@ A nivel técnico, el proyecto sigue una arquitectura modular, separando las dist
 Los componentes (organizados en contenedores docker) son:
 
 ### API
-<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/3547abdf846184c2ec9e81f5e100dce5406014ff/diagramas/API.svg">
+![Diagrama API](/diagramas/api.jpg)
+
 Acá se presentan los endpoints que permiten a los usuarios hacer solicitudes, recibir respuesta, consultar el estado de la consulta y el estado de los servicios en general.
 Tambien permite a los administradores probar distintos modelos, conocer el estado de las ordenes y entrenar el modelo (ingresando nuevos datos de incendio mediante el endpoint *Generar_datos*).
 Actualización: El endpoint /Informes ahora incorpora el uso de un modelo LLM que genera un reporte ready friendly sobre el estado del servicio, problemas, sugerencias de mejoras/soluciones, etc.
@@ -69,7 +70,8 @@ El sistema tiene dos tipos de bases de datos:
 
 ### Analista (modulo de IA)
 
-<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/924614dc308e08f6840daa1067c9c236a708f3fc/diagramas/bd.svg">
+![Diagrama Analista](/diagramas/analista.jpg)
+
 Se encarga de generar reportes sobre el estado del servicio, utilizando un modelo de OLLAMA, recibe logs, estados de ordenes y modelos.
 
 Genera:
