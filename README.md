@@ -16,10 +16,12 @@ Aclaración: El valor de 0.42 km cuadrados tiene que ver con una decisión técn
 
 ### Diagrama C2
 
+El siguiente diagrama permite una visión en detalle de los distintos componentes del sistema y como se interrelacionan entre sí. Para verlo en detalle, pueden acceder a `/diagramas`.
 <img src="https://raw.githubusercontent.com/Juanchumu/SPDI/3547abdf846184c2ec9e81f5e100dce5406014ff/diagramas/C2.svg">
 
 A nivel técnico, el proyecto sigue una arquitectura modular, separando las distintas etapas del procesamiento de datos, entrenamiento y despliegue.
 Los componentes (organizados en contenedores docker) son:
+
 ### API
 <img src="https://raw.githubusercontent.com/Juanchumu/SPDI/3547abdf846184c2ec9e81f5e100dce5406014ff/diagramas/API.svg">
 Acá se presentan los endpoints que permiten a los usuarios hacer solicitudes, recibir respuesta, consultar el estado de la consulta y el estado de los servicios en general.
@@ -46,7 +48,11 @@ El predictor revisa la cola de ordenes, toma una orden y procede igual que el mo
 
 <img src="https://raw.githubusercontent.com/Juanchumu/SPDI/0c467d89cbde34fdb3d2e9e1d897599993503e89/diagramas/worker.svg">
 
+### Bases de datos
 
+<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/924614dc308e08f6840daa1067c9c236a708f3fc/diagramas/bd.svg">
+El sistema tiene dos tipos de bases de datos: una con una estructura relacional donde se lleva registro de las ordenes solicitadas y sus estados, de los modelos disponibles y sus métricas, los entrenamientos y las descargas.
+La otra base de datos se usa para almacenar las imagenes de entrenamiento, las usadas para predicción, los modelos y los archivos .tiff que son el resultado de la predicción y se pueden entender como un mapa probabilistico donde cada pixel representa el riesgo de incendio en ese punto.
 
 # Organización de las carpetas y guía de uso
 ## 🔹 `services/`
