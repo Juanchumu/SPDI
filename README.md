@@ -10,7 +10,7 @@ Podemos observar el flujo general de los datos.
 El usuario accede al sistema solicitando una predicción indicando latitud y longitud, el sistema procesa la solicitud, descarga las imagenes satelitales de la zona durante el ultimo mes para generar una predicción la cual devuelve en distintos formatos: un dashboard en frontend web o alertas mediante aplicaciones de mensajería.
 Aclaración: El valor de 0.42 km cuadrados tiene que ver con una decisión técnica que involucra tomar imagenes de 200x200 pixeles, midiendo cada uno 10 metros cuadrados, se llega a ese valor de 0.42 km cuadrados.
 
-<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/3547abdf846184c2ec9e81f5e100dce5406014ff/diagramas/C1.svg" >
+![Diagrama C1](/diagramas/C1.svg)
 
 ---
 
@@ -31,29 +31,33 @@ Actualización: El endpoint /Informes ahora incorpora el uso de un modelo LLM qu
 
 ### Entrenador
 
-<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/3547abdf846184c2ec9e81f5e100dce5406014ff/diagramas/entrenador.svg">
+![Diagrama Entrenador](/diagramas/entrenador.svg)
 
 Este componente se encarga de recibir localizaciones historicas en donde hubo incendios, generando asi, el dataset para los entrenamientos.  
 
 
 ### Modelador
-<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/3547abdf846184c2ec9e81f5e100dce5406014ff/diagramas/modelador.svg">
+
+![Diagrama Modelador](/diagramas/modelador.svg)
+
 Este componente se encarga de buscar las imágenes nuevas en miniIO para realizar un entrenamiento guardando el modelo nuevo en un bucket de minIO, le asigna un id y lo registra en la base de datos junto a métricas de rendimiento del modelo lo cual permite rankear los modelos y elegir el de mejor performance siempre.
 
 ### Predictor
-<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/0c467d89cbde34fdb3d2e9e1d897599993503e89/diagramas/predictor.svg">
+
+![Diagrama Predictor](/diagramas/predictor.svg)
+
 El predictor revisa la cola de ordenes, toma una orden y procede igual que el modelador: busca las imagenes del ultimo mes en minIO asociadas al id de la orden, realiza la predicción con el modelo indicado (politica actualmente hardcodeada), guarda el resultado en minIO y registra en la base de datos. (Tambien cambia el estado de la orden).
 
 ### Validador
 
-<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/0c467d89cbde34fdb3d2e9e1d897599993503e89/diagramas/validador.svg">
+![Diagrama Validador](/diagramas/validador.svg)
 
 Este sitema se encarga de validar la orden recibida por la API, de momento contiene unos bloques IF sobre los atributos de las ordenes.
 En si, este seria el espacio para verificar (todavia no implementadas) que las ordenes cumplan requerimientos de seguridad, coberturas.. etc. 
 
 ### Worker
 
-<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/0c467d89cbde34fdb3d2e9e1d897599993503e89/diagramas/worker.svg">
+![Diagrama Worker](/diagramas/worker.svg)
 
 Se encarga de descargar las imagenes satelitales de una orden, sobre las cuales, el predictor:
 * Predecir(imagenes descargadas por el worker asociadas a una orden).
@@ -61,7 +65,8 @@ Se encarga de descargar las imagenes satelitales de una orden, sobre las cuales,
 
 ### Bases de datos
 
-<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/924614dc308e08f6840daa1067c9c236a708f3fc/diagramas/bd.svg">
+![Diagrama Base de Datos](/diagramas/bd.jpg)
+
 El sistema tiene dos tipos de bases de datos: 
 * (PostgreSQL) Con una estructura relacional donde se lleva registro de las ordenes solicitadas y sus estados, de los modelos disponibles y sus métricas, los entrenamientos y las descargas.
 
