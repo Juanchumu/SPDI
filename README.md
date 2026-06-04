@@ -34,6 +34,18 @@ Actualización: El endpoint Health ahora incorpora el uso de un modelo LLM que g
 <img src="https://raw.githubusercontent.com/Juanchumu/SPDI/3547abdf846184c2ec9e81f5e100dce5406014ff/diagramas/modelador.svg">
 Este componente se encarga de buscar las imágenes nuevas en miniIO para realizar un entrenamiento guardando el resultado en un bucket de minIO, le asigna un id y lo registra en la base de datos junto a métricas de rendimiento del modelo lo cual permite rankear los modelos y elegir el de mejor performance siempre.
 
+### Predictor
+<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/0c467d89cbde34fdb3d2e9e1d897599993503e89/diagramas/predictor.svg">
+El predictor revisa la cola de ordenes, toma una orden y procede igual que el modelador: busca las imagenes del ultimo mes en minIO asociadas al id de la orden, realiza la predicción con el modelo indicado, guarda el resultado en minIO y registra en la base de datos. (Tambien cambia el estado de la orden).
+
+### Validador
+
+<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/0c467d89cbde34fdb3d2e9e1d897599993503e89/diagramas/validador.svg">
+
+### Worker
+
+<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/0c467d89cbde34fdb3d2e9e1d897599993503e89/diagramas/worker.svg">
+
 
 
 # Organización de las carpetas y guía de uso
