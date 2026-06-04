@@ -2,20 +2,41 @@
 
 Este repositorio contiene un proyecto desarrollado para la materia **Proyecto Integrador de Ciencias de Datos**.
 
-<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/e9f17bf140584c73542d7b34e4e5b3df9219dd31/C1.svg" >
-
 ## Estructura del proyecto
 El proyecto consiste en un sistema de predicción de incendios basado en el procesamiento de datos satelitales históricos y modelos de *Machine Learning*.
 
+### Diagrama C1
+Podemos observar el flujo general de los datos. 
+El usuario accede al sistema solicitando una predicción indicando latitud y longitud, el sistema procesa la solicitud, descarga las imagenes satelitales de la zona durante el ultimo mes para generar una predicción la cual devuelve en distintos formatos: un dashboard en frontend web o alertas mediante aplicaciones de mensajería.
+Aclaración: El valor de 0.42 km cuadrados tiene que ver con una decisión técnica que involucra tomar imagenes de 200x200 pixeles, midiendo cada uno 10 metros cuadrados, se llega a ese valor de 0.42 km cuadrados.
 
-<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/e9f17bf140584c73542d7b34e4e5b3df9219dd31/C1.svg" >
+<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/3547abdf846184c2ec9e81f5e100dce5406014ff/diagramas/C1.svg" >
 
 ---
 
-# Estructura del proyecto
+### Diagrama C2
 
-El proyecto sigue una arquitectura modular, separando las distintas etapas del procesamiento de datos, entrenamiento y despliegue.
+<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/3547abdf846184c2ec9e81f5e100dce5406014ff/diagramas/C2.svg">
 
+A nivel técnico, el proyecto sigue una arquitectura modular, separando las distintas etapas del procesamiento de datos, entrenamiento y despliegue.
+Los componentes (organizados en contenedores docker) son:
+### API
+<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/3547abdf846184c2ec9e81f5e100dce5406014ff/diagramas/API.svg">
+Acá se presentan los endpoints que permiten a los usuarios hacer solicitudes, recibir respuesta, consultar el estado de la consulta y el estado de los servicios en general.
+Tambien permite a los administradores probar distintos modelos, conocer el estado de las ordenes y entrenar el modelo (ingresando nuevos datos de incendio mediante el endpoint *Generar_datos*).
+Actualización: El endpoint Health ahora incorpora el uso de un modelo LLM que genera un reporte ready friendly sobre el estado del servicio, problemas, sugerencias de mejoras/soluciones, etc.
+
+### Entrenador
+
+<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/3547abdf846184c2ec9e81f5e100dce5406014ff/diagramas/entrenador.svg">
+
+### Modelador
+<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/3547abdf846184c2ec9e81f5e100dce5406014ff/diagramas/modelador.svg">
+Este componente se encarga de buscar las imágenes nuevas en miniIO para realizar un entrenamiento guardando el resultado en un bucket de minIO, le asigna un id y lo registra en la base de datos junto a métricas de rendimiento del modelo lo cual permite rankear los modelos y elegir el de mejor performance siempre.
+
+
+
+# Organización de las carpetas y guía de uso
 ## 🔹 `services/`
 
 Contiene los servicios principales del sistema en producción:
