@@ -26,33 +26,61 @@ Los componentes (organizados en contenedores docker) son:
 <img src="https://raw.githubusercontent.com/Juanchumu/SPDI/3547abdf846184c2ec9e81f5e100dce5406014ff/diagramas/API.svg">
 Acá se presentan los endpoints que permiten a los usuarios hacer solicitudes, recibir respuesta, consultar el estado de la consulta y el estado de los servicios en general.
 Tambien permite a los administradores probar distintos modelos, conocer el estado de las ordenes y entrenar el modelo (ingresando nuevos datos de incendio mediante el endpoint *Generar_datos*).
-Actualización: El endpoint Health ahora incorpora el uso de un modelo LLM que genera un reporte ready friendly sobre el estado del servicio, problemas, sugerencias de mejoras/soluciones, etc.
+Actualización: El endpoint /Informes ahora incorpora el uso de un modelo LLM que genera un reporte ready friendly sobre el estado del servicio, problemas, sugerencias de mejoras/soluciones, etc.
 
 ### Entrenador
 
 <img src="https://raw.githubusercontent.com/Juanchumu/SPDI/3547abdf846184c2ec9e81f5e100dce5406014ff/diagramas/entrenador.svg">
 
+Este componente se encarga de recibir localizaciones historicas en donde hubo incendios, generando asi, el dataset para los entrenamientos.  
+
+
 ### Modelador
 <img src="https://raw.githubusercontent.com/Juanchumu/SPDI/3547abdf846184c2ec9e81f5e100dce5406014ff/diagramas/modelador.svg">
-Este componente se encarga de buscar las imágenes nuevas en miniIO para realizar un entrenamiento guardando el resultado en un bucket de minIO, le asigna un id y lo registra en la base de datos junto a métricas de rendimiento del modelo lo cual permite rankear los modelos y elegir el de mejor performance siempre.
+Este componente se encarga de buscar las imágenes nuevas en miniIO para realizar un entrenamiento guardando el modelo nuevo en un bucket de minIO, le asigna un id y lo registra en la base de datos junto a métricas de rendimiento del modelo lo cual permite rankear los modelos y elegir el de mejor performance siempre.
 
 ### Predictor
 <img src="https://raw.githubusercontent.com/Juanchumu/SPDI/0c467d89cbde34fdb3d2e9e1d897599993503e89/diagramas/predictor.svg">
-El predictor revisa la cola de ordenes, toma una orden y procede igual que el modelador: busca las imagenes del ultimo mes en minIO asociadas al id de la orden, realiza la predicción con el modelo indicado, guarda el resultado en minIO y registra en la base de datos. (Tambien cambia el estado de la orden).
+El predictor revisa la cola de ordenes, toma una orden y procede igual que el modelador: busca las imagenes del ultimo mes en minIO asociadas al id de la orden, realiza la predicción con el modelo indicado (politica actualmente hardcodeada), guarda el resultado en minIO y registra en la base de datos. (Tambien cambia el estado de la orden).
 
 ### Validador
 
 <img src="https://raw.githubusercontent.com/Juanchumu/SPDI/0c467d89cbde34fdb3d2e9e1d897599993503e89/diagramas/validador.svg">
 
+Este sitema se encarga de validar la orden recibida por la API, de momento contiene unos bloques IF sobre los atributos de las ordenes.
+En si, este seria el espacio para verificar (todavia no implementadas) que las ordenes cumplan requerimientos de seguridad, coberturas.. etc. 
+
 ### Worker
 
 <img src="https://raw.githubusercontent.com/Juanchumu/SPDI/0c467d89cbde34fdb3d2e9e1d897599993503e89/diagramas/worker.svg">
 
+Se encarga de descargar las imagenes satelitales de una orden, sobre las cuales, el predictor:
+* Predecir(imagenes descargadas por el worker asociadas a una orden).
+
+
 ### Bases de datos
 
 <img src="https://raw.githubusercontent.com/Juanchumu/SPDI/924614dc308e08f6840daa1067c9c236a708f3fc/diagramas/bd.svg">
-El sistema tiene dos tipos de bases de datos: una con una estructura relacional donde se lleva registro de las ordenes solicitadas y sus estados, de los modelos disponibles y sus métricas, los entrenamientos y las descargas.
-La otra base de datos se usa para almacenar las imagenes de entrenamiento, las usadas para predicción, los modelos y los archivos .tiff que son el resultado de la predicción y se pueden entender como un mapa probabilistico donde cada pixel representa el riesgo de incendio en ese punto.
+El sistema tiene dos tipos de bases de datos: 
+* (PostgreSQL) Con una estructura relacional donde se lleva registro de las ordenes solicitadas y sus estados, de los modelos disponibles y sus métricas, los entrenamientos y las descargas.
+
+* (AWS Local) Para almacenar las imagenes de entrenamiento, las usadas para predicción, los modelos y los archivos .tiff que son el resultado de la predicción y se pueden entender como un mapa probabilistico donde cada pixel representa el riesgo de incendio en ese punto.
+
+
+### Analista (modulo de IA)
+
+<img src="https://raw.githubusercontent.com/Juanchumu/SPDI/924614dc308e08f6840daa1067c9c236a708f3fc/diagramas/bd.svg">
+Se encarga de generar reportes sobre el estado del servicio, utilizando un modelo de OLLAMA, recibe logs, estados de ordenes y modelos.
+
+Genera:
+
+1. Resumen ejecutivo.
+2. Estado general del sistema.
+3. Problemas detectados.
+4. Riesgos.
+5. Recomendaciones.
+
+
 
 # Organización de las carpetas y guía de uso
 ## 🔹 `services/`
