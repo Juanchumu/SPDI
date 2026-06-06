@@ -7,6 +7,9 @@ import numpy as np
 import torch.nn as nn
 import shutil
 import urllib3
+import xgboost as xgb
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+import joblib
 
 from datetime import datetime
 
@@ -166,6 +169,39 @@ class TemporalFireNet(nn.Module):
         last = out[:, -1]
         last = last[:, :, None, None].expand(-1, -1, H, W)
         return self.decoder(last)
+
+class TempCNN(nn.Module):
+    """Red convolucional temporal pura (sin LSTM, usa Conv1D)"""
+    def __init__(self):
+        super().__init__()
+        self.encoder = ConvBlock(5, 32)
+        self.temporal_conv = nn.Sequential(
+            nn.Conv1d(32, 64, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv1d(64, 64, kernel_size=3, padding=1),
+            nn.ReLU()
+        )
+        self.decoder = nn.Sequential(
+            nn.Conv2d(64, 32, 3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(32, 1, 1),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        B, T, C, H, W = x.shape
+        feats = []
+        for t in range(T):
+            ft = self.encoder(x[:, t])  # (B, 32, H, W)
+            ft = ft.mean(dim=[2, 3])    # (B, 32)
+            feats.append(ft)
+        feats = torch.stack(feats, dim=1)  # (B, T, 32)
+        # Conv1D espera (B, C, T)
+        feats = feats.permute(0, 2, 1)     # (B, 32, T)
+        temporal_out = self.temporal_conv(feats)  # (B, 64, T)
+        last = temporal_out[:, :, -1]       # (B, 64)
+        last = last[:, :, None, None].expand(-1, -1, H, W)
+        return self.decoder(last)
 # ==================================================
 # MINIO
 # ==================================================
@@ -256,10 +292,11 @@ def ConsultarModelosNroDeEntrenamiento(nro):
 # ==================================================
 # SUBIR MODELO
 # ==================================================
-def AlmacenarModelo(nombre,final_loss,best_loss,dataset_size,metricas):
+def AlmacenarModelo(nombre,final_loss,best_loss,dataset_size,metricas,tipo="temporal_fire_net"):
     db = SessionLocal()
     nuevoModelo = Modelos(
         name=nombre,
+        tipo=tipo,
         final_loss=final_loss,
         best_loss=best_loss,
         pred_mean=metricas["pred_mean"],
@@ -354,8 +391,176 @@ def EntrenarModelo(nro):
             final_loss,
             best_loss,
             len(dataset),
-            metricas
+            metricas,
+            tipo="temporal_fire_net"
             )
+
+
+# ==================================================
+# ENTRENAMIENTO XGBOOST
+# ==================================================
+def EntrenarModeloXGBoost(nro):
+    print("Iniciando entrenamiento XGBoost...")
+    dataset = FireDataset(DATASET_ROOT)
+    
+    # Preparar datos: flatten pixels como filas
+    all_X = []
+    all_y = []
+    max_samples_per_image = 10000  # Subsamplear para no explotar memoria
+    
+    for i in range(len(dataset)):
+        x, y = dataset[i]
+        # x: (3, 5, 200, 200) -> flatten a (200*200, 15)
+        x_np = x.numpy()  # (3, 5, 200, 200)
+        y_np = y.numpy()  # (1, 200, 200)
+        
+        T, C, H, W = x_np.shape
+        # Reorganizar: cada pixel tiene 15 features (3 timestamps * 5 canales)
+        x_flat = x_np.transpose(2, 3, 0, 1).reshape(H * W, T * C)  # (40000, 15)
+        y_flat = y_np.reshape(H * W)  # (40000,)
+        
+        # Subsamplear
+        if len(x_flat) > max_samples_per_image:
+            indices = np.random.choice(len(x_flat), max_samples_per_image, replace=False)
+            x_flat = x_flat[indices]
+            y_flat = y_flat[indices]
+        
+        all_X.append(x_flat)
+        all_y.append(y_flat)
+    
+    X_train = np.concatenate(all_X, axis=0)
+    y_train = np.concatenate(all_y, axis=0)
+    # Binarizar target
+    y_train = (y_train > 0.5).astype(np.float32)
+    
+    print(f"Dataset XGBoost: {X_train.shape[0]} muestras, {X_train.shape[1]} features")
+    
+    model = xgb.XGBClassifier(
+        n_estimators=100,
+        max_depth=6,
+        learning_rate=0.1,
+        eval_metric='logloss',
+        use_label_encoder=False,
+        verbosity=1
+    )
+    model.fit(X_train, y_train)
+    
+    # Guardar modelo
+    nombre_modelo = f"xgb_model_ver_{nro}.json"
+    os.makedirs(MODEL_ROOT, exist_ok=True)
+    model_path = f"{MODEL_ROOT}/{nombre_modelo}"
+    model.save_model(model_path)
+    print(f"Modelo XGBoost guardado: {model_path}")
+    
+    # Evaluar
+    metricas = EvaluarModeloXGBoost(model, X_train, y_train)
+    
+    # Calcular loss aproximado (log loss)
+    from sklearn.metrics import log_loss
+    y_pred_proba = model.predict_proba(X_train)[:, 1]
+    final_loss = log_loss(y_train, y_pred_proba)
+    
+    AlmacenarModelo(
+        nombre_modelo,
+        final_loss,
+        final_loss,  # best_loss = final_loss para XGBoost
+        len(dataset),
+        metricas,
+        tipo="xgboost"
+    )
+
+
+# ==================================================
+# EVALUAR MODELO XGBOOST
+# ==================================================
+def EvaluarModeloXGBoost(model, X, y):
+    y_pred = model.predict(X)
+    y_pred_proba = model.predict_proba(X)[:, 1]
+    
+    TP = ((y_pred == 1) & (y == 1)).sum()
+    TN = ((y_pred == 0) & (y == 0)).sum()
+    FP = ((y_pred == 1) & (y == 0)).sum()
+    FN = ((y_pred == 0) & (y == 1)).sum()
+    
+    accuracy = (TP + TN) / (TP + TN + FP + FN + 1e-8)
+    precision = TP / (TP + FP + 1e-8)
+    recall = TP / (TP + FN + 1e-8)
+    f1 = 2 * precision * recall / (precision + recall + 1e-8)
+    iou = TP / (TP + FP + FN + 1e-8)
+    dice = 2 * TP / (2 * TP + FP + FN + 1e-8)
+    
+    return {
+        "pred_mean": float(np.mean(y_pred_proba)),
+        "pred_min": float(np.min(y_pred_proba)),
+        "pred_max": float(np.max(y_pred_proba)),
+        "accuracy": float(accuracy),
+        "precision": float(precision),
+        "recall": float(recall),
+        "f1_score": float(f1),
+        "iou": float(iou),
+        "dice": float(dice),
+    }
+
+
+# ==================================================
+# ENTRENAMIENTO TEMPCNN
+# ==================================================
+def EntrenarModeloTempCNN(nro):
+    print("Iniciando entrenamiento TempCNN...")
+    dataset = FireDataset(DATASET_ROOT)
+    loader = DataLoader(dataset, batch_size=2, shuffle=True)
+    model = TempCNN().to(device)
+    criterion = nn.BCELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    
+    max_epochs = 5
+    best_loss = float("inf")
+    final_loss = None
+    patience = 2
+    no_improve = 0
+    
+    for epoch in range(max_epochs):
+        model.train()
+        total_loss = 0
+        for x, y in tqdm(loader):
+            x = x.to(device)
+            y = y.to(device)
+            pred = model(x)
+            loss = criterion(pred, y)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.item()
+        avg_loss = total_loss / len(loader)
+        final_loss = avg_loss
+        print(f"TempCNN Epoch {epoch+1}/{max_epochs} - Loss: {avg_loss:.6f}")
+        if avg_loss < best_loss:
+            best_loss = avg_loss
+            no_improve = 0
+        else:
+            no_improve += 1
+        if avg_loss < 1e-6:
+            print("Early stop: loss ~ 0")
+            break
+        if no_improve >= patience:
+            print("Early stop: sin mejora")
+            break
+    
+    nombre_modelo = f"tempcnn_model_ver_{nro}.pth"
+    os.makedirs(MODEL_ROOT, exist_ok=True)
+    model_path = f"{MODEL_ROOT}/{nombre_modelo}"
+    torch.save(model.state_dict(), model_path)
+    print(f"Modelo TempCNN guardado: {model_path}")
+    
+    metricas = EvaluarModelo(model, loader)
+    AlmacenarModelo(
+        nombre_modelo,
+        final_loss,
+        best_loss,
+        len(dataset),
+        metricas,
+        tipo="temp_cnn"
+    )
 
 
 # ==================================================
@@ -417,6 +622,8 @@ def run():
                 descarga = TraerDeMiniOEntrenamientos()
                 if descarga == 0:
                     EntrenarModelo(nro)
+                    EntrenarModeloXGBoost(nro)
+                    EntrenarModeloTempCNN(nro)
             if nro > 0 and (nro % 10) == 0:
                 #aca tendria que ser, si no hay modelos, y hay 10 registros
                 #se empieza a modelar 
@@ -427,6 +634,8 @@ def run():
                     descarga = TraerDeMiniOEntrenamientos()
                     if descarga == 0:
                         EntrenarModelo(nro)
+                        EntrenarModeloXGBoost(nro)
+                        EntrenarModeloTempCNN(nro)
                 else:
                     print("Modelo ya existente")
             time.sleep(5)

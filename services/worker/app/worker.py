@@ -61,7 +61,9 @@ def run():
                         dia_de_la_imagen=args.get("dia_de_la_imagen"),
                         lat=args.get("lat"),
                         lon=args.get("lon"),
-                        orden_id=orden.id)
+                        orden_id=orden.id,
+                        db=db,
+                        orden=orden)
                 if (resultado == 1):
                     print("fallo la descarga de imagenes del worker")
                     #aca tendria que hacer vuelta atras 

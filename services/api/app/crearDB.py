@@ -49,6 +49,7 @@ with engine.connect() as conn:
         CREATE TABLE IF NOT EXISTS modelos (
             id SERIAL PRIMARY KEY,
             name TEXT,
+            tipo TEXT DEFAULT 'temporal_fire_net',
             final_loss DOUBLE PRECISION,
             best_loss DOUBLE PRECISION,
             pred_mean DOUBLE PRECISION,
@@ -66,6 +67,10 @@ with engine.connect() as conn:
             
             created_at TIMESTAMP
         )
+        """))
+        # Migración: agregar columna tipo si no existe (para DBs existentes)
+        conn.execute(text("""
+        ALTER TABLE modelos ADD COLUMN IF NOT EXISTS tipo TEXT DEFAULT 'temporal_fire_net'
         """))
         
         # Descargas | son las descargas de los archivos de sentinel

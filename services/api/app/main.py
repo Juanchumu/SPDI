@@ -15,7 +15,19 @@ import os
 # Guardamos el timestamp al momento de cargar el script
 START_TIME = time.time()
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI()
+
+# Allow requests from the web UI (any origin for simplicity)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 
 def minioVida():
@@ -205,6 +217,7 @@ def listar_modelos(db: Session = Depends(get_db)):
     return [{
         "id": modelo.id,
         "name": modelo.name,
+        "tipo": modelo.tipo,
         "final_loss": modelo.final_loss,
         "best_loss": modelo.best_loss,
         "pred_mean": modelo.pred_mean,

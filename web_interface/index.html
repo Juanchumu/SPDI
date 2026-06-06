@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Predicción de Incendios – SPDI</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    crossorigin=""
+  />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🛰️ Predicción de Incendios</h1>
+    </header>
+    <section class="controls">
+      <div class="input-group">
+        <label for="datePicker">Fecha (YYYY‑MM‑DD)</label>
+        <input type="date" id="datePicker" required />
+      </div>
+      <div class="input-group">
+        <label for="addressInput">Buscar dirección / ciudad</label>
+        <input
+          type="text"
+          id="addressInput"
+          placeholder="Ej. Bariloche, Argentina"
+        />
+        <button id="searchBtn" class="btn secondary">Buscar</button>
+      </div>
+      <div class="info" id="coordInfo">Coordenadas: --, --</div>
+      <button id="runBtn" class="btn primary" disabled>Obtener predicción</button>
+    </section>
+    <section id="map" class="map"></section>
+    <section class="result" id="resultBox" hidden>
+      <h2>Resultado</h2>
+      <pre id="resultJson"></pre>
+    </section>
+  </div>
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    crossorigin=""
+></script>
+  <script src="script.js"></script>
+</body>
+</html>
