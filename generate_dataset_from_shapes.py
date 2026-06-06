@@ -55,6 +55,28 @@ def get_candidates():
     candidates = []
     shapefile_paths = sorted(glob.glob(os.path.join(RAW_SHAPEFILES_DIR, "Superficies*.shp")))
     
+    # Load argentina.geojson provinces
+    geojson_path = "services/validador/app/argentina.geojson"
+    provinces = []
+    if os.path.exists(geojson_path):
+        print(f"Loading province geometries from: {geojson_path}")
+        with open(geojson_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        for feature in data["features"]:
+            try:
+                p_geom = shape(feature["geometry"])
+                p_name = feature["properties"].get("nombre", "Unknown")
+                provinces.append((p_name, p_geom))
+            except Exception as e:
+                print(f"Error loading a province geometry: {e}")
+                
+    TARGET_PROVINCES = [
+        "Buenos Aires", "Córdoba", "Santa Fe", "Entre Ríos", "La Pampa", 
+        "San Luis", "Santiago del Estero", "Chaco", "Corrientes", "Formosa", 
+        "Tucumán", "Misiones"
+    ]
+    print(f"Targeting agricultural & production provinces: {TARGET_PROVINCES}")
+    
     for shp_path in shapefile_paths:
         year_str = "".join(filter(str.isdigit, os.path.basename(shp_path)))
         if not year_str:
@@ -91,6 +113,17 @@ def get_candidates():
                 try:
                     geom = shape(sr.shape.__geo_interface__)
                     centroid = geom.centroid
+                    
+                    # Filter by target provinces
+                    prov_name = "Unknown"
+                    for name, p_geom in provinces:
+                        if p_geom.contains(centroid):
+                            prov_name = name
+                            break
+                            
+                    if prov_name not in TARGET_PROVINCES:
+                        continue
+                        
                     candidates.append({
                         "id": f"{year}_{idx_rec}",
                         "year": year,
@@ -99,12 +132,13 @@ def get_candidates():
                         "lon": centroid.x,
                         "hectareas": hectareas,
                         "geom": geom,
-                        "shp_path": shp_path
+                        "shp_path": shp_path,
+                        "province": prov_name
                     })
                 except Exception as e:
                     print(f"Error parsing geometry {idx_rec} in {shp_path}: {e}")
                     
-    print(f"Total candidate fires: {len(candidates)}")
+    print(f"Total candidate fires in target provinces: {len(candidates)}")
     return candidates
 
 def download_and_generate():
@@ -114,7 +148,7 @@ def download_and_generate():
         print("No candidates found.")
         return
         
-    # Group candidates by year and select top 3 largest per year
+    # Group candidates by year and select top 15 largest per year
     by_year = {}
     for c in candidates:
         by_year.setdefault(c["year"], []).append(c)
@@ -122,7 +156,7 @@ def download_and_generate():
     selected = []
     for year, list_c in by_year.items():
         list_c.sort(key=lambda x: x["hectareas"], reverse=True)
-        selected.extend(list_c[:3]) # take 3 per year
+        selected.extend(list_c[:15]) # take 15 per year
         
     # Predefined control scenes to prevent false positives in urban, water, and bare soil areas
     control_scenes = [
