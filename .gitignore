@@ -10,3 +10,9 @@ __pycache__/
 !tools/test_xgboost_local.py
 !tools/predict_fire_2021.py
 !tools/predict_no_fire_2020.py
+
+# Persistencia local - datos binarios grandes, no van al repo
+services/data/minio/
+services/data/postgres/
+services/dataset/
+services/tmp/
