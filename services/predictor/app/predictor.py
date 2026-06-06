@@ -293,20 +293,27 @@ def preprocess(data):
 def predecir_xgboost(model, ruta_stack, orden_id):
     """Predicción usando modelo XGBoost"""
     data, profile = cargar_stack(ruta_stack)
-    if data.shape[0] != 15:
-        raise Exception(f"El TIFF debe tener 15 bandas y tiene {data.shape[0]}")
+    if data.shape[0] != 17:
+        raise Exception(f"El TIFF debe tener 17 bandas y tiene {data.shape[0]}")
     
     H = data.shape[1]
     W = data.shape[2]
     
-    # Normalizar
-    x = data.reshape(3, 5, H, W)
-    x_min = x.min()
-    x_max = x.max()
-    x = (x - x_min) / (x_max - x_min + 1e-6)
+    # Process S2 (first 15 bands)
+    x_s2 = data[:15].reshape(3, 5, H, W)
+    x_min = x_s2.min()
+    x_max = x_s2.max()
+    x_s2 = (x_s2 - x_min) / (x_max - x_min + 1e-6)
     
-    # Flatten: cada pixel es una fila con 15 features
-    x_flat = x.transpose(2, 3, 0, 1).reshape(H * W, 15)  # (H*W, 15)
+    # Flatten S2: (H*W, 15)
+    x_s2_flat = x_s2.transpose(2, 3, 0, 1).reshape(H * W, 15)
+    
+    # Normalize OSM distances: (H*W, 2)
+    x_osm = data[15:] / 10000.0
+    x_osm_flat = x_osm.transpose(1, 2, 0).reshape(H * W, 2)
+    
+    # Concatenate: (H*W, 17)
+    x_flat = np.concatenate([x_s2_flat, x_osm_flat], axis=1)
     
     # Predecir probabilidades
     pred_proba = model.predict_proba(x_flat)[:, 1]  # (H*W,)

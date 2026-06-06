@@ -15,6 +15,10 @@ import planetary_computer
 import pystac_client
 from odc.stac import stac_load
 
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), "services"))
+from worker.app.osm_utils import get_osm_distances
+
 DATASET_ROOT = "tmp/dataset"
 INPUTS_DIR = os.path.join(DATASET_ROOT, "inputs")
 MASKS_DIR = os.path.join(DATASET_ROOT, "masks")
@@ -251,6 +255,24 @@ def download_and_generate():
             if len(bandas_stack) != 15:
                 print("  -> Stack generation failed (wrong band count)")
                 continue
+            
+            # Get OSM distances
+            from rasterio.coords import BoundingBox
+            left, bottom, right, top = rasterio.transform.array_bounds(profile["height"], profile["width"], profile["transform"])
+            bounds = BoundingBox(left, bottom, right, top)
+            
+            try:
+                print("  Calculating OSM distances (roads & campings)...")
+                road_dist, camping_dist = get_osm_distances(bounds, profile["crs"], (profile["height"], profile["width"]), profile["transform"])
+                bandas_stack.extend([road_dist, camping_dist])
+                profile["count"] = 17
+            except Exception as e:
+                print(f"  -> Failed to calculate OSM distances: {e}")
+                continue
+                
+            if len(bandas_stack) != 17:
+                print("  -> Stack generation failed (wrong final band count)")
+                continue
                 
             if c["id"].startswith("control_"):
                 # For control scenes, the mask is all zeros
@@ -277,7 +299,7 @@ def download_and_generate():
             mask_path = os.path.join(MASKS_DIR, f"escena_{id_num}.tif")
             
             with rasterio.open(input_path, "w", **profile) as dst:
-                for i in range(15):
+                for i in range(17):
                     dst.write(bandas_stack[i], i + 1)
                     
             mask_profile = profile.copy()

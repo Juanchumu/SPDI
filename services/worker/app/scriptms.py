@@ -1,5 +1,6 @@
 # imports
-
+from app.osm_utils import get_osm_distances
+from rasterio.coords import BoundingBox
 import os
 import zipfile
 import numpy as np
@@ -218,6 +219,24 @@ def run(dia_de_la_imagen, lat, lon, orden_id, db=None, orden=None):
             "crs": ds.odc.crs,
             "transform": transform
         }
+
+    if len(bandas_stack) == 15:
+        try:
+            update_status(db, orden, "Calculando distancias a rutas y campings...")
+            left, bottom, right, top = rasterio.transform.array_bounds(profile["height"], profile["width"], profile["transform"])
+            bounds = BoundingBox(left, bottom, right, top)
+            road_dist, camping_dist = get_osm_distances(
+                bounds, 
+                profile["crs"], 
+                (profile["height"], profile["width"]), 
+                profile["transform"]
+            )
+            bandas_stack.extend([road_dist, camping_dist])
+        except Exception as e:
+            print(f"Error calculating OSM distances in worker: {e}")
+            road_dist = np.full((profile["height"], profile["width"]), 10000.0, dtype=np.float32)
+            camping_dist = np.full((profile["height"], profile["width"]), 10000.0, dtype=np.float32)
+            bandas_stack.extend([road_dist, camping_dist])
 
     if len(bandas_stack) == 0:
         print("No hay datos válidos")

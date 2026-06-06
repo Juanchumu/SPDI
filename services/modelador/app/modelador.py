@@ -116,17 +116,21 @@ class FireDataset:
         x = self._center_crop(x)
         y = self._center_crop(y)
 
-        # 15 bandas -> (3 tiempos, 5 variables, 200, 200)
-        x = x.reshape(3, 5, 200, 200)
-
-        x_min = x.min()
-        x_max = x.max()
-        x = (x - x_min) / (x_max - x_min + 1e-6)
+        # Process 17 bands: first 15 are Sentinel-2, last 2 are OSM distances
+        x_s2 = x[:15].reshape(3, 5, 200, 200)
+        x_min = x_s2.min()
+        x_max = x_s2.max()
+        x_s2 = (x_s2 - x_min) / (x_max - x_min + 1e-6)
+        
+        # Normalize OSM distances by 10km cap
+        x_osm = x[15:] / 10000.0
+        
+        x_final = np.concatenate([x_s2.reshape(15, 200, 200), x_osm], axis=0)
 
         # x = torch.tensor(x, dtype=torch.float32)  # disabled
         # y = torch.tensor(y, dtype=torch.float32)  # disabled
 
-        return x, y
+        return x_final, y
 # ==================================================
 # MODELO
 # ==================================================
@@ -352,14 +356,13 @@ def EntrenarModeloXGBoost(nro):
     
     for i in range(len(dataset)):
         x, y = dataset[i]
-        # x: (3, 5, 200, 200) -> flatten a (200*200, 15)
-        # x is already a numpy array because we disabled torch conversion
-        x_np = x  # (3, 5, 200, 200)
-        y_np = y  # (1, 200, 200)
+        # x is (17, 200, 200)
+        x_np = x
+        y_np = y
         
-        T, C, H, W = x_np.shape
-        # Reorganizar: cada pixel tiene 15 features (3 timestamps * 5 canales)
-        x_flat = x_np.transpose(2, 3, 0, 1).reshape(H * W, T * C)  # (40000, 15)
+        C, H, W = x_np.shape
+        # Reorganizar: cada pixel tiene 17 features
+        x_flat = x_np.transpose(1, 2, 0).reshape(H * W, C)  # (40000, 17)
         y_flat = y_np.reshape(H * W)  # (40000,)
         
         # Subsamplear
