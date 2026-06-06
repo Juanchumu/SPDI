@@ -1,0 +1,12 @@
+tmp/
+.venv/
+__pycache__/
+*.pyc
+*.json
+*.rar
+*.env
+.env
+!tools/pruebas_api/*.json
+!tools/test_xgboost_local.py
+!tools/predict_fire_2021.py
+!tools/predict_no_fire_2020.py

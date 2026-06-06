@@ -124,11 +124,14 @@ document.getElementById('runBtn').addEventListener('click', async () => {
   const btn = document.getElementById('runBtn');
   btn.disabled = true;
 
-  // Limpiar el resultado anterior de la pantalla
+  // Limpiar el resultado anterior de la pantalla y el mapa
   const box = document.getElementById('resultBox');
   const pre = document.getElementById('resultJson');
   box.hidden = true;
   pre.textContent = "";
+  if (window.zonesLayer) {
+    window.zonesLayer.clearLayers();
+  }
 
   const dateStr = document.getElementById('datePicker').value; // YYYY-MM-DD
   const diaInt = parseInt(dateStr.replace(/-/g, ''), 10);
@@ -136,9 +139,39 @@ document.getElementById('runBtn').addEventListener('click', async () => {
   try {
     const order = await createOrder(diaInt, lat, lng);
     const result = await pollOrder(order.id);
+    const predData = JSON.parse(result.prediccion);
     const pre = document.getElementById('resultJson');
-    pre.textContent = JSON.stringify(JSON.parse(result.prediccion), null, 2);
+    pre.textContent = JSON.stringify(predData, null, 2);
     box.hidden = false;
+
+    // Dibujar zonas críticas en el mapa
+    if (!window.zonesLayer) {
+      window.zonesLayer = L.layerGroup().addTo(map);
+    }
+    
+    if (predData.zonas_criticas && predData.zonas_criticas.length > 0) {
+      const latBuffer = 0.009;
+      const lonBuffer = 0.011;
+      const left = lng - lonBuffer;
+      const right = lng + lonBuffer;
+      const bottom = lat - latBuffer;
+      const topLat = lat + latBuffer;
+
+      predData.zonas_criticas.forEach(zona => {
+        // zona tiene x1, y1, x2, y2 en coordenadas de pixel (0 a 200)
+        const boxLeft = left + (zona.x1 / 200) * (right - left);
+        const boxRight = left + (zona.x2 / 200) * (right - left);
+        const boxTop = topLat - (zona.y1 / 200) * (topLat - bottom);
+        const boxBottom = topLat - (zona.y2 / 200) * (topLat - bottom);
+
+        const bounds = [[boxBottom, boxLeft], [boxTop, boxRight]];
+        L.rectangle(bounds, {color: "#ff0000", weight: 3, fillOpacity: 0.3}).addTo(window.zonesLayer)
+          .bindPopup(`<b>ZONA CRÍTICA</b><br>Píxeles afectados: ${zona.pixels}`);
+      });
+      // Hacer zoom a la zona
+      map.setView([lat, lng], 13);
+    }
+
   } catch (e) {
     alert(e.message);
   } finally {

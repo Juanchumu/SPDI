@@ -81,8 +81,9 @@ def get_minio_client():
             read=30.0
         )
     )
+    minio_host = os.getenv("MINIO_HOST", "minio")
     return Minio(
-        "minio:9000",
+        f"{minio_host}:9000",
         access_key=DB_MINIO_USER,
         secret_key=DB_MINIO_PASS,
         secure=False,
@@ -311,6 +312,16 @@ def predecir_xgboost(model, ruta_stack, orden_id):
     pred_proba = model.predict_proba(x_flat)[:, 1]  # (H*W,)
     pred = pred_proba.reshape(H, W)  # (H, W)
     
+    # Mask out no-data pixels (black strips at the edge of S2 tiles)
+    nodata_mask = np.zeros((H, W), dtype=bool)
+    for t in range(3):
+        ndvi = data[t*5 + 0]
+        nbr = data[t*5 + 1]
+        ndbi = data[t*5 + 2]
+        t_nodata = (ndvi == 0.0) & (nbr == 0.0) & (ndbi == 0.0)
+        nodata_mask = nodata_mask | t_nodata
+    pred[nodata_mask] = 0.0
+    
     tif_path = guardar_pred_tif(pred, profile, orden_id)
     porcentaje = calcular_porcentaje(pred)
     zonas = detectar_zonas(pred)
@@ -390,6 +401,18 @@ def predecir(model, ruta_stack, orden_id, tipo="temporal_fire_net"):
     with torch.no_grad():
         pred = model(x)
     pred = pred.cpu().numpy()[0, 0]
+    
+    # Mask out no-data pixels (black strips at the edge of S2 tiles)
+    H, W = pred.shape
+    nodata_mask = np.zeros((H, W), dtype=bool)
+    for t in range(3):
+        ndvi = data[t*5 + 0]
+        nbr = data[t*5 + 1]
+        ndbi = data[t*5 + 2]
+        t_nodata = (ndvi == 0.0) & (nbr == 0.0) & (ndbi == 0.0)
+        nodata_mask = nodata_mask | t_nodata
+    pred[nodata_mask] = 0.0
+    
     tif_path = guardar_pred_tif(
         pred,
         profile,
