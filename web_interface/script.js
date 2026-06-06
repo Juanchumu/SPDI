@@ -123,13 +123,19 @@ async function pollOrder(id) {
 document.getElementById('runBtn').addEventListener('click', async () => {
   const btn = document.getElementById('runBtn');
   btn.disabled = true;
+
+  // Limpiar el resultado anterior de la pantalla
+  const box = document.getElementById('resultBox');
+  const pre = document.getElementById('resultJson');
+  box.hidden = true;
+  pre.textContent = "";
+
   const dateStr = document.getElementById('datePicker').value; // YYYY-MM-DD
   const diaInt = parseInt(dateStr.replace(/-/g, ''), 10);
   const { lat, lng } = selectedCoords;
   try {
     const order = await createOrder(diaInt, lat, lng);
     const result = await pollOrder(order.id);
-    const box = document.getElementById('resultBox');
     const pre = document.getElementById('resultJson');
     pre.textContent = JSON.stringify(JSON.parse(result.prediccion), null, 2);
     box.hidden = false;
