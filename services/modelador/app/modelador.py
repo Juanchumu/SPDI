@@ -364,6 +364,13 @@ def EntrenarModeloXGBoost(nro):
         # Reorganizar: cada pixel tiene 17 features
         x_flat = x_np.transpose(1, 2, 0).reshape(H * W, C)  # (40000, 17)
         y_flat = y_np.reshape(H * W)  # (40000,)
+        # Apply cloud mask: ignore pixels where cloud mask (band 4) == 1
+        cloud_mask = (x_np[3] == 1.0)  # band index 3 corresponds to cloud mask
+        cloud_mask_flat = cloud_mask.reshape(H * W)
+        # Keep only non-cloud pixels
+        valid_idx = ~cloud_mask_flat
+        x_flat = x_flat[valid_idx]
+        y_flat = y_flat[valid_idx]
         
         # Subsamplear
         if len(x_flat) > max_samples_per_image:

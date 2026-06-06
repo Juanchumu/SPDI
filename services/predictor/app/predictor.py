@@ -328,7 +328,9 @@ def predecir_xgboost(model, ruta_stack, orden_id):
         t_nodata = (ndvi == 0.0) & (nbr == 0.0) & (ndbi == 0.0)
         nodata_mask = nodata_mask | t_nodata
     pred[nodata_mask] = 0.0
-    
+    # Apply cloud mask (band 4 of T1)
+    nubes_t1 = data[3]
+    pred[nubes_t1 == 1.0] = 0.0
     tif_path = guardar_pred_tif(pred, profile, orden_id)
     porcentaje = calcular_porcentaje(pred)
     zonas = detectar_zonas(pred)
