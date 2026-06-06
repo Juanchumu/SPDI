@@ -20,37 +20,37 @@
   <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="style.css"/>
   
-  <!-- Tailwind config for theme color names and fonts matching DESIGN.md -->
+  <!-- Tailwind config for theme color names mapped to CSS variables -->
   <script id="tailwind-config">
     tailwind.config = {
       darkMode: "class",
       theme: {
         extend: {
           "colors": {
-            "primary-fixed": "#60ff99",
+            "primary-fixed": "var(--primary-fixed)",
             "inverse-surface": "#e5e2e3",
             "secondary-fixed": "#e5e1e4",
-            "surface-dim": "#131314",
+            "surface-dim": "var(--surface-dim)",
             "on-error-container": "#ffdad6",
-            "background": "#131314",
+            "background": "var(--background)",
             "tertiary-container": "#ffdb79",
-            "surface-container-high": "#2a2a2b",
+            "surface-container-high": "var(--surface-container-high)",
             "primary-container": "#00ff88",
-            "on-surface": "#e5e2e3",
+            "on-surface": "var(--on-surface)",
             "surface-tint": "#00e479",
-            "surface-container-highest": "#353436",
+            "surface-container-highest": "var(--surface-container-highest)",
             "on-secondary-fixed": "#1b1b1d",
             "on-secondary-fixed-variant": "#474649",
             "secondary": "#c8c6c8",
-            "surface-glass": "rgba(32, 31, 32, 0.65)",
-            "surface-container-lowest": "#0e0e0f",
-            "border-glass": "rgba(255, 255, 255, 0.08)",
+            "surface-glass": "var(--surface-glass)",
+            "surface-container-lowest": "var(--surface-container-lowest)",
+            "border-glass": "var(--border-glass)",
             "on-primary-fixed": "#00210c",
             "on-secondary": "#303032",
             "risk-low": "#00ff88",
-            "on-surface-variant": "#b9cbb9",
+            "on-surface-variant": "var(--on-surface-variant)",
             "inverse-on-surface": "#313031",
-            "surface": "#131314",
+            "surface": "var(--surface)",
             "risk-medium": "#ffaa00",
             "tertiary-fixed": "#ffe08d",
             "on-primary-fixed-variant": "#005228",
@@ -60,19 +60,19 @@
             "surface-bright": "#3a393a",
             "on-tertiary-fixed-variant": "#584400",
             "inverse-primary": "#006d37",
-            "surface-container-low": "#1c1b1c",
+            "surface-container-low": "var(--surface-container-low)",
             "surface-variant": "#353436",
             "outline-variant": "#3b4b3d",
             "tertiary": "#fffaf7",
             "secondary-container": "#474649",
             "secondary-fixed-dim": "#c8c6c8",
             "outline": "#849585",
-            "surface-container": "#201f20",
+            "surface-container": "var(--surface-container)",
             "primary-fixed-dim": "#00e479",
             "on-tertiary": "#3d2f00",
             "error": "#ffb4ab",
             "on-primary-container": "#007139",
-            "on-background": "#e5e2e3",
+            "on-background": "var(--on-background)",
             "on-tertiary-fixed": "#241a00",
             "on-primary": "#003919",
             "on-error": "#690005",
@@ -136,7 +136,7 @@
           <label class="font-label-caps text-label-caps text-on-surface-variant">Buscar Ciudad / Dirección</label>
           <div class="flex gap-2">
             <input class="flex-1 bg-surface-container-lowest/50 border border-border-glass rounded-lg px-3 py-2 text-on-surface font-body-md text-sm focus:ring-1 focus:ring-primary-fixed outline-none" id="addressInput" placeholder="Ej. Calamuchita, Cordoba" type="text"/>
-            <button class="bg-white/10 hover:bg-white/20 border border-border-glass text-white font-bold px-3 py-2 rounded-lg transition-all active:scale-[0.98]" id="searchBtn">Buscar</button>
+            <button class="bg-white/10 hover:bg-white/20 border border-border-glass text-on-surface font-bold px-3 py-2 rounded-lg transition-all active:scale-[0.98]" id="searchBtn">Buscar</button>
           </div>
         </div>
         
@@ -211,6 +211,8 @@
         </div>
         <div class="flex items-center gap-6">
           <div class="flex gap-4">
+            <!-- Theme Toggle Button -->
+            <button id="themeToggleBtn" class="material-symbols-outlined text-on-surface-variant hover:text-primary-fixed transition-colors cursor-pointer outline-none">light_mode</button>
             <span class="material-symbols-outlined text-on-surface-variant hover:text-primary-fixed transition-colors cursor-pointer">notifications</span>
             <span class="material-symbols-outlined text-on-surface-variant hover:text-primary-fixed transition-colors cursor-pointer">help</span>
             <span class="material-symbols-outlined text-on-surface-variant hover:text-primary-fixed transition-colors cursor-pointer">account_circle</span>
@@ -225,7 +227,7 @@
       <div class="hidden-state absolute bottom-8 right-8 w-96 z-50 p-6 rounded-2xl bg-surface-glass/95 border border-white/10 shadow-2xl backdrop-blur-2xl" id="results-panel">
         <div class="flex justify-between items-start mb-6">
           <div>
-            <h3 class="font-headline-md text-headline-md text-white">Reporte de Riesgo</h3>
+            <h3 class="font-headline-md text-headline-md text-on-surface font-semibold">Reporte de Riesgo</h3>
             <p class="font-data-sm text-data-sm text-on-surface-variant opacity-60" id="orderIdText">ID: #ORD-PENDIENTE</p>
           </div>
           <span class="px-3 py-1 rounded-full font-label-caps text-label-caps border" id="riskBadge">RIESGO --</span>
@@ -239,7 +241,7 @@
               <circle class="transition-all duration-1000 ease-out" cx="64" cy="64" fill="none" id="riskCircle" r="58" stroke="currentColor" stroke-dasharray="364.4" stroke-dashoffset="364.4" stroke-width="12"></circle>
             </svg>
             <div class="absolute flex flex-col items-center">
-              <span class="font-data-lg text-data-lg font-bold text-white" id="riskPercentText">0%</span>
+              <span class="font-data-lg text-data-lg font-bold text-on-surface" id="riskPercentText">0%</span>
               <span class="text-[10px] font-label-caps text-on-surface-variant/60 uppercase">Severidad</span>
             </div>
           </div>
@@ -263,7 +265,7 @@
           </div>
         </div>
         
-        <button class="mt-6 w-full py-2.5 font-label-caps text-label-caps text-on-surface-variant hover:text-white transition-colors border border-white/10 rounded-lg active:scale-[0.98]" id="closeReportBtn">Cerrar Reporte</button>
+        <button class="mt-6 w-full py-2.5 font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors border border-white/10 rounded-lg active:scale-[0.98]" id="closeReportBtn">Cerrar Reporte</button>
       </div>
       
       <!-- Floating Map Legend -->

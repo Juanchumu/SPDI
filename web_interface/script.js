@@ -1,4 +1,4 @@
-// script.js – Interactive SPDI Risk Command Logic
+// script.js – Interactive SPDI Risk Command Logic with Light Mode support
 
 // Initialize Leaflet map with CartoDB Dark Matter tile layer
 const map = L.map('map', {
@@ -6,7 +6,8 @@ const map = L.map('map', {
   attributionControl: false
 }).setView([-34.6037, -58.3816], 5); // default to Buenos Aires
 
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+// Store tileLayer reference to switch URLs on theme toggle
+const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   maxZoom: 19
 }).addTo(map);
 
@@ -42,6 +43,34 @@ const modelLabel = document.getElementById('modelLabel');
 const resultsDate = document.getElementById('resultsDate');
 const zonesList = document.getElementById('zonesList');
 const closeReportBtn = document.getElementById('closeReportBtn');
+
+// Theme Switcher Elements
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+const htmlEl = document.documentElement;
+
+// Initialize theme state from DOM
+let isDarkMode = htmlEl.classList.contains('dark');
+updateThemeUI(isDarkMode);
+
+themeToggleBtn.addEventListener('click', () => {
+  isDarkMode = !isDarkMode;
+  if (isDarkMode) {
+    htmlEl.classList.add('dark');
+  } else {
+    htmlEl.classList.remove('dark');
+  }
+  updateThemeUI(isDarkMode);
+});
+
+function updateThemeUI(isDark) {
+  if (isDark) {
+    themeToggleBtn.textContent = 'light_mode'; // icon to switch to light mode
+    tileLayer.setUrl('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
+  } else {
+    themeToggleBtn.textContent = 'dark_mode'; // icon to switch to dark mode
+    tileLayer.setUrl('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png');
+  }
+}
 
 // Helper: Sync coordinates from map marker to inputs
 function updateCoordFields(lat, lng) {
@@ -197,12 +226,10 @@ function renderPredictionResult(result, dateStr) {
     riskBadge.textContent = 'RIESGO ALTO';
     riskBadge.className = 'px-3 py-1 rounded-full font-label-caps text-label-caps border border-risk-high text-risk-high bg-risk-high/10 shadow-[0_0_8px_rgba(255,59,59,0.2)]';
     riskCircle.style.color = '#ff3b3b';
-    riskPercentText.style.color = '#ff3b3b';
   } else {
     riskBadge.textContent = 'RIESGO BAJO';
     riskBadge.className = 'px-3 py-1 rounded-full font-label-caps text-label-caps border border-risk-low text-risk-low bg-risk-low/10';
     riskCircle.style.color = '#00ff88';
-    riskPercentText.style.color = '#00ff88';
   }
   
   // Update circle animation (SVG circumference is 364.4)
@@ -238,7 +265,7 @@ function renderPredictionResult(result, dateStr) {
       
       const bounds = [[boxBottom, boxLeft], [boxTop, boxRight]];
       
-      // Color coded by risk level (highly severe areas in red)
+      // Color coded by risk level
       const color = risk === 'alto' ? '#ff3b3b' : '#ffaa00';
       const rect = L.rectangle(bounds, {
         color: color,
@@ -250,13 +277,13 @@ function renderPredictionResult(result, dateStr) {
       
       riskRectangles.push(rect);
       
-      // Add HTML list item
+      // Add HTML list item (fully responsive theme-ready color styling)
       const item = document.createElement('div');
       item.className = 'bg-white/5 p-2 rounded border border-white/5 flex justify-between items-center';
       item.innerHTML = `
         <div class="flex flex-col">
-          <span class="text-[9px] text-white/40 font-label-caps">LÍMITES: ${zona.x1},${zona.y1} a ${zona.x2},${zona.y2}</span>
-          <span class="font-data-sm text-[11px] text-white">Cluster #${index+1} (${zona.pixels} px)</span>
+          <span class="text-[9px] text-on-surface-variant/60 font-label-caps">LÍMITES: ${zona.x1},${zona.y1} a ${zona.x2},${zona.y2}</span>
+          <span class="font-data-sm text-[11px] text-on-surface">Cluster #${index+1} (${zona.pixels} px)</span>
         </div>
         <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${color}; box-shadow: 0 0 6px ${color}"></span>
       `;
