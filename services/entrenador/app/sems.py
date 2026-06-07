@@ -286,10 +286,26 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
         }
 
     # ==================================================
+    # OSM DISTANCES
+    # ==================================================
+    try:
+        from rasterio.coords import BoundingBox
+        from app.osm_utils import get_osm_distances
+        left, bottom, right, top = rasterio.transform.array_bounds(profile["height"], profile["width"], profile["transform"])
+        bounds = BoundingBox(left, bottom, right, top)
+        print("Calculando distancias OSM (rutas y campings)...")
+        road_dist, camping_dist = get_osm_distances(bounds, profile["crs"], (profile["height"], profile["width"]), profile["transform"])
+        bandas_stack.extend([road_dist, camping_dist])
+        profile["count"] = 17
+    except Exception as e:
+        print(f"Error calculando distancias OSM: {e}")
+        return 1
+
+    # ==================================================
     # VALIDAR STACK
     # ==================================================
-    if len(bandas_stack) != 15:
-        print("Stack incompleto")
+    if len(bandas_stack) != 17:
+        print("Stack incompleto (faltan bandas o OSM)")
         return 1
 
     # ==================================================
