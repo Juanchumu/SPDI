@@ -514,27 +514,27 @@ def run():
     while True:
         try:
             nro = ConsultarNroDeEntrenamientos()
-            print(f"Entrenamientos disponibles: {nro}")
-            logearDB("Consultando Entrenamientos")
-            if nro > 0 and ConsultarModelosNroDeEntrenamiento(nro) == 1:
+            
+            db = SessionLocal()
+            ultimo_modelo = db.query(Modelos).order_by(Modelos.id.desc()).first()
+            ultimo_size = ultimo_modelo.dataset_size if ultimo_modelo else 0
+            db.close()
+            
+            if nro > 0 and nro >= ultimo_size + 10:
+                print(f"Nuevo modelo requerido (Actual: {nro}, Ultimo: {ultimo_size})")
+                logearDB("Modelando")
+                descarga = TraerDeMiniOEntrenamientos()
+                if descarga == 0:
+                    EntrenarModeloXGBoost(nro)
+            elif ultimo_size == 0 and nro > 0:
                 print("Nuevo modelo inicial requerido")
                 logearDB("Modelando")
                 descarga = TraerDeMiniOEntrenamientos()
                 if descarga == 0:
                     EntrenarModeloXGBoost(nro)
-            if nro > 0 and (nro % 10) == 0:
-                #aca tendria que ser, si no hay modelos, y hay 10 registros
-                #se empieza a modelar 
-                estado = ConsultarModelosNroDeEntrenamiento(nro)
-                if estado == 2:
-                    print("Nuevo modelo requerido")
-                    logearDB("Modelando")
-                    descarga = TraerDeMiniOEntrenamientos()
-                    if descarga == 0:
-                        EntrenarModeloXGBoost(nro)
-                else:
-                    print("Modelo ya existente")
-            time.sleep(5)
+            else:
+                print(f"Entrenamientos disponibles: {nro} (Se necesitan {ultimo_size + 10} para nuevo modelo)")
+                time.sleep(5)
         except Exception as e:
             print(f"ERROR en el modelador: {e}")
             time.sleep(5)
