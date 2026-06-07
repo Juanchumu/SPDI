@@ -194,6 +194,16 @@ def download_and_generate():
         fecha_inicio = (c["date"] - timedelta(days=45)).strftime("%Y-%m-%d")
         fecha_fin = c["date"].strftime("%Y-%m-%d")
         
+        # Skip if already exists locally
+        id_num = success_count + 1
+        input_path = os.path.join(INPUTS_DIR, f"escena_{id_num}.tif")
+        mask_path = os.path.join(MASKS_DIR, f"escena_{id_num}.tif")
+        
+        if os.path.exists(input_path) and os.path.exists(mask_path):
+            print(f"  -> Escena ya existe localmente. Omitiendo descarga.")
+            success_count += 1
+            continue
+
         try:
             search = catalog.search(
                 collections=["sentinel-2-l2a"],
