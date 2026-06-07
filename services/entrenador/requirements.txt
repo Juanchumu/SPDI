@@ -7,4 +7,8 @@ minio
 SQLAlchemy
 psycopg2-binary
 urllib3
-
+pyshp
+shapely
+pyproj
+scipy
+requests
