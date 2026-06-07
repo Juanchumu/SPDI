@@ -15,6 +15,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar código
 COPY entrenador/app ./app
 COPY db ./db
+COPY worker/app/osm_utils.py ./app/osm_utils.py
+COPY validador/app/argentina.geojson ./argentina.geojson
 
 
 # Dar permisos al usuario sobre /app

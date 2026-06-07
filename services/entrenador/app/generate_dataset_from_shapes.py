@@ -16,13 +16,16 @@ import pystac_client
 from odc.stac import stac_load
 
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), "services"))
-from worker.app.osm_utils import get_osm_distances
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+try:
+    from app.osm_utils import get_osm_distances
+except ImportError:
+    from worker.app.osm_utils import get_osm_distances
 
-DATASET_ROOT = "tmp/dataset"
+DATASET_ROOT = "/app/dataset/train"
 INPUTS_DIR = os.path.join(DATASET_ROOT, "inputs")
 MASKS_DIR = os.path.join(DATASET_ROOT, "masks")
-RAW_SHAPEFILES_DIR = "data/raw"
+RAW_SHAPEFILES_DIR = "/app/data/raw"
 
 def ensure_dirs():
     os.makedirs(INPUTS_DIR, exist_ok=True)
@@ -60,7 +63,7 @@ def get_candidates():
     shapefile_paths = sorted(glob.glob(os.path.join(RAW_SHAPEFILES_DIR, "Superficies*.shp")))
     
     # Load argentina.geojson provinces
-    geojson_path = "services/validador/app/argentina.geojson"
+    geojson_path = "/app/argentina.geojson"
     provinces = []
     if os.path.exists(geojson_path):
         print(f"Loading province geometries from: {geojson_path}")

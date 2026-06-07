@@ -45,7 +45,42 @@ def logearDB(descripcion):
 def get_pending(db: Session):
     return db.query(Entrenamiento).filter(Entrenamiento.status == "pending").first()
 
+def upload_folder_to_minio(client, bucket, folder):
+    if not client.bucket_exists(bucket):
+        client.make_bucket(bucket)
+    for root, _, files in os.walk(folder):
+        for file in files:
+            file_path = os.path.join(root, file)
+            print(f"Subiendo {file} a {bucket}...")
+            client.fput_object(bucket, file, file_path)
+
+def check_minio_and_generate():
+    from app.sems import get_minio_client
+    from app import generate_dataset_from_shapes
+    
+    logearDB("Verificando dataset base en MinIO...")
+    try:
+        client = get_minio_client()
+        bucket_name = "train-inputs"
+        if not client.bucket_exists(bucket_name):
+            client.make_bucket(bucket_name)
+        objects = list(client.list_objects(bucket_name))
+        if len(objects) < 10:
+            logearDB("Dataset base faltante. Iniciando regeneración desde shapefiles...")
+            print("MinIO vacío o con menos de 10 escenas. Generando dataset desde shapefiles...")
+            generate_dataset_from_shapes.download_and_generate()
+            
+            logearDB("Subiendo dataset regenerado a MinIO...")
+            upload_folder_to_minio(client, "train-inputs", "/app/dataset/train/inputs")
+            upload_folder_to_minio(client, "train-masks", "/app/dataset/train/masks")
+            logearDB("Regeneración de dataset base completada.")
+        else:
+            logearDB("Dataset base OK en MinIO.")
+    except Exception as e:
+        print(f"Error verificando/generando dataset base: {e}")
+
 def run():
+    check_minio_and_generate()
     while True:
         db = SessionLocal()
         logearDB("Esperando nuevas ordenes de entrenamiento..")
