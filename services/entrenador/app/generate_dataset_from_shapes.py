@@ -194,13 +194,57 @@ def download_and_generate():
         fecha_inicio = (c["date"] - timedelta(days=45)).strftime("%Y-%m-%d")
         fecha_fin = c["date"].strftime("%Y-%m-%d")
         
-        # Skip if already exists locally
-        id_num = success_count + 1
+        from db.db import SessionLocal
+        from db.models import Entrenamiento
+        import json
+        
+        db = SessionLocal()
+        existing = db.query(Entrenamiento).filter(Entrenamiento.status == "lista-para-entrenar").all()
+        found_id = None
+        lat_target = round(float(c["lat"]), 3)
+        lon_target = round(float(c["lon"]), 3)
+        
+        for ext in existing:
+            if not ext.args: continue
+            try:
+                data = json.loads(ext.args)
+                if "lat" in data and "lon" in data:
+                    if round(float(data["lat"]), 3) == lat_target and round(float(data["lon"]), 3) == lon_target:
+                        found_id = ext.id
+                        break
+            except:
+                pass
+                
+        if not found_id:
+            date_str = c["date"].strftime("%Y-%m-%d")
+            args_json = json.dumps({"lat": c["lat"], "lon": c["lon"], "date": date_str, "source": "historic"})
+            nuevo = Entrenamiento(args=args_json, status="lista-para-entrenar")
+            db.add(nuevo)
+            db.commit()
+            db.refresh(nuevo)
+            found_id = nuevo.id
+            print(f"  -> DB Insert: Asignado ID oficial {found_id}")
+        else:
+            print(f"  -> DB Sync: Ya existe en la base de datos con ID {found_id}")
+            
+        db.close()
+        
+        id_num = found_id
         input_path = os.path.join(INPUTS_DIR, f"escena_{id_num}.tif")
         mask_path = os.path.join(MASKS_DIR, f"escena_{id_num}.tif")
         
+        old_id_num = success_count + 1
+        old_input_path = os.path.join(INPUTS_DIR, f"escena_{old_id_num}.tif")
+        old_mask_path = os.path.join(MASKS_DIR, f"escena_{old_id_num}.tif")
+        
+        if os.path.exists(old_input_path) and not os.path.exists(input_path):
+            os.rename(old_input_path, input_path)
+            if os.path.exists(old_mask_path):
+                os.rename(old_mask_path, mask_path)
+            print(f"  -> Migración: Renombrado escena_{old_id_num}.tif a escena_{id_num}.tif")
+        
         if os.path.exists(input_path) and os.path.exists(mask_path):
-            print(f"  -> Escena ya existe localmente. Omitiendo descarga.")
+            print(f"  -> Escena ya existe localmente con ID {id_num}. Omitiendo descarga.")
             success_count += 1
             continue
 
