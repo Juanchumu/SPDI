@@ -299,27 +299,27 @@ def predecir_xgboost(model, ruta_stack, orden_id):
     H = data.shape[1]
     W = data.shape[2]
     
-    # Process S2 (first 15 bands)
+    # Procesar Sentinel-2 (primeras 15 bandas)
     x_s2 = data[:15].reshape(3, 5, H, W)
     x_min = x_s2.min()
     x_max = x_s2.max()
     x_s2 = (x_s2 - x_min) / (x_max - x_min + 1e-6)
     
-    # Flatten S2: (H*W, 15)
+    # Aplanar Sentinel-2: (H*W, 15)
     x_s2_flat = x_s2.transpose(2, 3, 0, 1).reshape(H * W, 15)
     
-    # Normalize OSM distances: (H*W, 2)
+    # Normalizar distancias de OSM: (H*W, 2)
     x_osm = data[15:] / 10000.0
     x_osm_flat = x_osm.transpose(1, 2, 0).reshape(H * W, 2)
     
-    # Concatenate: (H*W, 17)
+    # Concatenar: (H*W, 17)
     x_flat = np.concatenate([x_s2_flat, x_osm_flat], axis=1)
     
     # Predecir probabilidades
     pred_proba = model.predict_proba(x_flat)[:, 1]  # (H*W,)
     pred = pred_proba.reshape(H, W)  # (H, W)
     
-    # Mask out no-data pixels (black strips at the edge of S2 tiles)
+    # Enmascarar píxeles sin datos (franjas negras en el borde de los tiles de S2)
     nodata_mask = np.zeros((H, W), dtype=bool)
     for t in range(3):
         ndvi = data[t*5 + 0]
@@ -328,14 +328,14 @@ def predecir_xgboost(model, ruta_stack, orden_id):
         t_nodata = (ndvi == 0.0) & (nbr == 0.0) & (ndbi == 0.0)
         nodata_mask = nodata_mask | t_nodata
     pred[nodata_mask] = 0.0
-    # Apply cloud mask (band 4 of T1)
+    # Aplicar máscara de nubes (banda 4 del T1)
     nubes_t1 = data[3]
     pred[nubes_t1 == 1.0] = 0.0
     tif_path = guardar_pred_tif(pred, profile, orden_id)
     porcentaje = calcular_porcentaje(pred)
     zonas = detectar_zonas(pred)
     resultado = {
-        "riesgo": "alto" if porcentaje > 10 else "bajo",
+        "riesgo": "alto" if porcentaje > 30 else "bajo",
         "porcentaje_area_riesgo": porcentaje,
         "zonas_criticas": zonas,
         "archivo_prediccion": f"pred_{orden_id}.tif"
@@ -411,7 +411,7 @@ def predecir(model, ruta_stack, orden_id, tipo="temporal_fire_net"):
         pred = model(x)
     pred = pred.cpu().numpy()[0, 0]
     
-    # Mask out no-data pixels (black strips at the edge of S2 tiles)
+    # Enmascarar píxeles sin datos (franjas negras en el borde de los tiles de S2)
     H, W = pred.shape
     nodata_mask = np.zeros((H, W), dtype=bool)
     for t in range(3):

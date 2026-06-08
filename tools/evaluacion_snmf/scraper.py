@@ -25,7 +25,7 @@ def main():
     regex_lat = re.compile(r'Latitud:\s*(\d+)[º°]\s*(\d+(?:,\d+)?)´\s*(\d+(?:,\d+)?)´´')
     regex_lon = re.compile(r'Longitud:\s*(\d+)[º°]\s*(\d+(?:,\d+)?)´\s*(\d+(?:,\d+)?)´´')
     
-    # Iterate backwards to get newer reports or randomly
+    # Iterar hacia atrás para obtener reportes más nuevos o al azar
     for idx, row in df.iterrows():
         if len(fires) >= 5:
             break

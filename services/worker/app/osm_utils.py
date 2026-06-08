@@ -9,34 +9,34 @@ from rasterio.features import rasterize
 
 def get_osm_distances(bounds, crs, shape, transform, degree_buffer=0.05, max_distance=10000.0):
     """
-    Downloads OSM road and campsite data, projects to local UTM, 
-    calculates distance grids on an extended grid, and crops to target shape.
+    Descarga los datos de calles y campings de OSM, proyecta a UTM local,
+    calcula grillas de distancia en una grilla extendida, y recorta al tamaño objetivo.
     
-    bounds: rasterio bounds object (left, bottom, right, top) or list/tuple
-    crs: rasterio.crs.CRS or pyproj.CRS of the local UTM zone
-    shape: tuple (H, W) for target output
-    transform: rasterio.Affine transform of target output
-    degree_buffer: float buffer in degrees around WGS84 center (~5.5km)
-    max_distance: float default value for distances beyond buffer
+    bounds: objeto bounds de rasterio (left, bottom, right, top) o lista/tupla
+    crs: rasterio.crs.CRS o pyproj.CRS de la zona UTM local
+    shape: tupla (H, W) para la salida objetivo
+    transform: transform rasterio.Affine de la salida objetivo
+    degree_buffer: float buffer en grados alrededor del centro WGS84 (~5.5km)
+    max_distance: float valor por defecto para distancias más allá del buffer
     
-    Returns: (road_dist, camping_dist) as HxW numpy arrays
+    Retorna: (road_dist, camping_dist) como arrays numpy HxW
     """
     H, W = shape
     left, bottom, right, top = bounds.left, bounds.bottom, bounds.right, bounds.top
     
-    # Project target center to WGS84
+    # Proyectar el centro objetivo a WGS84
     transformer_to_wgs84 = pyproj.Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
     center_x = (left + right) / 2
     center_y = (bottom + top) / 2
     center_lon, center_lat = transformer_to_wgs84.transform(center_x, center_y)
     
-    # Calculate buffered WGS84 bbox for Overpass
+    # Calcular bbox WGS84 extendido para Overpass
     south = center_lat - degree_buffer
     north = center_lat + degree_buffer
     west = center_lon - degree_buffer
     east = center_lon + degree_buffer
     
-    # Build query
+    # Construir consulta
     query = f"""[out:json][timeout:30];
     (
       way["highway"~"motorway|trunk|primary|secondary|tertiary|unclassified|residential"]({south},{west},{north},{east});
@@ -57,10 +57,10 @@ def get_osm_distances(bounds, crs, shape, transform, degree_buffer=0.05, max_dis
         osm_data = response.json()
         elements = osm_data.get("elements", [])
     except Exception as e:
-        print(f"Error querying OSM Overpass: {e}. Using default max distance.")
+        print(f"Error consultando OSM Overpass: {e}. Usando distancia máxima por defecto.")
         elements = []
         
-    # Parse geometries and project to UTM
+    # Parsear geometrías y proyectar a UTM
     transformer_to_utm = pyproj.Transformer.from_crs("EPSG:4326", crs, always_xy=True)
     
     road_geoms = []
@@ -86,9 +86,9 @@ def get_osm_distances(bounds, crs, shape, transform, degree_buffer=0.05, max_dis
                     pt_utm = shapely_transform(transformer_to_utm.transform, Point(coords[0]))
                     camping_geoms.append(pt_utm)
                     
-    # Setup extended grid (5km = 5000m buffer)
+    # Configurar grilla extendida (buffer de 5km = 5000m)
     buffer_m = 5000
-    offset_px = int(buffer_m / 10) # 10m pixel resolution
+    offset_px = int(buffer_m / 10) # 10m de resolución por píxel
     
     extend_left = left - buffer_m
     extend_top = top + buffer_m
@@ -96,7 +96,7 @@ def get_osm_distances(bounds, crs, shape, transform, degree_buffer=0.05, max_dis
     extend_h = H + 2 * offset_px
     extend_transform = rasterio.Affine(10.0, 0.0, extend_left, 0.0, -10.0, extend_top)
     
-    # Rasterize and compute EDT
+    # Rasterizar y calcular distancia euclidiana (EDT)
     if road_geoms:
         road_mask = rasterize(
             [(geom, 1) for geom in road_geoms],

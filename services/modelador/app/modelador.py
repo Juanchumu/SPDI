@@ -116,13 +116,13 @@ class FireDataset:
         x = self._center_crop(x)
         y = self._center_crop(y)
 
-        # Process 17 bands: first 15 are Sentinel-2, last 2 are OSM distances
+        # Procesar 17 bandas: las primeras 15 son de Sentinel-2, las últimas 2 son distancias de OSM
         x_s2 = x[:15].reshape(3, 5, 200, 200)
         x_min = x_s2.min()
         x_max = x_s2.max()
         x_s2 = (x_s2 - x_min) / (x_max - x_min + 1e-6)
         
-        # Normalize OSM distances by 10km cap, or use 1.0 (10km) if missing
+        # Normalizar distancias de OSM con un tope de 10km, o usar 1.0 (10km) si no existen
         if x.shape[0] == 15:
             x_osm = np.ones((2, 200, 200), dtype=np.float32)
         else:
@@ -137,7 +137,7 @@ class FireDataset:
 # ==================================================
 # MODELO
 # ==================================================
-# NOTE: Neural network classes disabled for XGBoost-only mode
+# NOTA: Clases de redes neuronales deshabilitadas para el modo exclusivo de XGBoost
 # class ConvBlock(nn.Module):
 #     def __init__(self, in_c, out_c):
 #         super().__init__()
@@ -178,7 +178,7 @@ class FireDataset:
 #         last = last[:, :, None, None].expand(-1, -1, H, W)
 #         return self.decoder(last)
 
-# NOTE: TempCNN class disabled for XGBoost-only mode
+# NOTA: Clase TempCNN deshabilitada para el modo exclusivo de XGBoost
 # class TempCNN(nn.Module):
 #     """Red convolucional temporal pura (sin LSTM, usa Conv1D)"""
 #     def __init__(self):
@@ -340,42 +340,43 @@ def AlmacenarModelo(nombre,final_loss,best_loss,dataset_size,metricas,tipo="temp
 # ENTRENAMIENTO
 # ==================================================
 
-# NOTE: EntrenarModelo (NN training) disabled for XGBoost-only mode
+# NOTA: EntrenarModelo (entrenamiento de NN) deshabilitado para el modo exclusivo de XGBoost
 # def EntrenarModelo(nro):
 #     ... (original code omitted)
 
 
 # ==================================================
 # ENTRENAMIENTO XGBOOST
-# =================================================# NOTE: EntrenarModeloXGBoost adjusted to work with numpy data (no torch)
+# ==================================================
+# NOTA: EntrenarModeloXGBoost ajustado para funcionar con datos de numpy (sin usar torch)
 def EntrenarModeloXGBoost(nro):
     print("Iniciando entrenamiento XGBoost...")
     dataset = FireDataset(DATASET_ROOT)
     
-    # Preparar datos: flatten pixels como filas
+    # Preparar datos: aplanar píxeles como filas
     all_X = []
     all_y = []
-    max_samples_per_image = 10000  # Subsamplear para no explotar memoria
+    max_samples_per_image = 10000  # Submuestrear para no desbordar la memoria
     
     for i in range(len(dataset)):
         x, y = dataset[i]
-        # x is (17, 200, 200)
+        # x tiene forma (17, 200, 200)
         x_np = x
         y_np = y
         
         C, H, W = x_np.shape
-        # Reorganizar: cada pixel tiene 17 features
+        # Reorganizar: cada píxel tiene 17 características
         x_flat = x_np.transpose(1, 2, 0).reshape(H * W, C)  # (40000, 17)
         y_flat = y_np.reshape(H * W)  # (40000,)
-        # Apply cloud mask: ignore pixels where cloud mask (band 4) == 1
-        cloud_mask = (x_np[3] == 1.0)  # band index 3 corresponds to cloud mask
+        # Aplicar máscara de nubes: ignorar píxeles donde la máscara de nubes (banda 4) sea == 1
+        cloud_mask = (x_np[3] == 1.0)  # el índice de banda 3 corresponde a la máscara de nubes
         cloud_mask_flat = cloud_mask.reshape(H * W)
-        # Keep only non-cloud pixels
+        # Conservar únicamente los píxeles sin nubes
         valid_idx = ~cloud_mask_flat
         x_flat = x_flat[valid_idx]
         y_flat = y_flat[valid_idx]
         
-        # Subsamplear
+        # Submuestrear
         if len(x_flat) > max_samples_per_image:
             indices = np.random.choice(len(x_flat), max_samples_per_image, replace=False)
             x_flat = x_flat[indices]
