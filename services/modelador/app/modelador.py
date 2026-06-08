@@ -122,8 +122,11 @@ class FireDataset:
         x_max = x_s2.max()
         x_s2 = (x_s2 - x_min) / (x_max - x_min + 1e-6)
         
-        # Normalize OSM distances by 10km cap
-        x_osm = x[15:] / 10000.0
+        # Normalize OSM distances by 10km cap, or use 1.0 (10km) if missing
+        if x.shape[0] == 15:
+            x_osm = np.ones((2, 200, 200), dtype=np.float32)
+        else:
+            x_osm = x[15:17] / 10000.0
         
         x_final = np.concatenate([x_s2.reshape(15, 200, 200), x_osm], axis=0)
 
@@ -520,7 +523,7 @@ def run():
             ultimo_size = ultimo_modelo.dataset_size if ultimo_modelo else 0
             db.close()
             
-            if nro > 0 and nro >= ultimo_size + 10:
+            if nro > 0 and nro >= ultimo_size + 5:
                 print(f"Nuevo modelo requerido (Actual: {nro}, Ultimo: {ultimo_size})")
                 logearDB("Modelando")
                 descarga = TraerDeMiniOEntrenamientos()
