@@ -17,6 +17,7 @@ from datetime import datetime
 from minio import Minio
 from sqlalchemy.orm import Session
 from scipy.ndimage import label, find_objects
+import xgboost as xgb
 
 from db.db import SessionLocal
 from db.models import Orden, Modelos, WorkersLogs
@@ -80,8 +81,9 @@ def get_minio_client():
             read=30.0
         )
     )
+    minio_host = os.getenv("MINIO_HOST", "minio")
     return Minio(
-        "minio:9000",
+        f"{minio_host}:9000",
         access_key=DB_MINIO_USER,
         secret_key=DB_MINIO_PASS,
         secure=False,
@@ -144,51 +146,100 @@ class TemporalFireNet(nn.Module):
 
         return self.decoder(last)
 
+class TempCNN(nn.Module):
+    """Red convolucional temporal pura (sin LSTM, usa Conv1D)"""
+    def __init__(self):
+        super().__init__()
+        self.encoder = ConvBlock(5, 32)
+        self.temporal_conv = nn.Sequential(
+            nn.Conv1d(32, 64, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv1d(64, 64, kernel_size=3, padding=1),
+            nn.ReLU()
+        )
+        self.decoder = nn.Sequential(
+            nn.Conv2d(64, 32, 3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(32, 1, 1),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        B, T, C, H, W = x.shape
+        feats = []
+        for t in range(T):
+            ft = self.encoder(x[:, t])  # (B, 32, H, W)
+            ft = ft.mean(dim=[2, 3])    # (B, 32)
+            feats.append(ft)
+        feats = torch.stack(feats, dim=1)  # (B, T, 32)
+        feats = feats.permute(0, 2, 1)     # (B, 32, T)
+        temporal_out = self.temporal_conv(feats)  # (B, 64, T)
+        last = temporal_out[:, :, -1]       # (B, 64)
+        last = last[:, :, None, None].expand(-1, -1, H, W)
+        return self.decoder(last)
+
 # ==================================================
 # DESCARGAR MODELO
 # ==================================================
 
 def descargar_ultimo_modelo():
-    #Un tiempo largo para que no interfiera 
+    """Descarga el modelo con mejor F1 score de la DB"""
     time.sleep(5)
     db = SessionLocal()
     try:
         modelo = (
             db.query(Modelos)
-            .order_by(Modelos.id.desc()) #Modelos.max_acuracy.desc().first()
+            .order_by(Modelos.f1_score.desc())
             .first()
         )
         if modelo is None:
             print("No hay modelos en la DB")
-            return None, None
-        model_path = f"{MODELS_DIR}/fire_model_ver_{modelo.id}.pth"
+            return None, None, None
+        
+        tipo = modelo.tipo or "temporal_fire_net"
+        # Determinar extensión según tipo
+        ext = ".json" if tipo == "xgboost" else ".pth"
+        model_path = f"{MODELS_DIR}/{modelo.name}"
+        
         if not os.path.exists(model_path):
             client = get_minio_client()
             client.fget_object(
                 "modelos",
-                #f"fire_model_ver_{modelo.id}.pth",
                 modelo.name,
                 model_path
             )
-            print(f"Modelo descargado: {model_path}")
-        return modelo.id, model_path
+            print(f"Modelo descargado: {model_path} (tipo: {tipo})")
+        return modelo.id, model_path, tipo
     finally:
         db.close()
 # ==================================================
 # CARGAR MODELO
 # ==================================================
-def cargar_modelo(model_path):
-    model = TemporalFireNet()
-    model.load_state_dict(
-        torch.load(
-            model_path,
-            map_location=device
+def cargar_modelo(model_path, tipo="temporal_fire_net"):
+    """Carga el modelo según su tipo"""
+    if tipo == "xgboost":
+        model = xgb.XGBClassifier()
+        model.load_model(model_path)
+        print(f"Modelo XGBoost cargado OK")
+        return model
+    elif tipo == "temp_cnn":
+        model = TempCNN()
+        model.load_state_dict(
+            torch.load(model_path, map_location=device)
         )
-    )
-    model.to(device)
-    model.eval()
-    print("Modelo cargado OK")
-    return model
+        model.to(device)
+        model.eval()
+        print(f"Modelo TempCNN cargado OK")
+        return model
+    else:  # temporal_fire_net
+        model = TemporalFireNet()
+        model.load_state_dict(
+            torch.load(model_path, map_location=device)
+        )
+        model.to(device)
+        model.eval()
+        print("Modelo TemporalFireNet cargado OK")
+        return model
 # ==================================================
 # DESCARGAR ORDEN
 # ==================================================
@@ -235,6 +286,61 @@ def preprocess(data):
     ).unsqueeze(0)
 
     return x
+
+# ==================================================
+# PREDICCION XGBOOST
+# ==================================================
+def predecir_xgboost(model, ruta_stack, orden_id):
+    """Predicción usando modelo XGBoost"""
+    data, profile = cargar_stack(ruta_stack)
+    if data.shape[0] != 17:
+        raise Exception(f"El TIFF debe tener 17 bandas y tiene {data.shape[0]}")
+    
+    H = data.shape[1]
+    W = data.shape[2]
+    
+    # Procesar Sentinel-2 (primeras 15 bandas)
+    x_s2 = data[:15].reshape(3, 5, H, W)
+    x_min = x_s2.min()
+    x_max = x_s2.max()
+    x_s2 = (x_s2 - x_min) / (x_max - x_min + 1e-6)
+    
+    # Aplanar Sentinel-2: (H*W, 15)
+    x_s2_flat = x_s2.transpose(2, 3, 0, 1).reshape(H * W, 15)
+    
+    # Normalizar distancias de OSM: (H*W, 2)
+    x_osm = data[15:] / 10000.0
+    x_osm_flat = x_osm.transpose(1, 2, 0).reshape(H * W, 2)
+    
+    # Concatenar: (H*W, 17)
+    x_flat = np.concatenate([x_s2_flat, x_osm_flat], axis=1)
+    
+    # Predecir probabilidades
+    pred_proba = model.predict_proba(x_flat)[:, 1]  # (H*W,)
+    pred = pred_proba.reshape(H, W)  # (H, W)
+    
+    # Enmascarar píxeles sin datos (franjas negras en el borde de los tiles de S2)
+    nodata_mask = np.zeros((H, W), dtype=bool)
+    for t in range(3):
+        ndvi = data[t*5 + 0]
+        nbr = data[t*5 + 1]
+        ndbi = data[t*5 + 2]
+        t_nodata = (ndvi == 0.0) & (nbr == 0.0) & (ndbi == 0.0)
+        nodata_mask = nodata_mask | t_nodata
+    pred[nodata_mask] = 0.0
+    # Aplicar máscara de nubes (banda 4 del T1)
+    nubes_t1 = data[3]
+    pred[nubes_t1 == 1.0] = 0.0
+    tif_path = guardar_pred_tif(pred, profile, orden_id)
+    porcentaje = calcular_porcentaje(pred)
+    zonas = detectar_zonas(pred)
+    resultado = {
+        "riesgo": "alto" if porcentaje > 30 else "bajo",
+        "porcentaje_area_riesgo": porcentaje,
+        "zonas_criticas": zonas,
+        "archivo_prediccion": f"pred_{orden_id}.tif"
+    }
+    return resultado, tif_path
 
 # ==================================================
 # GUARDAR PREDICCION
@@ -295,12 +401,27 @@ def detectar_zonas(pred, threshold=0.5, min_pixels=50):
 # ==================================================
 # PREDICCION
 # ==================================================
-def predecir(model, ruta_stack, orden_id):
+def predecir(model, ruta_stack, orden_id, tipo="temporal_fire_net"):
+    if tipo == "xgboost":
+        return predecir_xgboost(model, ruta_stack, orden_id)
+    # El resto funciona para TemporalFireNet y TempCNN
     data, profile = cargar_stack(ruta_stack)
     x = preprocess(data).to(device)
     with torch.no_grad():
         pred = model(x)
     pred = pred.cpu().numpy()[0, 0]
+    
+    # Enmascarar píxeles sin datos (franjas negras en el borde de los tiles de S2)
+    H, W = pred.shape
+    nodata_mask = np.zeros((H, W), dtype=bool)
+    for t in range(3):
+        ndvi = data[t*5 + 0]
+        nbr = data[t*5 + 1]
+        ndbi = data[t*5 + 2]
+        t_nodata = (ndvi == 0.0) & (nbr == 0.0) & (ndbi == 0.0)
+        nodata_mask = nodata_mask | t_nodata
+    pred[nodata_mask] = 0.0
+    
     tif_path = guardar_pred_tif(
         pred,
         profile,
@@ -332,13 +453,13 @@ def get_pending(db: Session):
 # ==================================================
 def run():
     while True:
-        modelo_id, model_path = descargar_ultimo_modelo()
+        modelo_id, model_path, modelo_tipo = descargar_ultimo_modelo()
         logearDB("Buscando Modelos Nuevos...")
-        if modelo_id == None:
+        if modelo_id is None:
             logearDB("No hay Modelos, me pongo a dormir...")
             time.sleep(5)
             continue
-        model = cargar_modelo(model_path)
+        model = cargar_modelo(model_path, modelo_tipo)
         db = SessionLocal()
         try:
             orden = get_pending(db)
@@ -354,7 +475,8 @@ def run():
                 resultado, tif_path = predecir(
                     model,
                     ruta_stack,
-                    orden.id
+                    orden.id,
+                    modelo_tipo
                 )
                 subir_prediccion(
                     orden.id,
@@ -362,7 +484,7 @@ def run():
                 )
                 orden.status = "Predicha"
                 orden.prediccion = json.dumps(resultado)
-                orden.modelo_utilizado = f"fire_model_ver_{modelo_id}"
+                orden.modelo_utilizado = f"{modelo_tipo}:{model_path.split('/')[-1]}"
                 db.commit()
                 print(f"Orden {orden.id} completada")
             except Exception as e:

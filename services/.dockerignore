@@ -1,0 +1,7 @@
+data/
+dataset/
+tmp/
+descargas/
+ordenes/
+*.log
+__pycache__/

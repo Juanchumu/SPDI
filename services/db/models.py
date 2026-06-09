@@ -31,6 +31,7 @@ class Modelos(Base):
     __tablename__ = "modelos"
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(Text)
+    tipo = Column(String, default="temporal_fire_net")  # temporal_fire_net | xgboost | temp_cnn
     final_loss = Column(Float)
     best_loss = Column(Float)
     pred_mean = Column(Float)

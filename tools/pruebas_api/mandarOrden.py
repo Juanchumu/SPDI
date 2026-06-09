@@ -1,9 +1,9 @@
 import time
 import requests
 
-DIA = 20211125
-lat = -34.249801
-lon = -58.880148
+DIA = 20260404
+lat = -34.3308878
+lon = -58.9874495
 data = {
     "dia": DIA,
     "lat": lat,
@@ -15,7 +15,7 @@ r = requests.post(
     json=data
 )
 print("POST:", r.status_code, r.text)
-if r.status_code != 200:
+if r.status_code not in (200, 201):
     raise Exception("Error al crear la orden")
 respuesta = r.json()
 

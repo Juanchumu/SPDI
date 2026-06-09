@@ -1,5 +1,6 @@
 # imports
-
+from app.osm_utils import get_osm_distances
+from rasterio.coords import BoundingBox
 import os
 import zipfile
 import numpy as np
@@ -52,11 +53,17 @@ def AlmacenarOrdenLista(nro_orden):
     print(f"Archivo escena_{nro_orden}.tif subido")
 
 
+def update_status(db, orden, msg):
+    if db and orden:
+        orden.status = msg
+        db.commit()
+
 # ==================================================
 # FUNCIÓN PRINCIPAL
 # ==================================================
-def run(dia_de_la_imagen, lat, lon, orden_id):
+def run(dia_de_la_imagen, lat, lon, orden_id, db=None, orden=None):
 
+    update_status(db, orden, "Calculando fechas y coordenadas...")
     fecha_base = datetime.strptime(dia_de_la_imagen, "%Y%m%d").replace(tzinfo=UTC)
 
     fecha_inicio = (fecha_base - timedelta(days=40)).strftime("%Y-%m-%d")
@@ -82,6 +89,7 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
     # ==================================================
     # STAC CLIENT
     # ==================================================
+    update_status(db, orden, "Buscando imágenes en el catálogo espacial de Microsoft...")
     catalog = pystac_client.Client.open(
         "https://planetarycomputer.microsoft.com/api/stac/v1",
         modifier=planetary_computer.sign_inplace
@@ -138,6 +146,7 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
         # ==================================================
         # CARGAR BANDAS
         # ==================================================
+        update_status(db, orden, "Descargando bandas espectrales del satélite Sentinel-2...")
         ds = stac_load(
             [item],
             bands=["red", "nir", "swir16", "SCL"],
@@ -157,6 +166,7 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
         # ==================================================
         # INDICES
         # ==================================================
+        update_status(db, orden, "Procesando tensores geoespaciales...")
         def idx(a, b):
             return np.divide(
                 a - b,
@@ -210,6 +220,24 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
             "transform": transform
         }
 
+    if len(bandas_stack) == 15:
+        try:
+            update_status(db, orden, "Calculando distancias a rutas y campings...")
+            left, bottom, right, top = rasterio.transform.array_bounds(profile["height"], profile["width"], profile["transform"])
+            bounds = BoundingBox(left, bottom, right, top)
+            road_dist, camping_dist = get_osm_distances(
+                bounds, 
+                profile["crs"], 
+                (profile["height"], profile["width"]), 
+                profile["transform"]
+            )
+            bandas_stack.extend([road_dist, camping_dist])
+        except Exception as e:
+            print(f"Error calculating OSM distances in worker: {e}")
+            road_dist = np.full((profile["height"], profile["width"]), 10000.0, dtype=np.float32)
+            camping_dist = np.full((profile["height"], profile["width"]), 10000.0, dtype=np.float32)
+            bandas_stack.extend([road_dist, camping_dist])
+
     if len(bandas_stack) == 0:
         print("No hay datos válidos")
         return 1
@@ -217,6 +245,7 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
     # ==================================================
     # GUARDAR STACK
     # ==================================================
+    update_status(db, orden, "Guardando escena multitemporal...")
     ruta_stack = f"/app/ordenes/inputs/escena_{orden_id}.tif"
 
     profile["count"] = len(bandas_stack)
@@ -226,6 +255,7 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
         for i in range(len(bandas_stack)):
             dst.write(bandas_stack[i], i + 1)
 
+    update_status(db, orden, "Enviando imagen a MinIO para predicción...")
     AlmacenarOrdenLista(orden_id)
 
     print("Input generado OK")
