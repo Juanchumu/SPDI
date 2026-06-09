@@ -4,13 +4,23 @@
   </button>
   <span>SPDI</span>
   <span class="example-spacer"></span>
+  <button (click)="iniciarCaptura()" matIconButton class="example-icon favorite-icon" aria-label="Example icon-button with heart icon">
+    <span>Agregar</span>
+    <mat-icon>add_location_alt</mat-icon>
+  </button>
+  <button (click)="recuperar_ordenes()" matIconButton class="example-icon favorite-icon" aria-label="Example icon-button with heart icon">
+    <mat-icon>update</mat-icon>
+  </button>
   <button matIconButton class="example-icon favorite-icon" aria-label="Example icon-button with heart icon">
-    <mat-icon>favorite</mat-icon>
+    <span>Mandar a Predecir</span>
+    <mat-icon>upload</mat-icon>
   </button>
   <button matIconButton class="example-icon" aria-label="Example icon-button with share icon">
     <mat-icon>share</mat-icon>
   </button>
 </mat-toolbar>
-
-<app-mapa-sectorizado></app-mapa-sectorizado>
+<app-mapa-sectorizado
+  [geojson]="geojsonData"
+    (puntoSeleccionado)="agregarPunto($event)"
+  ></app-mapa-sectorizado>
 

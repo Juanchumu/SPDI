@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -17,6 +18,15 @@ START_TIME = time.time()
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:4200",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def minioVida():
     try:
@@ -245,3 +255,32 @@ def ultimo_informe(db: Session = Depends(get_db)):
             "created_at": informe.created_at.isoformat(),
             "contenido": informe.contenido
             }
+
+@app.get("/api/v1/recuperar_ordenes")
+def listar_ordenes(db: Session = Depends(get_db)):
+    ordenes = db.query(Orden).all()
+    features = []
+    for orden in ordenes:
+        args = json.loads(orden.args)
+        features.append({
+            "type": "Feature",
+            "properties": {
+                "id": orden.id,
+                "dia": args.get("dia_de_la_imagen"),
+                "estado": orden.status,
+                "enviado": orden.created_at.isoformat() if orden.created_at else None,
+                "terminado": orden.updated_at.isoformat() if orden.updated_at else None,
+                "modelo": orden.modelo_utilizado if orden.modelo_utilizado else None
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    args.get("lon"),
+                    args.get("lat")
+                ]
+            }
+        })
+    return {
+        "type": "FeatureCollection",
+        "features": features
+    }
