@@ -9,7 +9,9 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+      # en produccion no se utilizan locales
+      #- ./data/postgres:/var/lib/postgresql/data
+      - postgre_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d mydb"]
       interval: 5s
@@ -40,7 +42,8 @@ services:
       - DATABASE_URL=${DATABASE_URL}
     # Montamos el código fuente para Hot Reload
     volumes:
-      - ./api/app:/app/app
+      # en produccion no se utilizan locales
+      #- ./api/app:/app/app
     # Lanzamos la API con --reload
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     restart: unless-stopped
@@ -84,10 +87,11 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - DB_MINIO_USER=${DB_MINIO_USER}
       - DB_MINIO_PASS=${DB_MINIO_PASS}
-    volumes:                           # 
-      - ./data:/app/data               # 
-      - ./descargas:/app/descargas     # 
-      - ./ordenes:/app/ordenes     # 
+    volumes:                           
+      # en produccion no se utilizan locales
+      # - ./data:/app/data               # 
+      # - ./descargas:/app/descargas     # 
+      # - ./ordenes:/app/ordenes     # 
     restart: unless-stopped
   entrenador:
     build:
@@ -110,8 +114,8 @@ services:
       - DB_MINIO_USER=${DB_MINIO_USER}
       - DB_MINIO_PASS=${DB_MINIO_PASS}
     volumes:
-      - ./dataset:/app/dataset
-      - ../data/raw:/app/data/raw:ro
+      #- ./dataset:/app/dataset
+      #- ../data/raw:/app/data/raw:ro
     restart: unless-stopped
   analista:
     build:
@@ -139,6 +143,33 @@ services:
       - OLLAMA_URL_B=${OLLAMA_URL_B}
       - OLLAMA_TOKEN=${OLLAMA_TOKEN}
     restart: unless-stopped
+# Sucesor de analista:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - TZ=America/Argentina/Buenos_Aires
+      - GENERIC_TIMEZONE=America/Argentina/Buenos_Aires
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DATABASE_URL=${DATABASE_URL}
+        #ollama  
+      - OLLAMA_URL_A=${OLLAMA_URL_A}
+      - OLLAMA_URL_B=${OLLAMA_URL_B}
+      - OLLAMA_TOKEN=${OLLAMA_TOKEN}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      # Para poder subir a git-hub los workflows
+      - ./n8n_data:/home/node/.n8n
 
   minio:
     image: minio/minio
@@ -151,7 +182,10 @@ services:
       MINIO_ROOT_USER: ${DB_MINIO_USER}
       MINIO_ROOT_PASSWORD: ${DB_MINIO_PASS}
     volumes:
-      - ./data/minio:/data
+    
+      # en produccion no se utilizan locales
+      #- ./data/minio:/data
+      - minio_data:/data
   modelador:
     build:
       context: .
@@ -175,7 +209,9 @@ services:
       - DB_MINIO_USER=${DB_MINIO_USER}
       - DB_MINIO_PASS=${DB_MINIO_PASS}
     volumes:
-      - ./tmp:/app/tmp
+    
+      # en produccion no se utilizan locales
+      #- ./tmp:/app/tmp
     restart: unless-stopped
   predictor:
     build:
@@ -203,10 +239,15 @@ services:
     ports:
       - "8080:80"
     volumes:
+    # esto tendria que ser una copia de archivos y no un volumen
       - ../web_interface:/usr/share/nginx/html:ro
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - api
     restart: unless-stopped
 
-# volumes minio_data y postgres_data eliminados: ahora usan bind mounts en ./data/
+
+volumes:
+  minio_data:
+  postgres_data:
+  n8n_data:
