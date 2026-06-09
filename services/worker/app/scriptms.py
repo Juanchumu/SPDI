@@ -104,7 +104,7 @@ def run(dia_de_la_imagen, lat, lon, orden_id, db=None, orden=None):
                 "lte": 100
             }
         },
-        limit=6
+        limit=3
     )
 
     items = list(search.items())
