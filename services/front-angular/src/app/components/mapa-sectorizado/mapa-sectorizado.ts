@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, AfterViewInit, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import * as L from 'leaflet';
 
 @Component({
@@ -11,13 +11,12 @@ import * as L from 'leaflet';
 export class MapaSectorizado implements AfterViewInit, OnChanges {
   @Input() geojson: any;
   @Input() modoCaptura = false;
-  @Output() puntoSeleccionado = new EventEmitter<{
-    lat:number;
-    lon:number;
-  }>();
+  @Output() puntoSeleccionado = new EventEmitter<{lat:number;lon:number}>();
 
   private map!: L.Map;
   capaGeojson?: L.GeoJSON;
+
+  private marcadoresCapturados: L.Marker[] = [];
 
   ngAfterViewInit(): void {
     this.initMap();
@@ -39,9 +38,20 @@ export class MapaSectorizado implements AfterViewInit, OnChanges {
       if (!this.modoCaptura) {return;}
       const lat = e.latlng.lat;
       const lon = e.latlng.lng;
-      L.marker([lat, lon]).addTo(this.map);
-      this.puntoSeleccionado.emit({lat,lon});
+      const marker = L.marker([lat, lon]).addTo(this.map);
+      this.marcadoresCapturados.push(marker);
+      //L.marker([lat, lon]).addTo(this.map);
+      this.puntoSeleccionado.emit({lat: e.latlng.lat,lon: e.latlng.lng });
     });
+  }
+
+  limpiarPuntosCapturados(): void {
+
+  for (const marker of this.marcadoresCapturados) {
+    this.map.removeLayer(marker);
+  }
+
+  this.marcadoresCapturados = [];
   }
   ngOnChanges(changes: SimpleChanges){
     //para evitar un problema de inicio antes que recibir

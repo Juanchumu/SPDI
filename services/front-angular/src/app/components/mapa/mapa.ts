@@ -1,28 +1,24 @@
+import { MapaSectorizado } from '../mapa-sectorizado/mapa-sectorizado'
+
 import { Component, signal, ViewChild } from '@angular/core';
-import { RouterOutlet, RouterLink } from '@angular/router';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { MapaSectorizado } from './components/mapa-sectorizado/mapa-sectorizado'
-import { Mapa } from './components/mapa/mapa'
 import { HttpClient } from '@angular/common/http';
 
 @Component({
-  selector: 'app-root',
+  selector: 'app-mapa',
   imports: [
-    RouterOutlet,
-    RouterLink,
     MatButtonModule,
     MatToolbarModule,
     MatIconModule,
     MapaSectorizado,
-    Mapa
-  ],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
+    ],
+  templateUrl: './mapa.html',
+  styleUrl: './mapa.css',
 })
-export class App {
+export class Mapa {
   @ViewChild(MapaSectorizado)
   mapa!: MapaSectorizado;
   protected readonly title = signal('front-angular-spdi');
@@ -69,4 +65,5 @@ export class App {
     this.capturando = false;
     this.capturaFinalizada = false;
   }
+
 }
