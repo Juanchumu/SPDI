@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -11,8 +11,10 @@ import subprocess
 import sys
 
 from db.db import SessionLocal
-from db.models import Orden, Entrenamiento, Modelos, Descargas, WorkersLogs, Informes
+from db.models import Orden, Entrenamiento, Modelos, Descargas, WorkersLogs, Informes, Usuario
 import os
+
+from passlib.context import CryptContext
 
 
 # Guardamos el timestamp al momento de cargar el script
@@ -33,6 +35,22 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_event():
     subprocess.Popen([sys.executable, "app/crearDB.py"])
+
+
+pwd_context = CryptContext(
+    schemes=["pbkdf2_sha256"],
+    deprecated="auto"
+)
+
+def verificar_password(password, password_hash):
+    return pwd_context.verify(password, password_hash)
+def hashear_password(password):
+    return pwd_context.hash(password)
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
 
 
 def minioVida():
@@ -103,6 +121,7 @@ class OrdenRequest(BaseModel):
     dia: int          # formato YYYYMMDD
     lat: float
     lon: float
+    username: str
 
 
 def get_db():
@@ -116,6 +135,7 @@ def get_db():
 @app.post("/api/v1/orden", status_code=status.HTTP_201_CREATED)
 def crear_orden(request: OrdenRequest, db: Session = Depends(get_db)):
     dia_str = str(request.dia)
+    usuario_str = str(request.username)
     args = {
         "dia_de_la_imagen": dia_str,
         "lat": request.lat,
@@ -123,7 +143,8 @@ def crear_orden(request: OrdenRequest, db: Session = Depends(get_db)):
     }
     nueva = Orden(
         args=json.dumps(args),
-        status="Pendiente.."
+        status="Pendiente..",
+        username= usuario_str
     )
     db.add(nueva)
     db.commit()
@@ -264,8 +285,11 @@ def ultimo_informe(db: Session = Depends(get_db)):
             }
 
 @app.get("/api/v1/recuperar_ordenes")
-def listar_ordenes(db: Session = Depends(get_db)):
-    ordenes = db.query(Orden).all()
+def listar_ordenes(username: str, db: Session = Depends(get_db)):
+    if (username == 'admin'):
+        ordenes = db.query(Orden).all()
+    else:
+        ordenes = db.query(Orden).filter(Orden.username == username).all()
     features = []
     for orden in ordenes:
         args = json.loads(orden.args)
@@ -291,4 +315,71 @@ def listar_ordenes(db: Session = Depends(get_db)):
     return {
         "type": "FeatureCollection",
         "features": features
+    }
+
+
+### USUARIOS
+class UsuarioRequest(BaseModel):
+    username: str
+    password: str
+
+@app.post("/api/v1/usuarios")
+def crear_usuario(
+    data: UsuarioRequest,
+    db: Session = Depends(get_db)
+):
+    existe = (
+        db.query(Usuario)
+        .filter(Usuario.username == data.username)
+        .first()
+    )
+
+    if existe:
+        raise HTTPException(
+            status_code=400,
+            detail="El usuario ya existe"
+        )
+
+    usuario = Usuario(
+        username=data.username,
+        password_hash=hashear_password(data.password)
+    )
+
+    db.add(usuario)
+    db.commit()
+    db.refresh(usuario)
+
+    return {
+        "id": usuario.id,
+        "username": usuario.username
+    }
+
+
+
+
+router = APIRouter()
+
+@app.post("/login")
+def login(
+    data: LoginRequest,
+    db: Session = Depends(get_db)
+):
+    usuario = (
+        db.query(Usuario)
+        .filter(Usuario.username == data.username)
+        .first()
+    )
+
+    if not usuario:
+        raise HTTPException(status_code=401)
+
+    if not verificar_password(
+        data.password,
+        usuario.password_hash
+    ):
+        raise HTTPException(status_code=401)
+
+    return {
+        "success": True,
+        "username": usuario.username
     }

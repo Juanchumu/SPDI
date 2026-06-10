@@ -11,6 +11,7 @@ class Orden(Base):
     status = Column(String, default="pending")
     prediccion = Column(Text, nullable=True)
     modelo_utilizado = Column(Text, nullable=True)
+    username = Column(String)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -54,6 +55,13 @@ class Descargas(Base):
     nombre_imagen = Column(Text)
     dia_de_la_imagen= Column(Text)
     fecha_descarga = Column(DateTime, default=datetime.utcnow)
+
+# 📥 Usuario
+class Usuario(Base):
+    __tablename__ = "usuarios"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, nullable=False)
+    password_hash= Column(String, nullable=False)
 
 class WorkersLogs(Base):
     __tablename__ = "workerslogs"
