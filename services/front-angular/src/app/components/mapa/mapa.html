@@ -1,0 +1,47 @@
+<mat-toolbar>
+  <span>Mapa de Predicciones</span>
+
+  <span class="example-spacer"></span>
+@if (!capturando && !capturaFinalizada) {
+  <button
+    mat-raised-button
+    (click)="toggleCaptura()">
+    <mat-icon>add_location_alt</mat-icon>
+    Capturar puntos
+  </button>
+}
+
+@if (capturando) {
+  <button
+    mat-raised-button
+    (click)="toggleCaptura()">
+    <mat-icon>stop</mat-icon>
+    Finalizar captura
+  </button>
+}
+
+@if (capturaFinalizada) {
+  <button
+    mat-raised-button
+    (click)="enviarPuntos()">
+    <mat-icon>upload</mat-icon>
+    Mandar a predecir
+  </button>
+}
+
+
+  <button
+    mat-raised-button
+    (click)="recuperar_ordenes()">
+    <mat-icon>update</mat-icon>
+    Actualizar
+  </button>
+
+
+</mat-toolbar>
+<app-mapa-sectorizado
+  [geojson]="geojsonData"
+    [modoCaptura] = "capturando"
+    (puntoSeleccionado)="agregarPunto($event)"
+ ></app-mapa-sectorizado>
+

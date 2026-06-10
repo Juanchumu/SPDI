@@ -64,13 +64,8 @@ http://localhost:8000/openapi.json
 Genera una nueva orden para evaluar riesgo de incendio en una ubicación y fecha determinada.
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/orden \
--H "Content-Type: application/json" \
--d '{
-  "dia": 20211125,
-  "lat": -34.249801,
-  "lon": -58.880148
-}'
+curl -X POST http://localhost:8000/api/v1/orden -H "Content-Type: application/json" -d '{ "dia": 20211125,"lat": -34.249801, "lon": -58.880148 }'
+
 ```
 
 ### Respuesta esperada
