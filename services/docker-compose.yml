@@ -44,7 +44,20 @@ services:
       - ./api/app:/app/app
     # Lanzamos la API con --reload
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-    restart: unless-stopped
+    restart: unless-stopped 
+  front-angular:
+    build:
+      context: .
+      dockerfile: ./front-angular/Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      db:
+        condition: service_healthy
+          #api:
+        #condition: service_healthy
+
+
   validador:
     build:
       context: .

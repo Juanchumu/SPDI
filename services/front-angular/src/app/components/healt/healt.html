@@ -1,1 +1,60 @@
-<p>healt works!</p>
+<mat-toolbar>
+  <span>Estado del Servicio</span>
+  <span class="example-spacer"></span>
+
+  <button
+    mat-raised-button
+    (click)="cargarHealth()">
+    <mat-icon>update</mat-icon>
+    Actualizar
+  </button>
+
+</mat-toolbar>
+
+@if (health) {
+
+  @for (servicio of health.services | keyvalue; track servicio.key) {
+
+    <div class="card">
+      <h4>{{ servicio.key }}</h4>
+
+      <p>
+        Estado:
+        <span
+          [class.up]="servicio.value.status === 'UP'"
+          [class.down]="servicio.value.status === 'DOWN'">
+          {{ servicio.value.status }}
+        </span>
+      </p>
+
+      @if (servicio.value.descripcion) {
+        <p>{{ servicio.value.descripcion }}</p>
+      }
+
+      @if (servicio.value.uptime) {
+        <p>Uptime: {{ servicio.value.uptime }}</p>
+      }
+
+      @if (servicio.value.last_seen) {
+        <p>Último reporte: {{ servicio.value.last_seen }}</p>
+      }
+
+      @if (servicio.value.seconds_since_last_heartbeat) {
+        <p>
+          Segundos sin heartbeat:
+          {{ servicio.value.seconds_since_last_heartbeat }}
+        </p>
+      }
+
+    </div>
+
+  }
+
+  <h3>Dependencias</h3>
+
+  <div class="card">
+    <p>Database: {{ health.dependencies.database }}</p>
+    <p>MinIO: {{ health.dependencies.minio }}</p>
+  </div>
+
+}

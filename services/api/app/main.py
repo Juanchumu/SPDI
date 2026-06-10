@@ -7,6 +7,8 @@ import json
 import time
 import requests
 from datetime import timedelta, datetime, timezone
+import subprocess
+import sys
 
 from db.db import SessionLocal
 from db.models import Orden, Entrenamiento, Modelos, Descargas, WorkersLogs, Informes
@@ -27,6 +29,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+async def startup_event():
+    subprocess.Popen([sys.executable, "app/crearDB.py"])
+
 
 def minioVida():
     try:
