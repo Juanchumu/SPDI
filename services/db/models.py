@@ -55,6 +55,13 @@ class Descargas(Base):
     dia_de_la_imagen= Column(Text)
     fecha_descarga = Column(DateTime, default=datetime.utcnow)
 
+# 📥 Usuario
+class Usuario(Base):
+    __tablename__ = "usuarios"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, nullable=False)
+    password_hash= Column(String, nullable=False)
+
 class WorkersLogs(Base):
     __tablename__ = "workerslogs"
     id = Column(Integer, primary_key=True)

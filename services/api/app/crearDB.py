@@ -78,6 +78,15 @@ with engine.connect() as conn:
             fecha_descarga TIMESTAMP
         )
         """))
+        # Usuarios | 
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id SERIAL PRIMARY KEY,
+            nombre_imagen TEXT,
+            username varchar(100) unique not null,
+            password_hash varchar(255) not null
+        )
+        """))
         
         # Ordenes | las ordenes 
         conn.execute(text("""
