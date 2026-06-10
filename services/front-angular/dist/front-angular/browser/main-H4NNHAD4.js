@@ -52942,7 +52942,9 @@ var Mapa = class _Mapa {
     this.capturando = !this.capturando;
   }
   enviarPuntos() {
-    const dia = 20211125;
+    const hoy = /* @__PURE__ */ new Date();
+    const dia = Number(hoy.getFullYear().toString() + String(hoy.getMonth() + 1).padStart(2, "0") + String(hoy.getDate()).padStart(2, "0"));
+    console.log(dia);
     for (const p of this.puntos) {
       this.http.post("http://localhost:8000/api/v1/orden", {
         dia,
