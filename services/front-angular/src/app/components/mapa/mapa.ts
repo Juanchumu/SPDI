@@ -1,11 +1,12 @@
 import { MapaSectorizado } from '../mapa-sectorizado/mapa-sectorizado'
 
-import { Component, signal, ViewChild } from '@angular/core';
+import { Component, signal, ViewChild, OnInit } from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../../auth';
 
 @Component({
   selector: 'app-mapa',
@@ -18,15 +19,25 @@ import { HttpClient } from '@angular/common/http';
   templateUrl: './mapa.html',
   styleUrl: './mapa.css',
 })
-export class Mapa {
+export class Mapa implements OnInit {
   @ViewChild(MapaSectorizado)
   mapa!: MapaSectorizado;
   protected readonly title = signal('front-angular-spdi');
   geojsonData: any;
-  constructor(private http: HttpClient){}
+
+  public nombreUsuario: string | null = null;
+
+  constructor(private http: HttpClient,private auth: AuthService) {
+    this.nombreUsuario = this.auth.getUsername();
+  }
+  ngOnInit(): void {
+    //this.nombreUsuario = localStorage.getItem('username');
+    this.nombreUsuario = this.auth.getUsername();
+  }
+  cerrarSesion() {this.auth.logout();}
   recuperar_ordenes(){
     console.log("click");
-    this.http.get('http://localhost:8000/api/v1/recuperar_ordenes').subscribe((geojson) => {
+    this.http.get(`http://localhost:8000/api/v1/recuperar_ordenes?username=${this.nombreUsuario}`).subscribe((geojson) => {
       console.log(geojson);
       this.geojsonData = geojson;
     });
@@ -62,7 +73,8 @@ export class Mapa {
         {
           dia,
           lat: p.lat,
-          lon: p.lon
+          lon: p.lon,
+          username: this.nombreUsuario
         }
       ).subscribe();
     }

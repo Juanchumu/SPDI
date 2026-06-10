@@ -82,7 +82,6 @@ with engine.connect() as conn:
         conn.execute(text("""
         CREATE TABLE IF NOT EXISTS usuarios (
             id SERIAL PRIMARY KEY,
-            nombre_imagen TEXT,
             username varchar(100) unique not null,
             password_hash varchar(255) not null
         )
@@ -96,6 +95,7 @@ with engine.connect() as conn:
             status TEXT,
             prediccion TEXT,
             modelo_utilizado TEXT,
+            username varchar(100),
             created_at TIMESTAMP,
             updated_at TIMESTAMP
         )

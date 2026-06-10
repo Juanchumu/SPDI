@@ -11,6 +11,7 @@ class Orden(Base):
     status = Column(String, default="pending")
     prediccion = Column(Text, nullable=True)
     modelo_utilizado = Column(Text, nullable=True)
+    username = Column(String)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

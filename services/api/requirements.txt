@@ -4,6 +4,6 @@ SQLAlchemy>=2.0
 psycopg2-binary>=2.9
 uvicorn[standard]
 requests
-
-
+passlib[bcrypt]
+python-jose
 
