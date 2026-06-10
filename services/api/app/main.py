@@ -275,6 +275,7 @@ def listar_ordenes(db: Session = Depends(get_db)):
                 "id": orden.id,
                 "dia": args.get("dia_de_la_imagen"),
                 "estado": orden.status,
+                "prediccion": orden.prediccion,
                 "enviado": orden.created_at.isoformat() if orden.created_at else None,
                 "terminado": orden.updated_at.isoformat() if orden.updated_at else None,
                 "modelo": orden.modelo_utilizado if orden.modelo_utilizado else None
