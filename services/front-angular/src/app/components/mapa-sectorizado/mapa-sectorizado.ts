@@ -76,10 +76,13 @@ export class MapaSectorizado implements AfterViewInit, OnChanges {
         },
         onEachFeature: (feature: any, layer) => {
           const p = feature.properties;
+          const pred = p.prediccion ? JSON.parse(p.prediccion) : null;
           layer.bindPopup(`
                           <h3>Orden ${p.id}</h3>
                           <b>Día:</b> ${p.dia}<br>
                           <b>Estado:</b> ${p.estado}<br>
+                          <b>Riesgo:</b> ${pred?.riesgo ?? 'No definido' }<br>
+                          <b>Porcentaje:</b> ${pred?.porcentaje_area_riesgo ?? 'Sin Calcular' }<br>
                           <b>Modelo:</b> ${p.modelo}<br>
                           <b>Enviado:</b> ${p.enviado}
                           `);

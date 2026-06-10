@@ -48,7 +48,14 @@ export class Mapa {
     this.capturando = !this.capturando;
   }
   enviarPuntos() {
-    const dia = 20211125;
+    //const dia = 20211125;
+    const hoy = new Date();
+    const dia = Number(
+      hoy.getFullYear().toString() +
+        String(hoy.getMonth() + 1).padStart(2, '0') +
+        String(hoy.getDate()).padStart(2, '0')
+    );
+    console.log(dia); // 20260609
     for (const p of this.puntos) {
       this.http.post(
         'http://localhost:8000/api/v1/orden',
