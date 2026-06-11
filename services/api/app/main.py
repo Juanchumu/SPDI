@@ -127,6 +127,32 @@ def crear_orden(request: OrdenRequest, db: Session = Depends(get_db)):
     return {"id": nueva.id, "status": "Pendiente.."}
 
 
+@app.get("/api/v1/orden")
+def listar_ordenes(db: Session = Depends(get_db)):
+    ordenes = db.query(Orden).order_by(Orden.created_at.desc()).limit(50).all()
+    resultado = []
+    for orden in ordenes:
+        try:
+            args = json.loads(orden.args)
+            lat = args.get("lat", 0)
+            lon = args.get("lon", 0)
+            dia = args.get("dia_de_la_imagen", "")
+        except:
+            lat = 0
+            lon = 0
+            dia = ""
+            
+        item = {
+            "id": orden.id,
+            "lat": lat,
+            "lon": lon,
+            "dia": dia,
+            "status": orden.status,
+            "prediction": orden.prediccion
+        }
+        resultado.append(item)
+    return resultado
+
 @app.get("/api/v1/orden/{id}")
 def obtener_orden(id: int, db: Session = Depends(get_db)):
     orden = db.query(Orden).filter(Orden.id == id).first()
@@ -134,16 +160,28 @@ def obtener_orden(id: int, db: Session = Depends(get_db)):
     if orden is None: 
         raise HTTPException(status_code=404, detail="Orden No encontrada")
 
-    respuesta = f'Estado: {orden.status}'
+    respuesta = {
+        "id": orden.id,
+        "status": orden.status
+    }
     if (orden.status == 'Predicha'):
-        respuesta = {
-                "id": orden.id,
-                "status": orden.status,
-                "prediccion": orden.prediccion,
-                "modelo_utilizado": orden.modelo_utilizado
-                }
+        respuesta["prediccion"] = orden.prediccion
+        respuesta["modelo_utilizado"] = orden.modelo_utilizado
+        
     return respuesta
 
+@app.delete("/api/v1/orden/{id}")
+def cancelar_orden(id: int, db: Session = Depends(get_db)):
+    orden = db.query(Orden).filter(Orden.id == id).first()
+    if orden is None: 
+        raise HTTPException(status_code=404, detail="Orden No encontrada")
+    
+    if orden.status == 'Predicha' or 'error' in orden.status.lower():
+        raise HTTPException(status_code=400, detail="La orden ya finalizó o dio error")
+        
+    orden.status = "Cancelada"
+    db.commit()
+    return {"id": orden.id, "status": orden.status}
 
 
 @app.post("/api/v1/generar_datos", status_code=status.HTTP_201_CREATED)
@@ -175,25 +213,35 @@ def obtener_entrenamiento(id: int, db: Session = Depends(get_db)):
     return respuesta
 
 @app.get("/api/v1/health")  # liveness
-def health():
+def health(db: Session = Depends(get_db)):
     # Calculamos cuánto tiempo pasó
     uptime_seconds = int(time.time() - START_TIME)
-    # Formateamos a un formato legible (HH:MM:SS)
     uptime_str = str(timedelta(seconds=uptime_seconds))
 
-    #return {"status_code": 200,"message": "Todo anda bien por acá.","uptime": uptime_str}
+    q_validador = db.query(Orden).filter(Orden.status == "Pendiente..").count()
+    q_worker = db.query(Orden).filter(Orden.status == "Lista para el worker..").count()
+    q_predictor = db.query(Orden).filter(Orden.status == "Lista para predecir..").count()
+    q_entrenador = db.query(Entrenamiento).filter(Entrenamiento.status == "pending").count()
+    q_modelador = db.query(Entrenamiento).filter(Entrenamiento.status == "lista-para-entrenar").count()
+
+    def get_worker_data(name, queue_size):
+        data = workerVida(name)
+        data["queue_size"] = queue_size
+        return data
+
     respuesta = {
             "services": {
                 "api": {
                     "status": "UP",
-                    "uptime": uptime_str
+                    "uptime": uptime_str,
+                    "queue_size": 0
                     },
-                "worker": workerVida("worker"),
-                "validador": workerVida("validador"),
-                "entrenador": workerVida("entrenador"),
-                "modelador":workerVida("modelador"),
-                "predictor": workerVida("predictor"),
-                "analista": workerVida("analista"),
+                "worker": get_worker_data("worker", q_worker),
+                "validador": get_worker_data("validador", q_validador),
+                "entrenador": get_worker_data("entrenador", q_entrenador),
+                "modelador": get_worker_data("modelador", q_modelador),
+                "predictor": get_worker_data("predictor", q_predictor),
+                "analista": get_worker_data("analista", 0),
                 },
             "dependencies": {
                 "database": dbVida(),

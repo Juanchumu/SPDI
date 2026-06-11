@@ -1,293 +1,582 @@
 <!DOCTYPE html>
-<html class="dark" lang="es">
+<html class="light h-full" lang="es">
 <head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>Comando de Riesgo SPDI | Predicción de Incendios</title>
-  
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  
-  <!-- Google Fonts & Material Symbols -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-  
-  <!-- Leaflet CSS -->
-  <link crossorigin="" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" rel="stylesheet"/>
-  
-  <!-- Leaflet JS -->
-  <script crossorigin="" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  
-  <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="style.css"/>
-  
-  <!-- Tailwind config for theme color names mapped to CSS variables -->
-  <script id="tailwind-config">
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          "colors": {
-            "primary-fixed": "var(--primary-fixed)",
-            "inverse-surface": "#e5e2e3",
-            "secondary-fixed": "#e5e1e4",
-            "surface-dim": "var(--surface-dim)",
-            "on-error-container": "#ffdad6",
-            "background": "var(--background)",
-            "tertiary-container": "#ffdb79",
-            "surface-container-high": "var(--surface-container-high)",
-            "primary-container": "#00ff88",
-            "on-surface": "var(--on-surface)",
-            "surface-tint": "#00e479",
-            "surface-container-highest": "var(--surface-container-highest)",
-            "on-secondary-fixed": "#1b1b1d",
-            "on-secondary-fixed-variant": "#474649",
-            "secondary": "#c8c6c8",
-            "surface-glass": "var(--surface-glass)",
-            "surface-container-lowest": "var(--surface-container-lowest)",
-            "border-glass": "var(--border-glass)",
-            "on-primary-fixed": "#00210c",
-            "on-secondary": "#303032",
-            "risk-low": "#00ff88",
-            "on-surface-variant": "var(--on-surface-variant)",
-            "inverse-on-surface": "#313031",
-            "surface": "var(--surface)",
-            "risk-medium": "#ffaa00",
-            "tertiary-fixed": "#ffe08d",
-            "on-primary-fixed-variant": "#005228",
-            "risk-high": "#ff3b3b",
-            "on-secondary-container": "#b7b4b7",
-            "tertiary-fixed-dim": "#e5c364",
-            "surface-bright": "#3a393a",
-            "on-tertiary-fixed-variant": "#584400",
-            "inverse-primary": "#006d37",
-            "surface-container-low": "var(--surface-container-low)",
-            "surface-variant": "#353436",
-            "outline-variant": "#3b4b3d",
-            "tertiary": "#fffaf7",
-            "secondary-container": "#474649",
-            "secondary-fixed-dim": "#c8c6c8",
-            "outline": "#849585",
-            "surface-container": "var(--surface-container)",
-            "primary-fixed-dim": "#00e479",
-            "on-tertiary": "#3d2f00",
-            "error": "#ffb4ab",
-            "on-primary-container": "#007139",
-            "on-background": "var(--on-background)",
-            "on-tertiary-fixed": "#241a00",
-            "on-primary": "#003919",
-            "on-error": "#690005",
-            "error-container": "#93000a",
-            "on-tertiary-container": "#795f01",
-            "primary": "#f1ffef"
-          },
-          "borderRadius": {
-            "DEFAULT": "0.25rem",
-            "lg": "0.5rem",
-            "xl": "0.75rem",
-            "full": "9999px"
-          },
-          "fontFamily": {
-            "headline-lg": ["Inter"],
-            "data-sm": ["JetBrains Mono"],
-            "display-lg": ["Inter"],
-            "body-lg": ["Inter"],
-            "data-lg": ["JetBrains Mono"],
-            "headline-md": ["Inter"],
-            "body-md": ["Inter"],
-            "label-caps": ["JetBrains Mono"]
-          },
-          "fontSize": {
-            "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
-            "data-sm": ["14px", {"lineHeight": "18px", "fontWeight": "500"}],
-            "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
-            "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
-            "data-lg": ["20px", {"lineHeight": "24px", "fontWeight": "500"}],
-            "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
-            "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
-            "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "700"}]
-          }
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Ignis Guard - Fire Risk Management</title>
+    
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <!-- Leaflet -->
+    <link crossorigin="" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" rel="stylesheet"/>
+    <script crossorigin="" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Tailwind Config -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed": "#121f0d",
+                        "inverse-surface": "#2e3131",
+                        "primary-container": "#1b4332",
+                        "tertiary-fixed": "#d7e8cb",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "tertiary": "#1d2a17",
+                        "error-container": "#ffdad6",
+                        "on-secondary-container": "#5d0900",
+                        "primary-fixed": "#c1ecd4",
+                        "background": "#f9f9f8",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#b5270e",
+                        "on-primary-fixed": "#002114",
+                        "secondary-fixed": "#ffdad3",
+                        "secondary-container": "#ff5c3e",
+                        "surface-container-low": "#f3f4f3",
+                        "outline": "#717973",
+                        "surface-container-highest": "#e1e3e2",
+                        "outline-variant": "#c1c8c2",
+                        "on-error-container": "#93000a",
+                        "surface": "#f9f9f8",
+                        "on-primary": "#ffffff",
+                        "surface-tint": "#3f6653",
+                        "inverse-on-surface": "#f0f1f0",
+                        "primary-fixed-dim": "#a5d0b9",
+                        "surface-dim": "#d9dad9",
+                        "on-primary-fixed-variant": "#274e3d",
+                        "surface-container-high": "#e7e8e7",
+                        "tertiary-fixed-dim": "#bbccb0",
+                        "on-background": "#191c1c",
+                        "on-primary-container": "#86af99",
+                        "on-surface": "#191c1c",
+                        "on-secondary-fixed": "#3e0400",
+                        "surface-container": "#edeeed",
+                        "surface-variant": "#e1e3e2",
+                        "surface-bright": "#f9f9f8",
+                        "on-surface-variant": "#414844",
+                        "on-secondary-fixed-variant": "#8e1300",
+                        "on-tertiary-fixed-variant": "#3c4b35",
+                        "primary": "#012d1d",
+                        "inverse-primary": "#a5d0b9",
+                        "on-tertiary-container": "#9bac91",
+                        "error": "#ba1a1a",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#32402b",
+                        "secondary-fixed-dim": "#ffb4a5"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "margin-desktop": "48px",
+                        "margin-mobile": "16px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "data-mono": ["Inter"],
+                        "headline-lg-mobile": ["Montserrat"],
+                        "label-bold": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg": ["Montserrat"],
+                        "headline-md": ["Montserrat"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                }
+            }
         }
-      }
-    }
-  </script>
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f9f9f8; color: #191c1c; -webkit-font-smoothing: antialiased; }
+        h1, h2, h3 { font-family: 'Montserrat', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; display: inline-block; vertical-align: middle; }
+        
+        .login-card-shadow { box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.12); }
+        .bg-overlay { background: linear-gradient(to bottom, rgba(1, 45, 29, 0.2), rgba(1, 45, 29, 0.6)); }
+        .elevation-1 { border: 1px solid #e1e3e2; box-shadow: 0px 4px 20px rgba(27, 67, 50, 0.05); }
+        .elevation-2 { box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.12); }
+        
+        .risk-high { background-color: #b5270e; color: #ffffff; }
+        .risk-medium { background-color: #d7e8cb; color: #1d2a17; }
+        .risk-low { background-color: #f3f4f3; color: #414844; }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c1c8c2; border-radius: 10px; }
+
+        .app-view { display: none; }
+        .app-view.active { display: flex; }
+        .content-view { display: none; }
+        .content-view.active { display: flex; }
+        .bento-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; }
+        .status-chart-bar { transition: height 1s ease-in-out; }
+    </style>
 </head>
-<body class="text-on-surface overflow-hidden bg-app-overlay">
-  <!-- Sidebar Layout -->
-  <div class="flex h-screen w-full relative">
-    
-    <!-- SideNavBar -->
-    <aside class="h-screen w-88 fixed left-0 top-0 z-50 flex flex-col py-6 px-4 backdrop-blur-xl border-r border-border-glass bg-surface-glass/80 shadow-2xl">
-      <!-- Header -->
-      <div class="mb-8 px-4">
-        <h1 class="font-headline-md text-headline-md font-bold text-primary-fixed tracking-tight">Tablero SPDI</h1>
-        <p class="font-body-md text-body-md text-on-surface-variant opacity-70">Riesgo de Incendio de Precisión</p>
-      </div>
-      
-      <!-- Custom Controls Section -->
-      <div class="flex-1 flex flex-col gap-5 px-4 overflow-y-auto custom-scroll">
-        <!-- Date Picker -->
-        <div class="flex flex-col gap-2">
-          <label class="font-label-caps text-label-caps text-on-surface-variant">Fecha de Análisis</label>
-          <input class="bg-surface-container-lowest/50 border border-border-glass rounded-lg px-3 py-2 text-on-surface font-data-sm text-data-sm focus:ring-1 focus:ring-primary-fixed outline-none transition-all" id="dateInput" type="date" required/>
+<body class="font-body-md text-on-surface h-full m-0 p-0 overflow-x-hidden">
+
+    <!-- ========================= -->
+    <!-- VIEW: LOGIN               -->
+    <!-- ========================= -->
+    <div id="view-login" class="app-view h-full w-full relative active">
+        <!-- Background Section with Image -->
+        <div class="fixed inset-0 z-0 overflow-hidden">
+            <div class="absolute inset-0 bg-overlay z-10"></div>
+            <img alt="Managed Forest Aerial View" id="login-bg-img" class="w-full h-full object-cover scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkpahhVwiM31bNJnCiAy7lU-cJF5Uyu1enohADqUK0wujHtgSKgOcDmrFBJNgMTBPvH1W7oDBxUEk44g6PCVXCFaGSvhAXiF5oxJARlgTsmaqzlFX42Sl7HsjXI2S2VIDJVhtn6yTklmsHvA35nJRd5dAyMIR1Gyg9v5koAMRmlFnWyhwwKJgvT_wdoysNTPppKrHlEQf0doc7SzJkMAq0xmHun91JXsAJhmYyy2QE67EjpUG78990XtYAcnhO4_hCLktcFNjE_A"/>
         </div>
-        
-        <!-- Address Search Group -->
-        <div class="flex flex-col gap-2">
-          <label class="font-label-caps text-label-caps text-on-surface-variant">Buscar Ciudad / Dirección</label>
-          <div class="flex gap-2">
-            <input class="flex-1 bg-surface-container-lowest/50 border border-border-glass rounded-lg px-3 py-2 text-on-surface font-body-md text-sm focus:ring-1 focus:ring-primary-fixed outline-none" id="addressInput" placeholder="Ej. Calamuchita, Cordoba" type="text"/>
-            <button class="bg-white/10 hover:bg-white/20 border border-border-glass text-on-surface font-bold px-3 py-2 rounded-lg transition-all active:scale-[0.98]" id="searchBtn">Buscar</button>
-          </div>
-        </div>
-        
-        <!-- Coordinates -->
-        <div class="flex flex-col gap-2">
-          <label class="font-label-caps text-label-caps text-on-surface-variant">Coordenadas del Punto</label>
-          <div class="grid grid-cols-2 gap-3">
-            <div class="flex flex-col gap-1">
-              <span class="text-[10px] text-on-surface-variant/60 font-label-caps uppercase">Latitud</span>
-              <input class="bg-surface-container-lowest/50 border border-border-glass rounded-lg px-3 py-2 text-on-surface font-data-sm text-data-sm focus:ring-1 focus:ring-primary-fixed outline-none" id="latInput" placeholder="-31.04" step="0.000001" type="number"/>
+        <!-- Login Container -->
+        <main class="relative z-20 flex min-h-full w-full items-center justify-center p-margin-mobile md:p-margin-desktop">
+            <div class="w-full max-w-md">
+                <!-- White Centered Card -->
+                <div class="bg-surface-container-lowest login-card-shadow border border-outline-variant p-10 rounded-lg flex flex-col items-center">
+                    <div class="mb-10 text-center">
+                        <div class="flex items-center justify-center gap-2 mb-2">
+                            <span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+                            <h1 class="font-headline-md text-headline-md font-bold text-primary tracking-tight">Ignis Guard</h1>
+                        </div>
+                        <p class="font-label-bold text-label-bold text-outline uppercase tracking-widest">Gestión de Riesgos</p>
+                    </div>
+                    <form id="login-form" class="w-full space-y-6">
+                        <div class="space-y-2">
+                            <label class="font-label-bold text-label-bold text-on-surface-variant block">Nombre de Usuario</label>
+                            <div class="relative group">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">person</span>
+                                <input class="w-full pl-10 pr-4 py-3 bg-white border border-[#8C9C82] rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" value="admin" type="text"/>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center">
+                                <label class="font-label-bold text-label-bold text-on-surface-variant block">Contraseña</label>
+                            </div>
+                            <div class="relative group">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">lock</span>
+                                <input id="password-input" class="w-full pl-10 pr-10 py-3 bg-white border border-[#8C9C82] rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" value="password123" type="password"/>
+                                <button class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors" onclick="togglePassword()" type="button">
+                                    <span class="material-symbols-outlined" id="pw_icon">visibility</span>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-primary-container text-white py-4 rounded-lg font-label-bold uppercase tracking-widest hover:opacity-90 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
+                            <span>Iniciar Sesión</span>
+                            <span class="material-symbols-outlined text-[18px]">login</span>
+                        </button>
+                    </form>
+                    <div class="mt-8 pt-8 border-t border-outline-variant w-full text-center">
+                        <div class="flex items-center justify-center gap-2 text-on-surface-variant mb-1">
+                            <span class="material-symbols-outlined text-[16px]">shield</span>
+                            <p class="font-body-sm font-medium">Acceso Seguro</p>
+                        </div>
+                        <p class="font-body-sm text-outline leading-relaxed">
+                            Este portal es exclusivamente para agentes autorizados y administradores del sistema.
+                        </p>
+                    </div>
+                </div>
             </div>
-            <div class="flex flex-col gap-1">
-              <span class="text-[10px] text-on-surface-variant/60 font-label-caps uppercase">Longitud</span>
-              <input class="bg-surface-container-lowest/50 border border-border-glass rounded-lg px-3 py-2 text-on-surface font-data-sm text-data-sm focus:ring-1 focus:ring-primary-fixed outline-none" id="lngInput" placeholder="-65.44" step="0.000001" type="number"/>
+        </main>
+    </div>
+
+    <!-- ========================= -->
+    <!-- VIEW: MAIN APP            -->
+    <!-- ========================= -->
+    <div id="view-app" class="app-view min-h-full w-full">
+        <!-- Side Navigation Shell -->
+        <aside class="h-screen w-64 fixed left-0 top-0 bg-surface border-r border-outline-variant flex flex-col py-6 z-20">
+            <div class="px-6 mb-8">
+                <h1 class="font-headline-md text-headline-md font-bold text-primary">Ignis Guard</h1>
+                <p class="text-on-surface-variant font-label-bold text-[10px] tracking-widest uppercase">Risk Management Pro</p>
             </div>
-          </div>
-        </div>
-        
-        <!-- Action Button -->
-        <button class="mt-2 w-full btn-primary font-bold py-3.5 rounded-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" id="predictBtn" disabled>
-          <span class="material-symbols-outlined">radar</span>
-          Generar Predicción
-        </button>
-        
-        <!-- Status Feed -->
-        <div class="mt-2 p-4 border border-border-glass bg-white/5 rounded-xl flex flex-col gap-2">
-          <div class="flex items-center gap-3">
-            <div class="w-2.5 h-2.5 rounded-full bg-on-surface-variant transition-colors" id="statusDot"></div>
-            <span class="font-data-sm text-data-sm text-on-surface-variant" id="statusText">Sistema: En espera</span>
-          </div>
-          <div class="text-[11px] font-label-caps text-on-surface-variant/40 leading-tight" id="statusDetails">
-            Listo para procesar coordenadas.
-          </div>
-        </div>
-        
-        <!-- Navigation Tabs -->
-        <nav class="mt-4 flex flex-col gap-1">
-          <div class="flex items-center gap-4 px-4 py-3 bg-white/5 text-primary-fixed border-r-2 border-primary-fixed rounded-l-lg">
-            <span class="material-symbols-outlined">radar</span>
-            <span class="font-body-md text-body-md">Comando de Riesgo</span>
-          </div>
-          <div class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors cursor-pointer rounded-l-lg">
-            <span class="material-symbols-outlined">history</span>
-            <span class="font-body-md text-body-md">Historial de Datos</span>
-          </div>
-          <div class="flex items-center gap-4 px-4 py-3 text-on-surface-variant hover:text-on-surface hover:bg-white/5 transition-colors cursor-pointer rounded-l-lg">
-            <span class="material-symbols-outlined">policy</span>
-            <span class="font-body-md text-body-md">Gestión de Pólizas</span>
-          </div>
-        </nav>
-      </div>
-      
-      <!-- Footer User Profile -->
-      <div class="mt-auto pt-6 px-4 flex items-center gap-3 border-t border-border-glass">
-        <img alt="Insurance Analyst" class="w-10 h-10 rounded-full border border-primary-fixed/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA05bUzMrk6ybkwAFxt-pfg3jJCWWaHL4RUG0q2admTKLkGWn2L0tByW0bNyEyjSyYqBx91uGpSY4CJPnRCUJ5CCVZMPa-hqU77e9a-J-0gm_FhyGeVuGvG-6OmgkUvXQU_-5mWRYsjH4_BsT2JZze85qNlgF-KbyRJCJUma6oxn8oYJAF5bs2CnU_yZhBrBLc_x97mqrWUO6_IHhR9PFlByX43ZF5UB7DNoO4Z9CdigCqLwNl8AJFShv-j7NQGJ8_rt7VMrQwqXA"/>
-        <div>
-          <p class="font-data-sm text-data-sm font-bold text-on-surface">M. Rodriguez</p>
-          <p class="text-[10px] font-label-caps text-on-surface-variant/60 uppercase">Analista de Riesgo III</p>
-        </div>
-      </div>
-    </aside>
-    
-    <!-- Main Content Area -->
-    <main class="ml-88 flex-1 relative">
-      <!-- TopAppBar -->
-      <header class="fixed top-0 right-0 w-[calc(100%-352px)] z-40 backdrop-blur-xl border-b border-border-glass bg-surface-glass/80 flex justify-between items-center px-8 h-16 shadow-sm">
-        <div class="flex items-center gap-2">
-          <span class="font-headline-md text-headline-md font-bold text-primary-fixed">Comando de Riesgo SPDI</span>
-          <span class="mx-4 h-4 w-px bg-border-glass"></span>
-          <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Lat: <span id="displayLat">--</span></span>
-          <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Lon: <span id="displayLng">--</span></span>
-        </div>
-        <div class="flex items-center gap-6">
-          <div class="flex gap-4">
-            <!-- Theme Toggle Button -->
-            <button id="themeToggleBtn" class="material-symbols-outlined text-on-surface-variant hover:text-primary-fixed transition-colors cursor-pointer outline-none">light_mode</button>
-            <span class="material-symbols-outlined text-on-surface-variant hover:text-primary-fixed transition-colors cursor-pointer">notifications</span>
-            <span class="material-symbols-outlined text-on-surface-variant hover:text-primary-fixed transition-colors cursor-pointer">help</span>
-            <span class="material-symbols-outlined text-on-surface-variant hover:text-primary-fixed transition-colors cursor-pointer">account_circle</span>
-          </div>
-        </div>
-      </header>
-      
-      <!-- Map View -->
-      <div class="z-0 h-full w-full opacity-80 transition-opacity" id="map"></div>
-      
-      <!-- Results Panel -->
-      <div class="hidden-state absolute bottom-8 right-8 w-96 z-50 p-6 rounded-2xl bg-surface-glass/95 border border-white/10 shadow-2xl backdrop-blur-2xl" id="results-panel">
-        <div class="flex justify-between items-start mb-6">
-          <div>
-            <h3 class="font-headline-md text-headline-md text-on-surface font-semibold">Reporte de Riesgo</h3>
-            <p class="font-data-sm text-data-sm text-on-surface-variant opacity-60" id="orderIdText">ID: #ORD-PENDIENTE</p>
-          </div>
-          <span class="px-3 py-1 rounded-full font-label-caps text-label-caps border" id="riskBadge">RIESGO --</span>
-        </div>
-        
-        <div class="flex items-center gap-8 mb-8">
-          <!-- Circular Progress SVG -->
-          <div class="relative w-32 h-32 flex items-center justify-center">
-            <svg class="w-full h-full -rotate-90">
-              <circle cx="64" cy="64" fill="none" r="58" stroke="rgba(255,255,255,0.05)" stroke-width="12"></circle>
-              <circle class="transition-all duration-1000 ease-out" cx="64" cy="64" fill="none" id="riskCircle" r="58" stroke="currentColor" stroke-dasharray="364.4" stroke-dashoffset="364.4" stroke-width="12"></circle>
-            </svg>
-            <div class="absolute flex flex-col items-center">
-              <span class="font-data-lg text-data-lg font-bold text-on-surface" id="riskPercentText">0%</span>
-              <span class="text-[10px] font-label-caps text-on-surface-variant/60 uppercase">Severidad</span>
+            <nav class="flex-1 px-4 space-y-1">
+                <a href="#" onclick="navTo('dashboard')" id="nav-dashboard" class="nav-item flex items-center gap-3 px-4 py-3 text-primary font-bold border-r-4 border-primary bg-surface-container-high transition-all duration-200">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" onclick="navTo('map')" id="nav-map" class="nav-item flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined">landscape</span>
+                    <span>Risk Mapping</span>
+                </a>
+                <a href="#" onclick="navTo('health')" id="nav-health" class="nav-item flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined">monitor_heart</span>
+                    <span>System Health</span>
+                </a>
+            </nav>
+            <div class="mt-auto px-6 mb-6">
+                <button onclick="navTo('map')" class="w-full bg-secondary text-on-secondary py-3 rounded-lg font-label-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+                    <span class="material-symbols-outlined">campaign</span>
+                    <span>Report Alert</span>
+                </button>
             </div>
-          </div>
-          
-          <div class="flex-1 flex flex-col gap-4">
-            <div class="flex flex-col">
-              <span class="text-[10px] font-label-caps text-on-surface-variant/40 uppercase">Modelo Utilizado</span>
-              <span class="font-data-sm text-data-sm text-primary-fixed" id="modelLabel">--</span>
+            <div class="px-4 space-y-1 border-t border-outline-variant pt-6">
+                <a href="#" class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:bg-surface-container-high transition-colors" onclick="logout()">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span>Cerrar Sesión</span>
+                </a>
             </div>
-            <div class="flex flex-col">
-              <span class="text-[10px] font-label-caps text-on-surface-variant/40 uppercase">Fecha de Proceso</span>
-              <span class="font-data-sm text-data-sm text-on-surface" id="resultsDate">--</span>
+        </aside>
+
+        <!-- Top Navigation Shell -->
+        <header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 bg-surface border-b border-outline-variant flex justify-between items-center px-gutter z-10">
+            <div class="flex items-center flex-1">
+                <div class="relative w-full max-w-md flex gap-2">
+                    <div class="relative flex-1">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+                        <input id="address-input" onkeypress="if(event.key === 'Enter') executeSearch()" class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" placeholder="Buscar localidades o zonas..." type="text"/>
+                    </div>
+                    <button onclick="executeSearch()" class="px-4 py-2 bg-primary text-on-primary rounded-lg font-label-bold hover:opacity-90 flex items-center gap-1">
+                        Buscar
+                    </button>
+                </div>
             </div>
-          </div>
-        </div>
-        
-        <div class="border-t border-white/5 pt-4">
-          <span class="text-[10px] font-label-caps text-on-surface-variant/40 mb-3 block uppercase">Zonas Críticas Detectadas</span>
-          <div class="flex flex-col gap-2 max-h-40 overflow-y-auto custom-scroll pr-2" id="zonesList">
-            <!-- Dynamically injected items here -->
-          </div>
-        </div>
-        
-        <button class="mt-6 w-full py-2.5 font-label-caps text-label-caps text-on-surface-variant hover:text-on-surface transition-colors border border-white/10 rounded-lg active:scale-[0.98]" id="closeReportBtn">Cerrar Reporte</button>
-      </div>
-      
-      <!-- Floating Map Legend -->
-      <div class="absolute bottom-8 left-8 z-30 p-4 bg-surface-glass/80 border border-white/5 rounded-xl backdrop-blur-md shadow-lg">
-        <div class="flex flex-col gap-3">
-          <div class="flex items-center gap-3">
-            <span class="w-3 h-3 rounded-full bg-risk-high shadow-[0_0_10px_rgba(255,59,59,0.3)]"></span>
-            <span class="font-label-caps text-label-caps text-on-surface-variant">Riesgo Extremo</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <span class="w-3 h-3 rounded-full bg-risk-medium shadow-[0_0_10px_rgba(255,170,0,0.3)]"></span>
-            <span class="font-label-caps text-label-caps text-on-surface-variant">Riesgo Moderado</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <span class="w-3 h-3 rounded-full bg-risk-low shadow-[0_0_10px_rgba(0,255,136,0.3)]"></span>
-            <span class="font-label-caps text-label-caps text-on-surface-variant">Zona Estable</span>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-  
-  <script src="script.js"></script>
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-4 text-on-surface-variant">
+                    <button class="hover:bg-surface-container-low p-2 rounded-full transition-colors relative">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span class="absolute top-2 right-2 w-2 h-2 bg-secondary rounded-full"></span>
+                    </button>
+                </div>
+                <div class="flex items-center gap-3 pl-6 border-l border-outline-variant">
+                    <div class="text-right">
+                        <p class="font-label-bold text-primary">Admin User</p>
+                        <p class="text-[10px] text-on-surface-variant">Administrator</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden elevation-1 text-on-primary font-bold">
+                        AD
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="ml-64 mt-16 flex-1 bg-surface min-h-[calc(100vh-64px)] w-full relative">
+            
+            <!-- Dashboard View -->
+            <div id="content-dashboard" class="content-view flex-col p-gutter w-full active">
+                <div class="flex justify-between items-end mb-8">
+                    <div>
+                        <h2 class="font-headline-lg text-primary">Panel de Control</h2>
+                        <p class="text-on-surface-variant font-body-md">Visión general de la gestión de riesgos forestales.</p>
+                    </div>
+                </div>
+                <!-- Metric Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-8">
+                    <div class="elevation-1 bg-surface-container-lowest p-6 rounded-xl border-l-4 border-secondary">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="material-symbols-outlined text-secondary text-3xl">warning</span>
+                            <span class="text-secondary font-label-bold">Métricas simuladas</span>
+                        </div>
+                        <h3 class="font-label-bold text-on-surface-variant uppercase tracking-wider mb-1">Órdenes Procesadas</h3>
+                        <p class="font-headline-lg text-primary">142</p>
+                    </div>
+                    <div class="elevation-1 bg-surface-container-lowest p-6 rounded-xl border-l-4 border-primary">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="material-symbols-outlined text-primary text-3xl">map</span>
+                            <span class="text-primary font-label-bold">Predicción AI</span>
+                        </div>
+                        <h3 class="font-label-bold text-on-surface-variant uppercase tracking-wider mb-1">Zonas bajo Monitoreo</h3>
+                        <p class="font-headline-lg text-primary">18</p>
+                    </div>
+                    <div class="elevation-1 bg-surface-container-lowest p-6 rounded-xl border-l-4 border-on-tertiary-container">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="material-symbols-outlined text-on-tertiary-container text-3xl">model_training</span>
+                        </div>
+                        <h3 class="font-label-bold text-on-surface-variant uppercase tracking-wider mb-1">Versión de XGBoost</h3>
+                        <p class="font-headline-lg text-primary">v2.1</p>
+                    </div>
+                </div>
+                <!-- Client Registry (Recent orders) -->
+                <div class="col-span-12 bg-surface-container-lowest rounded-xl elevation-1 overflow-hidden">
+                    <div class="p-6 border-b border-outline-variant flex justify-between items-center">
+                        <h3 class="font-headline-md text-primary">Registro de Predicciones</h3>
+                        <button onclick="navTo('map')" class="px-4 py-2 bg-primary text-on-primary rounded-lg font-label-bold hover:opacity-90 flex items-center gap-2">
+                            <span class="material-symbols-outlined">add</span> Nueva Predicción
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left" id="orders-table">
+                            <thead class="bg-surface-container-high border-b border-outline-variant">
+                                <tr>
+                                    <th class="px-6 py-4 font-label-bold text-primary">ID Órden</th>
+                                    <th class="px-6 py-4 font-label-bold text-primary">Latitud</th>
+                                    <th class="px-6 py-4 font-label-bold text-primary">Longitud</th>
+                                    <th class="px-6 py-4 font-label-bold text-primary">Fecha Sim.</th>
+                                    <th class="px-6 py-4 font-label-bold text-primary">Estado</th>
+                                    <th class="px-6 py-4 font-label-bold text-primary">Resultado (Modelo)</th>
+                                    <th class="px-6 py-4 font-label-bold text-primary text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-outline-variant" id="orders-table-body">
+                                <!-- Populated dynamically -->
+                                <tr class="hover:bg-surface-container-low transition-colors group">
+                                    <td class="px-6 py-4 font-body-md font-semibold text-outline" colspan="7">Aún no hay órdenes generadas en esta sesión. Ve a Risk Mapping para predecir.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Risk Mapping View -->
+            <div id="content-map" class="content-view flex-col p-gutter w-full h-full">
+                <!-- Customer Detail Header Card -->
+                <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0px_4px_20px_rgba(27,67,50,0.05)] border border-outline-variant mb-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <nav class="flex items-center gap-2 text-on-surface-variant font-label-bold mb-2">
+                                <span>HERRAMIENTAS PREDICTIVAS</span>
+                            </nav>
+                            <h2 class="font-headline-md text-primary mb-1">Mapeo y Detección Temprana (XGBoost)</h2>
+                            <p class="text-sm text-on-surface-variant">Selecciona un punto geográfico, o ingresa coordenadas para que el modelo evalúe el riesgo forestal (resolución 20km²).</p>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="flex-1 grid grid-cols-12 gap-gutter relative h-[600px] mb-8">
+                    <!-- Map Container -->
+                    <section class="col-span-12 lg:col-span-8 relative rounded-xl overflow-hidden border border-outline-variant shadow-md h-full">
+                        <div id="leaflet-map" class="absolute inset-0 w-full h-full z-0"></div>
+                        <!-- Status Banner Floating Over Map -->
+                        <div id="map-status-banner" class="absolute top-4 left-1/2 -translate-x-1/2 bg-surface border border-outline-variant px-4 py-2 rounded-full elevation-2 z-10 flex items-center gap-2 hidden">
+                            <div class="w-3 h-3 rounded-full bg-secondary animate-pulse"></div>
+                            <span class="font-label-bold text-primary" id="map-status-text">Procesando imagen satelital...</span>
+                        </div>
+                    </section>
+
+                    <!-- Tools Panel -->
+                    <aside class="col-span-12 lg:col-span-4 flex flex-col gap-4 h-full">
+                        <!-- Input Tool -->
+                        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-6">
+                            <h3 class="font-label-bold text-primary mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[18px]">draw</span> PARÁMETROS DE ANÁLISIS
+                            </h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="text-[10px] font-bold text-on-surface-variant mb-1 block">LATITUD</label>
+                                    <input type="number" id="input-lat" class="w-full px-3 py-2 border border-outline-variant rounded bg-surface focus:ring-1 focus:border-primary" placeholder="Ej. -34.2498" step="0.0001">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-on-surface-variant mb-1 block">LONGITUD</label>
+                                    <input type="number" id="input-lon" class="w-full px-3 py-2 border border-outline-variant rounded bg-surface focus:ring-1 focus:border-primary" placeholder="Ej. -58.8801" step="0.0001">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-on-surface-variant mb-1 block">FECHA DE IMAGEN (YYYYMMDD)</label>
+                                    <input type="number" id="input-date" class="w-full px-3 py-2 border border-outline-variant rounded bg-surface focus:ring-1 focus:border-primary" value="20211125">
+                                </div>
+                                <button onclick="triggerPrediction()" class="w-full mt-4 bg-primary text-on-primary py-3 rounded-lg font-label-bold shadow-md hover:opacity-90 flex justify-center items-center gap-2 transition-all">
+                                    <span class="material-symbols-outlined text-[18px]">radar</span>
+                                    Analizar Riesgo
+                                </button>
+                                <p class="text-[10px] text-center text-outline">Tip: Podés hacer clic en cualquier lugar del mapa para autocompletar las coordenadas.</p>
+                            </div>
+                        </div>
+
+                        <!-- Prediction Result Card -->
+                        <div id="prediction-card" class="bg-surface-container-low border border-outline-variant p-4 rounded-xl text-on-surface transition-opacity hidden">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">analytics</span>
+                                <h4 class="font-label-bold uppercase text-primary">Resultado de Modelo</h4>
+                            </div>
+                            <div id="prediction-content">
+                                <!-- Filled via JS -->
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+
+            <!-- Health View -->
+            <div id="content-health" class="content-view flex-col p-gutter w-full">
+                <div class="flex justify-between items-end mb-8">
+                    <div>
+                        <h2 class="font-headline-lg text-primary">Estado del Sistema</h2>
+                        <p class="font-body-md text-on-surface-variant">Monitorización de infraestructura crítica y contenedores Docker.</p>
+                    </div>
+                </div>
+                <div class="bento-grid">
+                    <div class="col-span-12 lg:col-span-8 bg-surface-container-lowest border border-outline-variant p-6 rounded-xl shadow-[0px_4px_20px_rgba(27,67,50,0.05)]">
+                        <h3 class="font-label-bold text-on-surface-variant uppercase mb-6 tracking-wider">Infraestructura de Microservicios</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                            <!-- API -->
+                            <div class="p-4 border border-outline-variant rounded-lg">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-primary-fixed text-primary rounded-lg">
+                                            <span class="material-symbols-outlined">api</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-body-md font-bold text-primary">API Principal</h4>
+                                            <p class="text-[12px] text-on-surface-variant">FastAPI (Puerto 8000)</p>
+                                        </div>
+                                    </div>
+                                    <span id="badge-api" class="px-2 py-1 bg-primary-container/10 text-primary font-label-bold text-[10px] rounded uppercase">Operativo</span>
+                                </div>
+                            </div>
+                            <!-- Validador -->
+                            <div class="p-4 border border-outline-variant rounded-lg cursor-pointer hover:shadow-md transition-all hover:border-primary" onclick="showHealthDetails('validador')">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-primary-fixed text-primary rounded-lg">
+                                            <span class="material-symbols-outlined">rule</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-body-md font-bold text-primary">Validador</h4>
+                                        </div>
+                                    </div>
+                                    <span id="badge-validador" class="px-2 py-1 bg-surface-container text-on-surface-variant font-label-bold text-[10px] rounded uppercase">CARGANDO</span>
+                                </div>
+                            </div>
+                            <!-- Worker -->
+                            <div class="p-4 border border-outline-variant rounded-lg cursor-pointer hover:shadow-md transition-all hover:border-primary" onclick="showHealthDetails('worker')">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-primary-fixed text-primary rounded-lg">
+                                            <span class="material-symbols-outlined">memory</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-body-md font-bold text-primary">Worker</h4>
+                                        </div>
+                                    </div>
+                                    <span id="badge-worker" class="px-2 py-1 bg-surface-container text-on-surface-variant font-label-bold text-[10px] rounded uppercase">CARGANDO</span>
+                                </div>
+                            </div>
+                            <!-- Predictor -->
+                            <div class="p-4 border border-outline-variant rounded-lg cursor-pointer hover:shadow-md transition-all hover:border-primary" onclick="showHealthDetails('predictor')">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-primary-fixed text-primary rounded-lg">
+                                            <span class="material-symbols-outlined">online_prediction</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-body-md font-bold text-primary">Predictor</h4>
+                                        </div>
+                                    </div>
+                                    <span id="badge-predictor" class="px-2 py-1 bg-surface-container text-on-surface-variant font-label-bold text-[10px] rounded uppercase">CARGANDO</span>
+                                </div>
+                            </div>
+                            <!-- Entrenador -->
+                            <div class="p-4 border border-outline-variant rounded-lg cursor-pointer hover:shadow-md transition-all hover:border-primary" onclick="showHealthDetails('entrenador')">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-primary-fixed text-primary rounded-lg">
+                                            <span class="material-symbols-outlined">model_training</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-body-md font-bold text-primary">Entrenador</h4>
+                                        </div>
+                                    </div>
+                                    <span id="badge-entrenador" class="px-2 py-1 bg-surface-container text-on-surface-variant font-label-bold text-[10px] rounded uppercase">CARGANDO</span>
+                                </div>
+                            </div>
+                            <!-- Modelador -->
+                            <div class="p-4 border border-outline-variant rounded-lg cursor-pointer hover:shadow-md transition-all hover:border-primary" onclick="showHealthDetails('modelador')">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-primary-fixed text-primary rounded-lg">
+                                            <span class="material-symbols-outlined">science</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-body-md font-bold text-primary">Modelador</h4>
+                                        </div>
+                                    </div>
+                                    <span id="badge-modelador" class="px-2 py-1 bg-surface-container text-on-surface-variant font-label-bold text-[10px] rounded uppercase">CARGANDO</span>
+                                </div>
+                            </div>
+                            <!-- Base de datos -->
+                            <div class="p-4 border border-outline-variant rounded-lg">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-primary-fixed text-primary rounded-lg">
+                                            <span class="material-symbols-outlined">database</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-body-md font-bold text-primary">PostgreSQL</h4>
+                                            <p class="text-[12px] text-on-surface-variant">Estado de Órdenes</p>
+                                        </div>
+                                    </div>
+                                    <span id="badge-db" class="px-2 py-1 bg-primary-container/10 text-primary font-label-bold text-[10px] rounded uppercase">Operativo</span>
+                                </div>
+                            </div>
+                            <!-- MinIO -->
+                            <div class="p-4 border border-outline-variant rounded-lg">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-primary-fixed text-primary rounded-lg">
+                                            <span class="material-symbols-outlined">storage</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-body-md font-bold text-primary">MinIO (S3 Local)</h4>
+                                            <p class="text-[12px] text-on-surface-variant">Volumen de imágenes TIF</p>
+                                        </div>
+                                    </div>
+                                    <span id="badge-minio" class="px-2 py-1 bg-primary-container/10 text-primary font-label-bold text-[10px] rounded uppercase">Operativo</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal para Detalles del Health -->
+            <div id="health-modal" class="fixed inset-0 bg-surface/80 backdrop-blur-sm z-50 hidden flex items-center justify-center transition-opacity opacity-0">
+                <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg w-full max-w-md mx-4 p-6 transform scale-95 transition-transform">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="p-3 bg-primary-fixed text-primary rounded-xl" id="modal-icon">
+                                <span class="material-symbols-outlined text-2xl">memory</span>
+                            </div>
+                            <div>
+                                <h3 id="modal-title" class="font-headline-sm font-bold text-primary capitalize">Worker Name</h3>
+                                <span id="modal-badge" class="px-2 py-1 text-[10px] font-label-bold rounded uppercase mt-1 inline-block">STATUS</span>
+                            </div>
+                        </div>
+                        <button onclick="closeHealthModal()" class="text-on-surface-variant hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-surface-container p-4 rounded-lg">
+                            <p class="text-[12px] font-label-bold text-on-surface-variant uppercase mb-1">Actividad Actual</p>
+                            <p id="modal-desc" class="font-body-md text-on-surface font-medium">Cargando...</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-surface-container-low border border-outline-variant p-4 rounded-lg">
+                                <p class="text-[11px] font-label-bold text-on-surface-variant uppercase mb-1">Cola de Tareas</p>
+                                <p id="modal-queue" class="font-headline-sm text-primary">0</p>
+                            </div>
+                            <div class="bg-surface-container-low border border-outline-variant p-4 rounded-lg">
+                                <p class="text-[11px] font-label-bold text-on-surface-variant uppercase mb-1">Última Señal</p>
+                                <p id="modal-ping" class="font-headline-sm text-primary">0s</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </main>
+    </div>
+
+    <!-- Scripts (SPA Logic & Map Integration) -->
+    <script src="script.js"></script>
 </body>
 </html>

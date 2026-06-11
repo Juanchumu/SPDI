@@ -1,330 +1,523 @@
-// script.js – Interactive SPDI Risk Command Logic with Light Mode support
-
-// Initialize Leaflet map with CartoDB Dark Matter tile layer
-const map = L.map('map', {
-  zoomControl: false,
-  attributionControl: false
-}).setView([-34.6037, -58.3816], 5); // default to Buenos Aires
-
-// Store tileLayer reference to switch URLs on theme toggle
-const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  maxZoom: 19
-}).addTo(map);
-
-// Add zoom control at bottom-right for clean HUD look
-L.control.zoom({
-  position: 'bottomright'
-}).addTo(map);
-
-let marker = null;
-let selectedCoords = null;
-let riskRectangles = [];
-
-// DOM Elements
-const dateInput = document.getElementById('dateInput');
-const addressInput = document.getElementById('addressInput');
-const searchBtn = document.getElementById('searchBtn');
-const latInput = document.getElementById('latInput');
-const lngInput = document.getElementById('lngInput');
-const predictBtn = document.getElementById('predictBtn');
-const statusDot = document.getElementById('statusDot');
-const statusText = document.getElementById('statusText');
-const statusDetails = document.getElementById('statusDetails');
-const displayLat = document.getElementById('displayLat');
-const displayLng = document.getElementById('displayLng');
-
-// Results Panel Elements
-const resultsPanel = document.getElementById('results-panel');
-const orderIdText = document.getElementById('orderIdText');
-const riskBadge = document.getElementById('riskBadge');
-const riskCircle = document.getElementById('riskCircle');
-const riskPercentText = document.getElementById('riskPercentText');
-const modelLabel = document.getElementById('modelLabel');
-const resultsDate = document.getElementById('resultsDate');
-const zonesList = document.getElementById('zonesList');
-const closeReportBtn = document.getElementById('closeReportBtn');
-
-// Theme Switcher Elements
-const themeToggleBtn = document.getElementById('themeToggleBtn');
-const htmlEl = document.documentElement;
-
-// Initialize theme state from DOM
-let isDarkMode = htmlEl.classList.contains('dark');
-updateThemeUI(isDarkMode);
-
-themeToggleBtn.addEventListener('click', () => {
-  isDarkMode = !isDarkMode;
-  if (isDarkMode) {
-    htmlEl.classList.add('dark');
-  } else {
-    htmlEl.classList.remove('dark');
-  }
-  updateThemeUI(isDarkMode);
-});
-
-function updateThemeUI(isDark) {
-  if (isDark) {
-    themeToggleBtn.textContent = 'light_mode'; // icon to switch to light mode
-    tileLayer.setUrl('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
-  } else {
-    themeToggleBtn.textContent = 'dark_mode'; // icon to switch to dark mode
-    tileLayer.setUrl('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png');
-  }
-}
-
-// Helper: Sync coordinates from map marker to inputs
-function updateCoordFields(lat, lng) {
-  selectedCoords = { lat, lng };
-  latInput.value = lat.toFixed(6);
-  lngInput.value = lng.toFixed(6);
-  displayLat.textContent = lat.toFixed(4);
-  displayLng.textContent = lng.toFixed(4);
-  togglePredictButton();
-}
-
-// Map click event
-map.on('click', function(e) {
-  const { lat, lng } = e.latlng;
-  placeMarker(lat, lng);
-});
-
-// Coordinate input changes (manual entry)
-function handleCoordinateInputChange() {
-  const lat = parseFloat(latInput.value);
-  const lng = parseFloat(lngInput.value);
-  if (!isNaN(lat) && !isNaN(lng)) {
-    placeMarker(lat, lng, false); // place marker without reflying map
-  }
-}
-latInput.addEventListener('input', handleCoordinateInputChange);
-lngInput.addEventListener('input', handleCoordinateInputChange);
-
-// Place marker on coordinates
-function placeMarker(lat, lng, fly = true) {
-  selectedCoords = { lat, lng };
-  if (marker) {
-    marker.setLatLng([lat, lng]);
-  } else {
-    marker = L.marker([lat, lng], { draggable: true }).addTo(map);
-    marker.on('dragend', function(ev) {
-      const pos = ev.target.getLatLng();
-      updateCoordFields(pos.lat, pos.lng);
+function navTo(viewName) {
+    // Hide all views
+    document.querySelectorAll('.content-view').forEach(v => v.classList.remove('active'));
+    
+    // Deactivate nav links
+    document.querySelectorAll('.nav-item').forEach(v => {
+        v.classList.remove('text-primary', 'font-bold', 'border-r-4', 'border-primary', 'bg-surface-container-high');
+        v.classList.add('text-on-surface-variant', 'hover:bg-surface-container-high');
     });
-  }
-  updateCoordFields(lat, lng);
-  if (fly) {
-    map.flyTo([lat, lng], 12, { duration: 1.2 });
-  }
-}
 
-// Enable/Disable predict button
-function togglePredictButton() {
-  const dateVal = dateInput.value;
-  predictBtn.disabled = !(selectedCoords && dateVal);
-}
-dateInput.addEventListener('change', togglePredictButton);
+    // Show target view
+    const target = document.getElementById('content-' + viewName);
+    if(target) target.classList.add('active');
 
-// Nominatim Search Address
-async function searchAddress(query) {
-  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
-  const resp = await fetch(url, { headers: { 'Accept-Language': 'es' } });
-  return await resp.json();
-}
-
-searchBtn.addEventListener('click', async () => {
-  const query = addressInput.value.trim();
-  if (!query) return;
-  
-  updateStatusUI('Sistema: Buscando', 'bg-primary-fixed', `Buscando ubicación: "${query}"...`);
-  try {
-    const results = await searchAddress(query);
-    if (results.length === 0) {
-      alert('Ubicación no encontrada.');
-      updateStatusUI('Sistema: En espera', 'bg-on-surface-variant', 'Ubicación no encontrada. Listo para reintentar.');
-      return;
+    // Activate nav link
+    const link = document.getElementById('nav-' + viewName);
+    if(link) {
+        link.classList.remove('text-on-surface-variant', 'hover:bg-surface-container-high');
+        link.classList.add('text-primary', 'font-bold', 'border-r-4', 'border-primary', 'bg-surface-container-high');
     }
-    const { lat, lon } = results[0];
-    const latF = parseFloat(lat);
-    const lonF = parseFloat(lon);
-    placeMarker(latF, lonF);
-    updateStatusUI('Sistema: En espera', 'bg-on-surface-variant', 'Ubicación encontrada. Listo para predecir.');
-  } catch (err) {
-    alert('Error al buscar dirección: ' + err.message);
-    updateStatusUI('Sistema: En espera', 'bg-on-surface-variant', 'Error en la búsqueda.');
-  }
+
+    // Workaround for Leaflet render bug when container is hidden
+    if(viewName === 'map' && map) {
+        setTimeout(() => map.invalidateSize(), 100);
+    }
+}
+
+// ==========================================
+// LOGIN
+// ==========================================
+const loginForm = document.getElementById('login-form');
+if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        localStorage.setItem('isLoggedIn', 'true');
+        performLogin();
+    });
+}
+
+function performLogin() {
+    document.getElementById('view-login').classList.remove('active');
+    document.getElementById('view-app').classList.add('active');
+    navTo('dashboard');
+    fetchExistingOrders();
+}
+
+function logout() {
+    localStorage.removeItem('isLoggedIn');
+    document.getElementById('view-app').classList.remove('active');
+    document.getElementById('view-login').classList.add('active');
+}
+
+// Auto-login if previously logged in
+window.addEventListener('DOMContentLoaded', () => {
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+        performLogin();
+    }
 });
 
-// UI State Helpers
-function updateStatusUI(text, dotClass, detailsText) {
-  statusText.textContent = text;
-  statusDot.className = `w-2.5 h-2.5 rounded-full transition-colors ${dotClass}`;
-  statusDetails.textContent = detailsText;
-}
-
-// API Calls
-async function createOrder(dia, lat, lon) {
-  const payload = { dia, lat, lon };
-  const resp = await fetch('/api/v1/orden', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  if (!resp.ok) throw new Error('Fallo al crear la orden de predicción');
-  return await resp.json(); // {id, status}
-}
-
-async function getOrder(id) {
-  const resp = await fetch(`/api/v1/orden/${id}`);
-  if (!resp.ok) throw new Error('Fallo al recuperar los detalles de la orden');
-  return await resp.json();
-}
-
-async function pollOrder(id) {
-  const maxAttempts = 60; // 5 mins
-  const interval = 5000;  // 5 secs
-  
-  for (let i = 0; i < maxAttempts; i++) {
-    const data = await getOrder(id);
-    
-    if (typeof data === 'string') {
-      const displayStatus = data.replace("Estado: ", "");
-      updateStatusUI('Sistema: Procesando', 'bg-primary-fixed-dim animate-pulse', `Fase: ${displayStatus}`);
-      if (data.includes("Error") || data.includes("error")) {
-        throw new Error(data);
-      }
+function togglePassword() {
+    const input = document.getElementById('password-input');
+    const icon = document.getElementById('pw_icon');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.innerText = 'visibility_off';
+    } else {
+        input.type = 'password';
+        icon.innerText = 'visibility';
     }
-    
-    if (typeof data === 'object' && data.prediccion) {
-      updateStatusUI('Sistema: Finalizado', 'bg-risk-low', 'Análisis completado. Reporte generado.');
-      return data;
+}
+
+// Background effect for login
+document.addEventListener('mousemove', (e) => {
+    const img = document.getElementById('login-bg-img');
+    if(img && document.getElementById('view-login').classList.contains('active')) {
+        const x = (window.innerWidth / 2 - e.pageX) / 80;
+        const y = (window.innerHeight / 2 - e.pageY) / 80;
+        img.style.transform = `scale(1.05) translate(${x}px, ${y}px)`;
     }
-    await new Promise(r => setTimeout(r, interval));
-  }
-  throw new Error('Tiempo de espera de predicción agotado');
-}
+});
 
-// Clean map overlays
-function clearMapOverlays() {
-  riskRectangles.forEach(rect => map.removeLayer(rect));
-  riskRectangles = [];
-}
 
-// Show results panel and draw critical zones on Leaflet
-function renderPredictionResult(result, dateStr) {
-  const predData = JSON.parse(result.prediccion);
-  
-  // Set up details
-  orderIdText.textContent = `ID: #ORD-${result.id}-XGB`;
-  modelLabel.textContent = result.modelo_utilizado;
-  resultsDate.textContent = dateStr;
-  
-  // Risk evaluation
-  const risk = predData.riesgo || 'bajo';
-  const percentage = predData.porcentaje_area_riesgo || 0;
-  
-  if (risk === 'alto') {
-    riskBadge.textContent = 'RIESGO ALTO';
-    riskBadge.className = 'px-3 py-1 rounded-full font-label-caps text-label-caps border border-risk-high text-risk-high bg-risk-high/10 shadow-[0_0_8px_rgba(255,59,59,0.2)]';
-    riskCircle.style.color = '#ff3b3b';
-  } else {
-    riskBadge.textContent = 'RIESGO BAJO';
-    riskBadge.className = 'px-3 py-1 rounded-full font-label-caps text-label-caps border border-risk-low text-risk-low bg-risk-low/10';
-    riskCircle.style.color = '#00ff88';
-  }
-  
-  // Update circle animation (SVG circumference is 364.4)
-  const offset = 364.4 - (364.4 * percentage / 100);
-  riskCircle.style.strokeDashoffset = offset;
-  riskPercentText.textContent = `${percentage.toFixed(1)}%`;
-  
-  // Inject critical zones
-  zonesList.innerHTML = '';
-  clearMapOverlays();
-  
-  const lat = selectedCoords.lat;
-  const lng = selectedCoords.lng;
-  const zones = predData.zonas_criticas || [];
-  
-  if (zones.length === 0) {
-    zonesList.innerHTML = '<div class="text-[11px] text-on-surface-variant/40 italic">Ninguna zona crítica detectada.</div>';
-  } else {
-    // 0.009 and 0.011 bounding box constants
-    const latBuffer = 0.009;
-    const lonBuffer = 0.011;
-    const left = lng - lonBuffer;
-    const right = lng + lonBuffer;
-    const bottom = lat - latBuffer;
-    const topLat = lat + latBuffer;
+// ==========================================
+// MAP & API LOGIC
+// ==========================================
+let map;
+let marker;
+let drawnRectangles = [];
+const API_URL = 'http://localhost:8000/api/v1';
+
+// Init Map
+document.addEventListener('DOMContentLoaded', () => {
+    map = L.map('leaflet-map', {
+        zoomControl: false,
+        attributionControl: false
+    }).setView([-34.6037, -58.3816], 5);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19
+    }).addTo(map);
+
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    // Click on map to set coordinates
+    map.on('click', function(e) {
+        const lat = parseFloat(e.latlng.lat).toFixed(4);
+        const lon = parseFloat(e.latlng.lng).toFixed(4);
+        
+        document.getElementById('input-lat').value = lat;
+        document.getElementById('input-lon').value = lon;
+        
+        if (marker) {
+            marker.setLatLng(e.latlng);
+        } else {
+            marker = L.marker(e.latlng).addTo(map);
+        }
+    });
+});
+
+function drawRiskBox(lat, lon, riskPercent) {
+    const kmDegrees = 0.09; // Approx 10km radius -> 20km square
+    const bounds = [[lat - kmDegrees, lon - kmDegrees], [lat + kmDegrees, lon + kmDegrees]];
     
-    zones.forEach((zona, index) => {
-      // Scale pixel coordinates to WGS84 coordinates
-      const boxLeft = left + (zona.x1 / 200) * (right - left);
-      const boxRight = left + (zona.x2 / 200) * (right - left);
-      const boxTop = topLat - (zona.y1 / 200) * (topLat - bottom);
-      const boxBottom = topLat - (zona.y2 / 200) * (topLat - bottom);
-      
-      const bounds = [[boxBottom, boxLeft], [boxTop, boxRight]];
-      
-      // Color coded by risk level
-      const color = risk === 'alto' ? '#ff3b3b' : '#ffaa00';
-      const rect = L.rectangle(bounds, {
+    let color = '#414844'; // Estable (Low)
+    if (riskPercent > 50) color = '#b5270e'; // Extremo (High)
+    else if (riskPercent > 20) color = '#d7e8cb'; // Moderado (Medium)
+
+    const rect = L.rectangle(bounds, {
         color: color,
         weight: 2,
-        fillOpacity: 0.35,
-        dashArray: '3, 5'
-      }).addTo(map)
-        .bindPopup(`<b>Zona Crítica #${index+1}</b><br>Pixeles: ${zona.pixels}`);
-      
-      riskRectangles.push(rect);
-      
-      // Add HTML list item (fully responsive theme-ready color styling)
-      const item = document.createElement('div');
-      item.className = 'bg-white/5 p-2 rounded border border-white/5 flex justify-between items-center';
-      item.innerHTML = `
-        <div class="flex flex-col">
-          <span class="text-[9px] text-on-surface-variant/60 font-label-caps">LÍMITES: ${zona.x1},${zona.y1} a ${zona.x2},${zona.y2}</span>
-          <span class="font-data-sm text-[11px] text-on-surface">Cluster #${index+1} (${zona.pixels} px)</span>
-        </div>
-        <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${color}; box-shadow: 0 0 6px ${color}"></span>
-      `;
-      zonesList.appendChild(item);
-    });
-  }
-  
-  // Slide in results panel
-  resultsPanel.classList.remove('hidden-state');
-  map.flyTo([lat, lng], 13, { duration: 1.5 });
+        fillColor: color,
+        fillOpacity: 0.3
+    }).addTo(map);
+    
+    drawnRectangles.push(rect);
+    map.flyToBounds(bounds, { padding: [50, 50] });
 }
 
-// Predict button action
-predictBtn.addEventListener('click', async () => {
-  const dateStr = dateInput.value; // YYYY-MM-DD
-  const diaInt = parseInt(dateStr.replace(/-/g, ''), 10);
-  const { lat, lng } = selectedCoords;
-  
-  // Reset previous result panel
-  resultsPanel.classList.add('hidden-state');
-  clearMapOverlays();
-  
-  predictBtn.disabled = true;
-  updateStatusUI('Sistema: Iniciando', 'bg-primary-fixed-dim animate-pulse', 'Creando orden de análisis satelital...');
-  
-  try {
-    const order = await createOrder(diaInt, lat, lng);
-    updateStatusUI('Sistema: En cola', 'bg-primary-fixed-dim', `Orden #${order.id} enviada. Esperando procesamiento...`);
+function updateStatusBanner(text, isError=false, isSuccess=false) {
+    const banner = document.getElementById('map-status-banner');
+    const textEl = document.getElementById('map-status-text');
+    banner.classList.remove('hidden');
+    textEl.innerText = text;
     
-    const result = await pollOrder(order.id);
-    renderPredictionResult(result, dateStr);
-  } catch (err) {
-    alert(err.message);
-    updateStatusUI('Sistema: En espera', 'bg-error', `Fallo: ${err.message}`);
-  } finally {
-    togglePredictButton();
-  }
-});
+    const dot = banner.querySelector('div');
+    dot.className = 'w-3 h-3 rounded-full'; // reset
+    if(isError) dot.classList.add('bg-error');
+    else if(isSuccess) dot.classList.add('bg-primary-fixed');
+    else dot.classList.add('bg-secondary', 'animate-pulse');
+}
 
-// Close panel action
-closeReportBtn.addEventListener('click', () => {
-  resultsPanel.classList.add('hidden-state');
-  clearMapOverlays();
-});
+// Global store for orders to render in dashboard
+let ordersDB = [];
+
+function updateDashboardTable() {
+    const tbody = document.getElementById('orders-table-body');
+    if(!tbody) return;
+    
+    if(ordersDB.length === 0) {
+        tbody.innerHTML = `<tr><td class="px-6 py-4 text-outline" colspan="6">Sin órdenes generadas.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = '';
+    ordersDB.forEach(order => {
+        let statusBadge = `<span class="px-3 py-1 bg-surface-container text-on-surface-variant rounded-full text-[10px] font-bold uppercase">${order.status}</span>`;
+        if(order.status === 'Predicha') statusBadge = `<span class="px-3 py-1 bg-primary-fixed text-primary rounded-full text-[10px] font-bold uppercase">Completado</span>`;
+        if(order.status === 'error') statusBadge = `<span class="px-3 py-1 bg-error-container text-error rounded-full text-[10px] font-bold uppercase">Error</span>`;
+
+        let resultBadge = '-';
+        if(order.prediction !== null && order.prediction !== undefined) {
+            let pct = 0;
+            try {
+                let predObj = typeof order.prediction === 'string' ? JSON.parse(order.prediction) : order.prediction;
+                if (predObj && predObj.porcentaje_area_riesgo !== undefined) {
+                    pct = parseFloat(predObj.porcentaje_area_riesgo);
+                } else {
+                    pct = parseFloat(order.prediction) * 100;
+                }
+            } catch(e) {
+                pct = parseFloat(order.prediction) * 100;
+            }
+            
+            if (!isNaN(pct)) {
+                if(pct > 50) resultBadge = `<span class="risk-high px-3 py-1 rounded-full text-[10px] font-bold uppercase text-error bg-error-container">Alto (${pct.toFixed(1)}%)</span>`;
+                else if(pct > 20) resultBadge = `<span class="risk-medium px-3 py-1 rounded-full text-[10px] font-bold uppercase text-on-tertiary-container bg-tertiary-container">Medio (${pct.toFixed(1)}%)</span>`;
+                else resultBadge = `<span class="risk-low px-3 py-1 rounded-full text-[10px] font-bold uppercase text-primary bg-primary-container">Bajo (${pct.toFixed(1)}%)</span>`;
+            } else {
+                resultBadge = `<span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase">Error de Parseo</span>`;
+            }
+        }
+
+        let actionBtn = '-';
+        if (order.status !== 'Predicha' && order.status !== 'Cancelada' && !order.status.toLowerCase().includes('error')) {
+            actionBtn = `<button onclick="cancelOrder(${order.id})" class="text-error hover:text-on-error-container text-[12px] font-bold flex items-center gap-1 transition-colors"><span class="material-symbols-outlined text-[16px]">cancel</span> Cancelar</button>`;
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-surface-container-low transition-colors group';
+        tr.innerHTML = `
+            <td class="px-6 py-4 font-body-md font-bold text-primary">#${order.id}</td>
+            <td class="px-6 py-4">${order.lat}</td>
+            <td class="px-6 py-4">${order.lon}</td>
+            <td class="px-6 py-4 text-on-surface-variant">${order.dia}</td>
+            <td class="px-6 py-4">${statusBadge}</td>
+            <td class="px-6 py-4">${resultBadge}</td>
+            <td class="px-6 py-4 text-right flex justify-end">${actionBtn}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+async function cancelOrder(id) {
+    try {
+        const resp = await fetch(`${API_URL}/orden/${id}`, { method: 'DELETE' });
+        if (!resp.ok) throw new Error();
+        
+        // Update local DB
+        const dbOrder = ordersDB.find(o => o.id === id);
+        if(dbOrder) dbOrder.status = 'Cancelada';
+        updateDashboardTable();
+    } catch (e) {
+        alert('No se pudo cancelar la orden. Puede que ya haya finalizado.');
+    }
+}
+
+async function fetchExistingOrders() {
+    try {
+        const resp = await fetch(`${API_URL}/orden`);
+        if (!resp.ok) return;
+        const data = await resp.json();
+        ordersDB = data;
+        updateDashboardTable();
+        
+        // Resume polling for any order that is not finished
+        ordersDB.forEach(o => {
+            if (o.status !== 'Predicha' && o.status !== 'Cancelada' && !o.status.toLowerCase().includes('error')) {
+                pollOrder(o.id, o.lat, o.lon);
+            }
+        });
+    } catch (e) {
+        console.error("Error fetching orders", e);
+    }
+}
+
+// API interaction
+async function triggerPrediction() {
+    const lat = parseFloat(document.getElementById('input-lat').value);
+    const lon = parseFloat(document.getElementById('input-lon').value);
+    const dateVal = document.getElementById('input-date').value;
+
+    if (isNaN(lat) || isNaN(lon) || !dateVal) {
+        alert("Por favor completa latitud, longitud y fecha.");
+        return;
+    }
+
+    updateStatusBanner('Solicitando análisis a la API...');
+    const card = document.getElementById('prediction-card');
+    card.classList.add('hidden');
+
+    try {
+        const resp = await fetch(`${API_URL}/orden`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dia: parseInt(dateVal), lat, lon })
+        });
+        
+        if (!resp.ok) throw new Error('Error al crear la orden.');
+        const data = await resp.json();
+        
+        // Add to DB
+        const newOrder = { id: data.id, lat, lon, dia: dateVal, status: 'Pendiente', prediction: null };
+        ordersDB.unshift(newOrder);
+        updateDashboardTable();
+
+        pollOrder(data.id, lat, lon);
+    } catch (err) {
+        updateStatusBanner('Error de conexión con API', true);
+        console.error(err);
+    }
+}
+
+async function pollOrder(id, lat, lon) {
+    updateStatusBanner(`Orden #${id}: Procesando satélite y AI...`);
+    
+    const interval = setInterval(async () => {
+        try {
+            const resp = await fetch(`${API_URL}/orden/${id}`);
+            if (!resp.ok) return;
+            const data = await resp.json();
+            
+            // Update local DB
+            const dbOrder = ordersDB.find(o => o.id === id);
+            if(dbOrder) {
+                dbOrder.status = data.status || dbOrder.status;
+                updateDashboardTable(); // Update UI with intermediate state
+            }
+
+            if (data.status === 'Predicha') {
+                clearInterval(interval);
+                updateStatusBanner(`Orden #${id}: Análisis finalizado.`, false, true);
+                if(dbOrder) dbOrder.prediction = data.prediccion;
+                updateDashboardTable();
+                showResultCard(data.prediccion, lat, lon);
+            } else if (data.status.toLowerCase().includes('error')) {
+                clearInterval(interval);
+                updateStatusBanner(`Orden #${id}: Falló el proceso.`, true);
+            } else if (data.status === 'Cancelada') {
+                clearInterval(interval);
+                updateStatusBanner(`Orden #${id}: Cancelada.`, true);
+            } else {
+                updateStatusBanner(`Orden #${id}: ${data.status}`);
+            }
+        } catch (err) {
+            console.error('Error polling', err);
+        }
+    }, 3000);
+}
+
+function showResultCard(predValue, lat, lon) {
+    let val = 0;
+    try {
+        let obj = typeof predValue === 'string' ? JSON.parse(predValue) : predValue;
+        if (obj && obj.porcentaje_area_riesgo !== undefined) {
+            val = parseFloat(obj.porcentaje_area_riesgo);
+        } else {
+            val = parseFloat(predValue) * 100;
+        }
+    } catch(e) {
+        val = parseFloat(predValue) * 100;
+    }
+    if (isNaN(val)) val = 0;
+    const card = document.getElementById('prediction-card');
+    const content = document.getElementById('prediction-content');
+    
+    let riskLabel = 'BAJO';
+    let riskColorClass = 'text-primary';
+    if(val > 50) { riskLabel = 'EXTREMO'; riskColorClass = 'text-error'; }
+    else if(val > 20) { riskLabel = 'MEDIO'; riskColorClass = 'text-on-tertiary-container'; }
+
+    content.innerHTML = `
+        <div class="mb-4">
+            <p class="text-[12px] opacity-80 mb-1">Riesgo calculado por modelo XGBoost:</p>
+            <p class="text-3xl font-bold ${riskColorClass}">${val.toFixed(2)}%</p>
+            <p class="text-sm font-bold ${riskColorClass} uppercase">${riskLabel}</p>
+        </div>
+        <div class="flex justify-between items-center text-[10px] text-on-surface-variant pt-2 border-t border-outline-variant">
+            <span>Lat: ${lat.toFixed(4)}</span>
+            <span>Lon: ${lon.toFixed(4)}</span>
+        </div>
+    `;
+    
+    card.classList.remove('hidden');
+    drawRiskBox(lat, lon, val);
+}
+
+// ==========================================
+// HEALTH POLLING
+// ==========================================
+let lastHealthData = null;
+
+async function pollHealth() {
+    try {
+        const resp = await fetch(`${API_URL}/health`);
+        if (!resp.ok) throw new Error();
+        const data = await resp.json();
+        lastHealthData = data;
+
+        function updateBadge(id, statusObj) {
+            const el = document.getElementById(id);
+            if(!el) return;
+            const isUp = typeof statusObj === 'string' ? statusObj === 'UP' : (statusObj && statusObj.status === 'UP');
+            if(isUp) {
+                el.innerText = 'OPERATIVO';
+                el.className = 'px-2 py-1 bg-primary-container/10 text-primary font-label-bold text-[10px] rounded uppercase';
+            } else {
+                el.innerText = 'CAÍDO';
+                el.className = 'px-2 py-1 bg-error-container text-error font-label-bold text-[10px] rounded uppercase';
+            }
+        }
+
+        updateBadge('badge-api', data.services.api);
+        updateBadge('badge-validador', data.services.validador);
+        updateBadge('badge-worker', data.services.worker);
+        updateBadge('badge-predictor', data.services.predictor);
+        updateBadge('badge-entrenador', data.services.entrenador);
+        updateBadge('badge-modelador', data.services.modelador);
+        updateBadge('badge-db', data.dependencies.database);
+        updateBadge('badge-minio', data.dependencies.minio);
+        
+        // If modal is open, update it
+        const modal = document.getElementById('health-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+            const currentService = document.getElementById('modal-title').innerText.toLowerCase();
+            if (data.services[currentService]) {
+                updateModalContent(currentService, data.services[currentService]);
+            }
+        }
+    } catch (err) {
+        // If API is down, mark everything as down
+        ['badge-api', 'badge-validador', 'badge-worker', 'badge-predictor', 'badge-entrenador', 'badge-modelador', 'badge-db', 'badge-minio'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+                el.innerText = 'CAÍDO';
+                el.className = 'px-2 py-1 bg-error-container text-error font-label-bold text-[10px] rounded uppercase';
+            }
+        });
+    }
+}
+
+function updateModalContent(serviceName, data) {
+    document.getElementById('modal-title').innerText = serviceName;
+    
+    const badge = document.getElementById('modal-badge');
+    const isUp = typeof data === 'string' ? data === 'UP' : (data && data.status === 'UP');
+    
+    if(isUp) {
+        badge.innerText = 'OPERATIVO';
+        badge.className = 'px-2 py-1 bg-primary-container/10 text-primary font-label-bold text-[10px] rounded uppercase mt-1 inline-block';
+    } else {
+        badge.innerText = 'CAÍDO';
+        badge.className = 'px-2 py-1 bg-error-container text-error font-label-bold text-[10px] rounded uppercase mt-1 inline-block';
+    }
+    
+    document.getElementById('modal-desc').innerText = data.descripcion || 'Sin información detallada';
+    document.getElementById('modal-queue').innerText = data.queue_size !== undefined ? data.queue_size : '-';
+    
+    if (data.seconds_since_last_heartbeat !== undefined) {
+        document.getElementById('modal-ping').innerText = `${data.seconds_since_last_heartbeat}s`;
+    } else {
+        document.getElementById('modal-ping').innerText = '-';
+    }
+}
+
+function showHealthDetails(serviceName) {
+    if (!lastHealthData || !lastHealthData.services[serviceName]) return;
+    
+    const data = lastHealthData.services[serviceName];
+    updateModalContent(serviceName, data);
+    
+    const modal = document.getElementById('health-modal');
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.firstElementChild.classList.remove('scale-95');
+    }, 10);
+}
+
+function closeHealthModal() {
+    const modal = document.getElementById('health-modal');
+    modal.classList.add('opacity-0');
+    modal.firstElementChild.classList.add('scale-95');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+// Start polling health every 5 seconds
+setInterval(pollHealth, 5000);
+pollHealth(); // Initial call
+
+// ==========================================
+// SEARCH LOCATION (NOMINATIM)
+// ==========================================
+async function executeSearch() {
+    const input = document.getElementById('address-input');
+    const query = input.value.trim();
+    if(!query) return;
+
+    // Switch to Map view if not already there
+    navTo('map');
+    // Check if query is directly coordinates (lat, lon)
+    const coordMatch = query.match(/^\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)\s*$/);
+    
+    let lat, lon;
+    let displayName = query;
+    
+    if (coordMatch) {
+        lat = parseFloat(coordMatch[1]);
+        lon = parseFloat(coordMatch[3]);
+        updateStatusBanner(`Coordenadas directas detectadas...`);
+    } else {
+        updateStatusBanner(`Buscando "${query}"...`);
+        try {
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+            const resp = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+            const results = await resp.json();
+
+            if (results.length === 0) {
+                updateStatusBanner('Ubicación no encontrada', true);
+                alert('Ubicación no encontrada.');
+                return;
+            }
+
+            lat = parseFloat(results[0].lat);
+            lon = parseFloat(results[0].lon);
+            displayName = results[0].display_name.split(',')[0];
+        } catch (e) {
+            console.error(e);
+            updateStatusBanner('Error en la búsqueda', true);
+            return;
+        }
+    }
+
+    // Update inputs
+        document.getElementById('input-lat').value = lat.toFixed(4);
+        document.getElementById('input-lon').value = lon.toFixed(4);
+
+        // Update Map Marker
+        const latlng = [lat, lon];
+        if (marker) {
+            marker.setLatLng(latlng);
+        } else {
+            marker = L.marker(latlng).addTo(map);
+        }
+        
+        map.flyTo(latlng, 12, { duration: 1.2 });
+        updateStatusBanner(`Ubicación encontrada: ${displayName}`, false, true);
+        
+        setTimeout(() => {
+            document.getElementById('map-status-banner').classList.add('hidden');
+        }, 4000);
+}
