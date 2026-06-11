@@ -11,7 +11,7 @@ import subprocess
 import sys
 
 from db.db import SessionLocal
-from db.models import Orden, Entrenamiento, Modelos, Descargas, WorkersLogs, Informes, Usuario
+from db.models import Orden, Entrenamiento, Modelos, Descargas, InformesClientes, WorkersLogs, Informes, Usuario
 import os
 
 from passlib.context import CryptContext

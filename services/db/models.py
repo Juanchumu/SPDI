@@ -62,6 +62,9 @@ class Usuario(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, nullable=False)
     password_hash= Column(String, nullable=False)
+    responsable = Column(Text)
+    tipo = Column(Text)
+    descripcion = Column(Text)
 
 class WorkersLogs(Base):
     __tablename__ = "workerslogs"
@@ -75,6 +78,17 @@ class Informes(Base):
     id = Column(Integer, primary_key=True)
     contenido = Column(Text) 
     created_at = Column(DateTime, default=datetime.utcnow)
+class InformesClientes(Base):
+    __tablename__ = "informesclientes"
+    id = Column(Integer, primary_key=True)
+    responsable = Column(Text)
+    cliente = Column(Text)
+    contenido = Column(Text) 
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+
+
 
 
 
