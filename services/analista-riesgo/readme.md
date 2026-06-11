@@ -1,14 +1,17 @@
-este worker genera informes para clientes, seria un aviso personalizado.
+este worker genera informes sobre un cliente en particular y analisa que tan riesgoso es
+asegurarlo o tomarlo
 
+osea, le delega a un modelo la decision. entre nosotros sabemos que la respuesta va a estar dada
+por la probabilidad de las palabras.
 
-lamentamos informar que su area presenta un riesgo elevado de incendio: 
-tome las siguientes medidas:
+se le pasa una descripcion del cliente, el cual se tiene que anotar al dar de alta:
 
-su area presenta un riesgo bajo:
-igualmente tome las medidas contra incendios 
+se tiene que preguntar: 
+cuanto personal posee | esto es para saber si el cliente posee la capacidad de prepararse para un incendio 
 
-en el aviso personalizado, le decimos que si tiene alguna duda no dude en contactar 
-a la empresa aseguradora para los proximos pasos. 
+si utiliza agua de pozo o tiene una laguna cerca 
+
+y se le pasan las predicciones "predicha" del cliente 
 
 
 
