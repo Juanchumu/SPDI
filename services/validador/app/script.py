@@ -13,10 +13,8 @@ def run(dia_de_la_imagen, lat, lon, orden_id):
     # ==================================================
     fecha_base = datetime.strptime(dia_de_la_imagen, "%Y%m%d").replace(tzinfo=UTC)
 
-    # si la fecha es mayor a 5 días respecto al sistema
-    fecha_limite = datetime.now(UTC) - timedelta(days=5)
-
-    if fecha_base > fecha_limite:
+    # Evitar pedir predicciones en el futuro
+    if fecha_base > datetime.now(UTC):
         return 1
 
     # ==================================================
