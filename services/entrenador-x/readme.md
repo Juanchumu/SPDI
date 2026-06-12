@@ -1,6 +1,13 @@
 Nota: Para evitar que se pise con el otro worker, se puede hacer que arranque uno u otro 
 unicamente cambiando el estado final.
 
+Este entrenador-x posee un problema enorme:
+si no hay datos de entrenamiento:
+* se pone a descargar por si solo
+
+Esto es un problema ya que no esta informado (hasta ahora).
+
+
 # Esto Genera:
 
 Indice A es ndvi

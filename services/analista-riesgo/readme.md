@@ -1,21 +1,36 @@
-este worker genera informes sobre un cliente en particular y analisa que tan riesgoso es
-asegurarlo o tomarlo
+este worker genera un informe sobre un cliente, en particular, y analisa que tan riesgoso es
+asegurarlo o tomarlo.
 
-osea, le delega a un modelo la decision. entre nosotros sabemos que la respuesta va a estar dada
-por la probabilidad de las palabras.
+ya que puede haber clientes que con un unico punto no ocupe toda el area del mismo 
 
+el informe es utilizando como minimo 1 punto. 
+
++
+se le pasan las predicciones "predicha" del cliente.
+
++ 
 se le pasa una descripcion del cliente, el cual se tiene que anotar al dar de alta:
 
 se tiene que preguntar: 
 cuanto personal posee | esto es para saber si el cliente posee la capacidad de prepararse para un incendio 
-
 si utiliza agua de pozo o tiene una laguna cerca 
 
-y se le pasan las predicciones "predicha" del cliente 
+--------
+esto crea un informe personalizado de si conviene ono asegurarlo.
+
+
+-------
+
+si se considera tomar al cliente, se lo da de alta en el sistema, asi puede acceder a su estado.
+->>>> esto genera un informe personalizado para ese cliente
+
 
 ----------------------------------------------------------
 
-tendria que agarrar todos los clientes y ver si alguno esta malo y de ahi generar el informe 
+
+
+----
+
 
 
 

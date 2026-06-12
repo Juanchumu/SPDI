@@ -15,6 +15,8 @@ from datetime import datetime
 
 
 from minio import Minio
+from minio.error import S3Error
+
 from sqlalchemy.orm import Session
 from scipy.ndimage import label, find_objects
 import xgboost as xgb
@@ -28,7 +30,8 @@ from db.models import Orden, Modelos, WorkersLogs
 
 DB_MINIO_USER = os.getenv("DB_MINIO_USER")
 DB_MINIO_PASS = os.getenv("DB_MINIO_PASS")
-
+DB_MINIO_HOST = os.getenv("DB_MINIO_HOST")
+print(f"que hay carajos hay dentro de {DB_MINIO_HOST}")
 TMP_DIR = "tmp"
 ORDERS_DIR = f"{TMP_DIR}/ordenes"
 MODELS_DIR = f"{TMP_DIR}/modelos"
@@ -38,7 +41,6 @@ os.makedirs(ORDERS_DIR, exist_ok=True)
 os.makedirs(MODELS_DIR, exist_ok=True)
 os.makedirs(PRED_DIR, exist_ok=True)
 
-device = torch.device("cpu")
 
 # ==================================================
 # logs de estado en la db (actualiza)
@@ -81,9 +83,8 @@ def get_minio_client():
             read=30.0
         )
     )
-    minio_host = os.getenv("MINIO_HOST")
     return Minio(
-        f"{minio_host}:9000",
+        f"{DB_MINIO_HOST}:9000",
         access_key=DB_MINIO_USER,
         secret_key=DB_MINIO_PASS,
         secure=False,
@@ -92,91 +93,6 @@ def get_minio_client():
 # ==================================================
 # MODELO
 # ==================================================
-
-class ConvBlock(nn.Module):
-    def __init__(self, in_c, out_c):
-        super().__init__()
-
-        self.net = nn.Sequential(
-            nn.Conv2d(in_c, out_c, 3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(out_c, out_c, 3, padding=1),
-            nn.ReLU()
-        )
-
-    def forward(self, x):
-        return self.net(x)
-
-
-class TemporalFireNet(nn.Module):
-    def __init__(self):
-        super().__init__()
-
-        self.encoder = ConvBlock(5, 32)
-
-        self.lstm = nn.LSTM(
-            input_size=32,
-            hidden_size=64,
-            batch_first=True
-        )
-
-        self.decoder = nn.Sequential(
-            nn.Conv2d(64, 32, 3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(32, 1, 1),
-            nn.Sigmoid()
-        )
-
-    def forward(self, x):
-        B, T, C, H, W = x.shape
-
-        feats = []
-
-        for t in range(T):
-            ft = self.encoder(x[:, t])
-            ft = ft.mean(dim=[2, 3])
-            feats.append(ft)
-
-        feats = torch.stack(feats, dim=1)
-
-        out, _ = self.lstm(feats)
-
-        last = out[:, -1]
-        last = last[:, :, None, None].expand(-1, -1, H, W)
-
-        return self.decoder(last)
-
-class TempCNN(nn.Module):
-    """Red convolucional temporal pura (sin LSTM, usa Conv1D)"""
-    def __init__(self):
-        super().__init__()
-        self.encoder = ConvBlock(5, 32)
-        self.temporal_conv = nn.Sequential(
-            nn.Conv1d(32, 64, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv1d(64, 64, kernel_size=3, padding=1),
-            nn.ReLU()
-        )
-        self.decoder = nn.Sequential(
-            nn.Conv2d(64, 32, 3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(32, 1, 1),
-            nn.Sigmoid()
-        )
-
-    def forward(self, x):
-        B, T, C, H, W = x.shape
-        feats = []
-        for t in range(T):
-            ft = self.encoder(x[:, t])  # (B, 32, H, W)
-            ft = ft.mean(dim=[2, 3])    # (B, 32)
-            feats.append(ft)
-        feats = torch.stack(feats, dim=1)  # (B, T, 32)
-        feats = feats.permute(0, 2, 1)     # (B, 32, T)
-        temporal_out = self.temporal_conv(feats)  # (B, 64, T)
-        last = temporal_out[:, :, -1]       # (B, 64)
-        last = last[:, :, None, None].expand(-1, -1, H, W)
-        return self.decoder(last)
 
 # ==================================================
 # DESCARGAR MODELO
@@ -203,6 +119,12 @@ def descargar_ultimo_modelo():
         
         if not os.path.exists(model_path):
             client = get_minio_client()
+            try:
+                #No esta el balde creado 
+                client.stat_object("modelos-x", modelo.name)
+            except S3Error:
+                print("No esta el balde modelos-x creado")
+                return None, None, None
             client.fget_object(
                 "modelos-x",
                 modelo.name,

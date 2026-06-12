@@ -78,10 +78,10 @@ services:
       - DATABASE_URL=${DATABASE_URL}
     restart: unless-stopped
 
-  worker-x:
+  worker:
     build:
       context: .
-      dockerfile: ./worker-x/Dockerfile
+      dockerfile: ./worker/Dockerfile
     command: python -u -m app.worker
     depends_on:
       db:
@@ -103,10 +103,10 @@ services:
         #- ./descargas:/app/descargas     # 
         #- ./ordenes:/app/ordenes     # 
     restart: unless-stopped
-  entrenador-x:
+  entrenador:
     build:
       context: .
-      dockerfile: ./entrenador-x/Dockerfile
+      dockerfile: ./entrenador/Dockerfile
     command: python -u -m app.entrenador
     depends_on:
       db:
@@ -191,10 +191,10 @@ services:
       MINIO_ROOT_PASSWORD: ${DB_MINIO_PASS}
     volumes:
       - minio_data:/data
-  modelador-x:
+  modelador:
     build:
       context: .
-      dockerfile: ./modelador-x/Dockerfile
+      dockerfile: ./modelador/Dockerfile
     command: python -u -m app.modelador
     depends_on:
       db:
@@ -216,10 +216,10 @@ services:
         #    volumes:
         #- ./tmp:/app/tmp
     restart: unless-stopped
-  predictor-x:
+  predictor:
     build:
       context: .
-      dockerfile: ./predictor-x/Dockerfile
+      dockerfile: ./predictor/Dockerfile
     command: python -u -m app.predictor
     depends_on:
       db:
@@ -234,7 +234,6 @@ services:
 
       - DB_MINIO_USER=${DB_MINIO_USER}
       - DB_MINIO_PASS=${DB_MINIO_PASS}
-      - DB_MINIO_HOST=${DB_MINIO_HOST}
 
     restart: unless-stopped
 
