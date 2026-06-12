@@ -1,13 +1,15 @@
 este worker genera informes para clientes, seria un aviso personalizado.
 
-
+como: 
+camino 1:
 lamentamos informar que su area| localidad presenta un riesgo elevado de incendio: 
 tome las siguientes medidas:
-
+camino 2:
 su area presenta un riesgo bajo:
 igualmente tome las medidas contra incendios 
 
-+ 
++ tambien podemos sumar: 
+
 en el aviso personalizado, le decimos que si tiene alguna duda no dude en contactar 
 a la empresa aseguradora para los proximos pasos. 
 

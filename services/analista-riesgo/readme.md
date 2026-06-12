@@ -1,5 +1,5 @@
 este worker genera un informe sobre un cliente, en particular, y analisa que tan riesgoso es
-asegurarlo o tomarlo.
+asegurarlo.
 
 ya que puede haber clientes que con un unico punto no ocupe toda el area del mismo 
 
@@ -11,9 +11,25 @@ se le pasan las predicciones "predicha" del cliente.
 + 
 se le pasa una descripcion del cliente, el cual se tiene que anotar al dar de alta:
 
-se tiene que preguntar: 
+[
+la descripcion se puede sacar de descripcion de la tabla: 
+# si el estado es: requerido | listo 
+class InformesRiesgo(Base):
+    __tablename__ = "informesriesgo"
+    id = Column(Integer, primary_key=True)
+    responsable = Column(Text)
+    cliente = Column(Text)
+    descripcion = Column(Text)
+    estado = Column(Text)
+    contenido = Column(Text) 
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime,server_default=func.now(),onupdate=func.now())
+    
+ ]
+
+en la descripcion puede que no haya nada o si haya algo: 
 cuanto personal posee | esto es para saber si el cliente posee la capacidad de prepararse para un incendio 
-si utiliza agua de pozo o tiene una laguna cerca 
+si utiliza agua de pozo o tiene una laguna cerca, si tiene una cantidad inmensa de arboles ..etc
 
 --------
 esto crea un informe personalizado de si conviene ono asegurarlo.
