@@ -1,0 +1,245 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d mydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: ./api/Dockerfile
+    ports:
+      - "8000:8000"
+    #healthcheck:
+      #test: ["CMD","curl", "-f", "http://localhost:8000/docs"]
+      #interval: 5s
+      #timeout: 5s
+      #retries: 10
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DATABASE_URL=${DATABASE_URL}
+    # Montamos el código fuente para Hot Reload
+    #volumes:
+    #  - ./api/app:/app/app
+    # Lanzamos la API con --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped 
+  front-angular:
+    build:
+      context: .
+      dockerfile: ./front-angular/Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      db:
+        condition: service_healthy
+          #api:
+        #condition: service_healthy
+
+
+  validador:
+    build:
+      context: .
+      dockerfile: ./validador/Dockerfile
+    command: python -u -m app.validador
+    depends_on:
+      db:
+        condition: service_healthy
+          #api:
+        #condition: service_healthy
+
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DATABASE_URL=${DATABASE_URL}
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: ./worker/Dockerfile
+    command: python -u -m app.worker
+    depends_on:
+      db:
+        condition: service_healthy
+          #api:
+          #condition: service_healthy
+
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DATABASE_URL=${DATABASE_URL}
+      - DB_MINIO_USER=${DB_MINIO_USER}
+      - DB_MINIO_PASS=${DB_MINIO_PASS}
+        #volumes:                           # 
+        #- ./data:/app/data               # 
+        #- ./descargas:/app/descargas     # 
+        #- ./ordenes:/app/ordenes     # 
+    restart: unless-stopped
+  entrenador:
+    build:
+      context: .
+      dockerfile: ./entrenador/Dockerfile
+    command: python -u -m app.entrenador
+    depends_on:
+      db:
+        condition: service_healthy
+          #api:
+          #condition: service_healthy
+
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DATABASE_URL=${DATABASE_URL}
+      - DB_MINIO_USER=${DB_MINIO_USER}
+      - DB_MINIO_PASS=${DB_MINIO_PASS}
+        #volumes:                           # 
+        #- ./dataset:/app/dataset     # 
+    restart: unless-stopped
+  analista:
+    build:
+      context: .
+      dockerfile: ./analista/Dockerfile
+    command: python -u -m app.analista
+    depends_on:
+      db:
+        condition: service_healthy
+          #api:
+        #condition: service_healthy
+
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DATABASE_URL=${DATABASE_URL}
+        #MiniO 
+      - DB_MINIO_USER=${DB_MINIO_USER}
+      - DB_MINIO_PASS=${DB_MINIO_PASS}
+        #ollama  
+      - OLLAMA_URL_A=${OLLAMA_URL_A}
+      - OLLAMA_URL_B=${OLLAMA_URL_B}
+      - OLLAMA_TOKEN=${OLLAMA_TOKEN}
+    restart: unless-stopped
+# Sucesor de analista:
+#  n8n:
+#    image: docker.n8n.io/n8nio/n8n:latest
+#    container_name: n8n
+#    restart: unless-stopped
+#    ports:
+#      - "5678:5678"
+#    environment:
+#      - TZ=America/Argentina/Buenos_Aires
+#      - GENERIC_TIMEZONE=America/Argentina/Buenos_Aires
+#      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+#      - N8N_RUNNERS_ENABLED=true
+#      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+#      - DB_HOST=${DB_HOST}
+#      - DB_PORT=${DB_PORT}
+#      - DB_USER=${DB_USER}
+#      - DB_PASSWORD=${DB_PASSWORD}
+#      - DB_NAME=${DB_NAME}
+#      - DATABASE_URL=${DATABASE_URL}
+#        #ollama  
+#      - OLLAMA_URL_A=${OLLAMA_URL_A}
+#      - OLLAMA_URL_B=${OLLAMA_URL_B}
+#      - OLLAMA_TOKEN=${OLLAMA_TOKEN}
+#    volumes:
+#      - n8n_data:/home/node/.n8n
+#      - ./n8n_data:/home/node/.n8n
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000" # API S3
+      - "9001:9001" # Panel web
+    environment:
+      MINIO_ROOT_USER: ${DB_MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${DB_MINIO_PASS}
+    volumes:
+      - minio_data:/data
+  modelador:
+    build:
+      context: .
+      dockerfile: ./modelador/Dockerfile
+    command: python -u -m app.modelador
+    depends_on:
+      db:
+        condition: service_healthy
+          #api:
+          #condition: service_healthy
+      minio:
+        condition: service_started
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DATABASE_URL=${DATABASE_URL}
+
+      - DB_MINIO_USER=${DB_MINIO_USER}
+      - DB_MINIO_PASS=${DB_MINIO_PASS}
+        #    volumes:
+        #- ./tmp:/app/tmp
+    restart: unless-stopped
+  predictor:
+    build:
+      context: .
+      dockerfile: ./predictor/Dockerfile
+    command: python -u -m app.predictor
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DATABASE_URL=${DATABASE_URL}
+
+      - DB_MINIO_USER=${DB_MINIO_USER}
+      - DB_MINIO_PASS=${DB_MINIO_PASS}
+
+    restart: unless-stopped
+
+
+
+volumes:
+  minio_data:
+  postgres_data:
+    #  n8n_data:

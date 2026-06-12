@@ -50,6 +50,7 @@ with engine.connect() as conn:
         CREATE TABLE IF NOT EXISTS modelos (
             id SERIAL PRIMARY KEY,
             name TEXT,
+            tipo TEXT,
             final_loss DOUBLE PRECISION,
             best_loss DOUBLE PRECISION,
             pred_mean DOUBLE PRECISION,
@@ -83,7 +84,10 @@ with engine.connect() as conn:
         CREATE TABLE IF NOT EXISTS usuarios (
             id SERIAL PRIMARY KEY,
             username varchar(100) unique not null,
-            password_hash varchar(255) not null
+            password_hash varchar(255) not null,
+            responsable TEXT,
+            tipo TEXT,
+            descripcion TEXT
         )
         """))
         
@@ -120,7 +124,7 @@ with engine.connect() as conn:
             created_at TIMESTAMP
         )
         """))
-        # WorkersLogs 
+        # informes  
         conn.execute(text("""
         CREATE TABLE IF NOT EXISTS informes (
             id SERIAL PRIMARY KEY,
@@ -128,6 +132,29 @@ with engine.connect() as conn:
             created_at TIMESTAMP
         )
         """))
+        # informes-clientes
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS informesclientes (
+            id SERIAL PRIMARY KEY,
+            responsable TEXT,
+            cliente TEXT,
+            contenido TEXT,
+            created_at TIMESTAMP
+        )
+        """))
+
+        # Pedido de analisis personalizado 
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS analisispersonalizado (
+            id SERIAL PRIMARY KEY,
+            status TEXT,
+            cliente TEXT,
+            created_at TIMESTAMP,
+            updated_at TIMESTAMP
+        )
+        """))
+
+       
         
         # Confirmar la transacción
         trans.commit()

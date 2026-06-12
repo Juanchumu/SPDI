@@ -1,0 +1,13 @@
+numpy
+rasterio
+planetary-computer
+pystac-client
+odc-stac
+minio
+SQLAlchemy
+psycopg2-binary
+urllib3
+scipy
+requests
+pyproj
+shapely

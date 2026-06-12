@@ -1,0 +1,11 @@
+torch
+torchvision
+numpy
+rasterio
+scipy
+sqlalchemy<2.0
+psycopg2-binary
+minio
+urllib3
+xgboost
+scikit-learn
