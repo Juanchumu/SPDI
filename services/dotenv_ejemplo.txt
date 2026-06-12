@@ -1,13 +1,19 @@
 
+POSTGRES_USER = 'user'
+POSTGRES_PASSWORD = 'password'
+POSTGRES_DB = 'mydb'
+DB_HOST = 'db'
+DB_PORT = '5432'
+DB_USER = 'user'
+DB_PASSWORD = 'password'
+DB_NAME = 'mydb'
+DATABASE_URL = "postgresql://user:password@db:5432/mydb"
 
-POSTGRES_USER = ''
-POSTGRES_PASSWORD = ''
-POSTGRES_DB = ''
-DB_HOST = ''
-DB_PORT = ''
-DB_USER = ''
-DB_PASSWORD = ''
-DB_NAME = ''
 
-DATABASE_URL = "postgresql://usuario:password@base:puerto/nombredelabase"
-      
+DB_MINIO_USER = 'admin'
+DB_MINIO_PASS = 'Masterkey2026'
+DB_MINIO_HOST = 'minio'
+
+OLLAMA_URL_A = "https://holanda.com"
+OLLAMA_URL_B = "https://holanda2.com"    
+OLLAMA_TOKEN = AAAAAAAAAAAAAAAAAAAAAAAAAAAAA
