@@ -41,12 +41,12 @@ def get_minio_client():
     )
 def AlmacenarOrdenLista(nro_orden):
     client = get_minio_client()
-    bucket_name = "ordenes"
+    bucket_name = "ordenes-x"
     if not client.bucket_exists(bucket_name):
         client.make_bucket(bucket_name)
         print("Bucket para las ordenes creado")
     client.fput_object(
-        "ordenes",
+        bucket_name,
         f"escena_{nro_orden}.tif",
         f"/app/ordenes/inputs/escena_{nro_orden}.tif"
     )

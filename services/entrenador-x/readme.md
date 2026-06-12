@@ -1,3 +1,6 @@
+Nota: Para evitar que se pise con el otro worker, se puede hacer que arranque uno u otro 
+unicamente cambiando el estado final.
+
 # Esto Genera:
 
 Indice A es ndvi

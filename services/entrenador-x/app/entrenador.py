@@ -43,7 +43,7 @@ def logearDB(descripcion):
 
 
 def get_pending(db: Session):
-    return db.query(Entrenamiento).filter(Entrenamiento.status == "pending-x").first()
+    return db.query(Entrenamiento).filter(Entrenamiento.status == "pending").first()
 
 def upload_folder_to_minio(client, bucket, folder):
     if not client.bucket_exists(bucket):
@@ -61,7 +61,7 @@ def check_minio_and_generate():
     logearDB("Verificando dataset base en MinIO...")
     try:
         client = get_minio_client()
-        bucket_name = "train-inputs"
+        bucket_name = "train-inputs-x"
         if not client.bucket_exists(bucket_name):
             client.make_bucket(bucket_name)
         objects = list(client.list_objects(bucket_name))
@@ -71,11 +71,11 @@ def check_minio_and_generate():
             generate_dataset_from_shapes.download_and_generate()
             
             logearDB("Subiendo dataset regenerado a MinIO...")
-            upload_folder_to_minio(client, "train-inputs", "/app/dataset/train/inputs")
-            upload_folder_to_minio(client, "train-masks", "/app/dataset/train/masks")
+            upload_folder_to_minio(client, "train-inputs-x", "/app/dataset/train/inputs")
+            upload_folder_to_minio(client, "train-masks-x", "/app/dataset/train/masks")
             logearDB("Regeneración de dataset base completada.")
         else:
-            logearDB("Dataset base OK en MinIO.")
+            logearDB("Dataset-x base OK en MinIO.")
     except Exception as e:
         print(f"Error verificando/generando dataset base: {e}")
 
@@ -109,7 +109,7 @@ def run():
                     continue
 
                 #os.system("python /app/app/generador.py")
-                entrenamiento.status = "lista-para-entrenar"
+                entrenamiento.status = "lista-para-entrenar-x"
             except Exception as e:
                 entrenamiento.status = "error"
                 traceback.print_exc()

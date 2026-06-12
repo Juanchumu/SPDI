@@ -55,20 +55,20 @@ def AlmacenarEntrenamiento(nombre, dia):
     db.commit()
     db.close()
     client = get_minio_client()
-    bucket_name = "train-inputs"
+    bucket_name = "train-inputs-x"
     if not client.bucket_exists(bucket_name):
         client.make_bucket(bucket_name)
-        print("Bucket para los inputs creado")
+        print("Bucket para los inputs-x creado")
     client.fput_object(
         bucket_name,
         f"escena_{nombre}.tif",
         f"/app/dataset/train/inputs/escena_{nombre}.tif"
     )
     print(f"Archivo escena {nombre} subido")
-    bucket_name = "train-masks"
+    bucket_name = "train-masks-x"
     if not client.bucket_exists(bucket_name):
         client.make_bucket(bucket_name)
-        print("Bucket para los masks creado")
+        print("Bucket para los masks-x creado")
     client.fput_object(
         bucket_name,
         f"escena_{nombre}.tif",

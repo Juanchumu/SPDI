@@ -3,9 +3,9 @@ import time
 import json
 import shutil
 import urllib3
-
-import torch
-import torch.nn as nn
+#Deberia unicamente predecir con xgboost
+#import torch
+#import torch.nn as nn
 import rasterio
 import numpy as np
 
@@ -48,12 +48,12 @@ def logearDB(descripcion):
     try:
         registro = (
             db.query(WorkersLogs)
-            .filter(WorkersLogs.name == "predictor")
+            .filter(WorkersLogs.name == "predictor-x")
             .first()
         )
         if registro is None:
             registro = WorkersLogs(
-                name="predictor",
+                name="predictor-x",
                 descripcion=descripcion
             )
             db.add(registro)
@@ -81,7 +81,7 @@ def get_minio_client():
             read=30.0
         )
     )
-    minio_host = os.getenv("MINIO_HOST", "minio")
+    minio_host = os.getenv("MINIO_HOST")
     return Minio(
         f"{minio_host}:9000",
         access_key=DB_MINIO_USER,
@@ -204,11 +204,11 @@ def descargar_ultimo_modelo():
         if not os.path.exists(model_path):
             client = get_minio_client()
             client.fget_object(
-                "modelos",
+                "modelos-x",
                 modelo.name,
                 model_path
             )
-            print(f"Modelo descargado: {model_path} (tipo: {tipo})")
+            print(f"Modelo x descargado: {model_path} (tipo: {tipo})")
         return modelo.id, model_path, tipo
     finally:
         db.close()
@@ -222,24 +222,6 @@ def cargar_modelo(model_path, tipo="temporal_fire_net"):
         model.load_model(model_path)
         print(f"Modelo XGBoost cargado OK")
         return model
-    elif tipo == "temp_cnn":
-        model = TempCNN()
-        model.load_state_dict(
-            torch.load(model_path, map_location=device)
-        )
-        model.to(device)
-        model.eval()
-        print(f"Modelo TempCNN cargado OK")
-        return model
-    else:  # temporal_fire_net
-        model = TemporalFireNet()
-        model.load_state_dict(
-            torch.load(model_path, map_location=device)
-        )
-        model.to(device)
-        model.eval()
-        print("Modelo TemporalFireNet cargado OK")
-        return model
 # ==================================================
 # DESCARGAR ORDEN
 # ==================================================
@@ -247,7 +229,7 @@ def descargar_orden(orden_id):
     client = get_minio_client()
     local_path = f"{ORDERS_DIR}/escena_{orden_id}.tif"
     client.fget_object(
-        "ordenes",
+        "ordenes-x",
         f"escena_{orden_id}.tif",
         local_path
     )
@@ -280,11 +262,7 @@ def preprocess(data):
 
     x = (x - x_min) / (x_max - x_min + 1e-6)
 
-    x = torch.tensor(
-        x,
-        dtype=torch.float32
-    ).unsqueeze(0)
-
+    x = torch.tensor(x,dtype=torch.float32).unsqueeze(0)
     return x
 
 # ==================================================
@@ -346,10 +324,7 @@ def predecir_xgboost(model, ruta_stack, orden_id):
 # GUARDAR PREDICCION
 # ==================================================
 def guardar_pred_tif(pred, profile, orden_id):
-    profile.update(
-        count=1,
-        dtype="float32"
-    )
+    profile.update(count=1,dtype="float32")
     path = f"{PRED_DIR}/pred_{orden_id}.tif"
     with rasterio.open(path, "w", **profile) as dst:
         dst.write(pred.astype("float32"), 1)
@@ -359,7 +334,7 @@ def guardar_pred_tif(pred, profile, orden_id):
 # ==================================================
 def subir_prediccion(orden_id, local_path):
     client = get_minio_client()
-    bucket_name = "predicciones"
+    bucket_name = "predicciones-x"
     if not client.bucket_exists(bucket_name):
         client.make_bucket(bucket_name)
     client.fput_object(
@@ -422,11 +397,7 @@ def predecir(model, ruta_stack, orden_id, tipo="temporal_fire_net"):
         nodata_mask = nodata_mask | t_nodata
     pred[nodata_mask] = 0.0
     
-    tif_path = guardar_pred_tif(
-        pred,
-        profile,
-        orden_id
-    )
+    tif_path = guardar_pred_tif( pred, profile, orden_id )
     porcentaje = calcular_porcentaje(pred)
     zonas = detectar_zonas(pred)
     resultado = {
@@ -443,7 +414,7 @@ def get_pending(db: Session):
     return (
         db.query(Orden)
         .filter(
-            Orden.status == "Lista para predecir.."
+            Orden.status == "Lista para predecir-x.."
         )
         .order_by(Orden.id.asc())
         .first()
@@ -454,9 +425,9 @@ def get_pending(db: Session):
 def run():
     while True:
         modelo_id, model_path, modelo_tipo = descargar_ultimo_modelo()
-        logearDB("Buscando Modelos Nuevos...")
+        logearDB("Buscando Modelos x Nuevos...")
         if modelo_id is None:
-            logearDB("No hay Modelos, me pongo a dormir...")
+            logearDB("No hay Modelos x, me pongo a dormir...")
             time.sleep(5)
             continue
         model = cargar_modelo(model_path, modelo_tipo)
@@ -493,7 +464,7 @@ def run():
                 db.commit()
                 print(f"Error procesando orden {orden.id}: {e}")
         except Exception as e:
-            print(f"Error general worker: {e}")
+            print(f"Error general predictor: {e}")
         finally:
             db.close()
         time.sleep(5)

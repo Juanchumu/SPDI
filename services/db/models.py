@@ -32,6 +32,7 @@ class Modelos(Base):
     __tablename__ = "modelos"
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(Text)
+    tipo = Column(Text)
     final_loss = Column(Float)
     best_loss = Column(Float)
     pred_mean = Column(Float)

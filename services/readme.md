@@ -16,6 +16,9 @@ en los directorios
 Por primera vez solo hay que levantar 
 la api y la db 
 
+sudo docker compose -f docker-compose-x.yml up --build
+
+
 ```bash
 sudo docker compose up --build db api 
 

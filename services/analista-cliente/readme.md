@@ -1,17 +1,18 @@
 este worker genera informes para clientes, seria un aviso personalizado.
 
 
-lamentamos informar que su area presenta un riesgo elevado de incendio: 
+lamentamos informar que su area| localidad presenta un riesgo elevado de incendio: 
 tome las siguientes medidas:
 
 su area presenta un riesgo bajo:
 igualmente tome las medidas contra incendios 
 
++ 
 en el aviso personalizado, le decimos que si tiene alguna duda no dude en contactar 
 a la empresa aseguradora para los proximos pasos. 
 
-
-
+esto se busca como: informe para mi (cliente) de la tabla informes clientes
+ 
 ## Servicio de análisis automático con LLM
 
 Este worker genera informes técnicos automáticos sobre el estado operativo del sistema utilizando un modelo de lenguaje (LLM).

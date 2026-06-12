@@ -13,6 +13,11 @@ si utiliza agua de pozo o tiene una laguna cerca
 
 y se le pasan las predicciones "predicha" del cliente 
 
+----------------------------------------------------------
+
+tendria que agarrar todos los clientes y ver si alguno esta malo y de ahi generar el informe 
+
+
 
 
 ## Servicio de análisis automático con LLM

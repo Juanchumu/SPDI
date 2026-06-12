@@ -12,16 +12,16 @@ RUN apt-get update && apt-get install -y netcat-openbsd \
 RUN useradd -m appuser
 
 # Requirements primero (cache docker)
-COPY predictor/requirements.txt .
+COPY predictor-x/requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Código
-COPY predictor/app ./app
+COPY predictor-x/app ./app
 COPY db ./db
 
 # Entrypoint
-COPY predictor/entrypoint.sh /entrypoint.sh
+COPY predictor-x/entrypoint.sh /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh
 

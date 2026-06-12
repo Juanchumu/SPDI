@@ -50,6 +50,7 @@ with engine.connect() as conn:
         CREATE TABLE IF NOT EXISTS modelos (
             id SERIAL PRIMARY KEY,
             name TEXT,
+            tipo TEXT,
             final_loss DOUBLE PRECISION,
             best_loss DOUBLE PRECISION,
             pred_mean DOUBLE PRECISION,

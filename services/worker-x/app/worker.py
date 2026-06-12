@@ -18,12 +18,12 @@ def logearDB(descripcion):
     try:
         registro = (
             db.query(WorkersLogs)
-            .filter(WorkersLogs.name == "worker")
+            .filter(WorkersLogs.name == "worker-x")
             .first()
         )
         if registro is None:
             registro = WorkersLogs(
-                name="worker",
+                name="worker-x",
                 descripcion=descripcion
             )
             db.add(registro)
@@ -50,7 +50,7 @@ def run():
         orden = get_pending(db)
         if orden:
             # marcar como processing
-            orden.status = "Siendo procesada por worker.."
+            orden.status = "Siendo procesada por worker-x.."
             logearDB("Procesando")
             db.commit()
             args = json.loads(orden.args)
@@ -65,18 +65,18 @@ def run():
                         db=db,
                         orden=orden)
                 if (resultado == 1):
-                    print("fallo la descarga de imagenes del worker")
+                    print("fallo la descarga de imagenes del worker-x")
                     #aca tendria que hacer vuelta atras 
-                    orden.status = "pending"
+                    orden.status = "Lista para el worker.."
                     db.commit()
                     db.close()
                     time.sleep(5)
                     continue
 
-                orden.status = "Lista para predecir.."
+                orden.status = "Lista para predecir-x.."
             except Exception as e:
-                orden.status = "error en worker"
-                print(f"Error: {e}")
+                orden.status = "error en worker-x"
+                print(f"Error del worker-x: {e}")
 
             db.commit()
 

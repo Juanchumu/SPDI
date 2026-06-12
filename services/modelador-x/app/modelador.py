@@ -43,12 +43,12 @@ def logearDB(descripcion):
     try:
         registro = (
             db.query(WorkersLogs)
-            .filter(WorkersLogs.name == "modelador")
+            .filter(WorkersLogs.name == "modelador-x")
             .first()
         )
         if registro is None:
             registro = WorkersLogs(
-                name="modelador",
+                name="modelador-x",
                 descripcion=descripcion
             )
             db.add(registro)
@@ -233,7 +233,7 @@ def get_minio_client():
 def TraerDeMiniOEntrenamientos():
     db = SessionLocal()
     datos = db.query(Entrenamiento).filter(
-        Entrenamiento.status == "lista-para-entrenar"
+        Entrenamiento.status == "lista-para-entrenar-x"
     ).all()
     db.close()
     if len(datos) == 0:
@@ -249,7 +249,7 @@ def TraerDeMiniOEntrenamientos():
     #Primero descargamos los inputs
     for d in datos:
         client.fget_object(
-            "train-inputs",
+            "train-inputs-x",
             f"escena_{d.id}.tif",
             f"tmp/dataset/inputs/escena_{d.id}.tif"
         )
@@ -257,7 +257,7 @@ def TraerDeMiniOEntrenamientos():
     #Segundo descargamos los masks 
     for d in datos:
         client.fget_object(
-            "train-masks",
+            "train-masks-x",
             f"escena_{d.id}.tif",
             f"tmp/dataset/masks/escena_{d.id}.tif"
         )
@@ -269,7 +269,7 @@ def TraerDeMiniOEntrenamientos():
 def ConsultarNroDeEntrenamientos():
     db = SessionLocal()
     datos = db.query(Entrenamiento).filter(
-        Entrenamiento.status == "lista-para-entrenar"
+        Entrenamiento.status == "lista-para-entrenar-x"
     ).all()
     db.close()
     return len(datos)
@@ -279,14 +279,14 @@ def ConsultarNroDeEntrenamientos():
 def ConsultarModelosNroDeEntrenamiento(nro):
     db = SessionLocal()
     try:
-        nombre_modelo = f"fire_model_ver_{nro}.pth"
+        nombre_modelo = f"fire_model_x_ver_{nro}.pth"
         ultimo_modelo = (
             db.query(Modelos)
             .order_by(Modelos.id.desc())
             .first()
         )
         if ultimo_modelo is None:
-            print("No hay modelos")
+            print("No hay modelos x")
             return 1
         modelo = (
             db.query(Modelos)
@@ -294,7 +294,7 @@ def ConsultarModelosNroDeEntrenamiento(nro):
             .first()
         )
         if modelo is None:
-            print(f"El modelo {nro} no existe")
+            #print(f"El modelo x {nro} no existe")
             return 2
         return 0
     finally:
@@ -324,7 +324,7 @@ def AlmacenarModelo(nombre,final_loss,best_loss,dataset_size,metricas,tipo="temp
     db.commit()
     db.close()
     client = get_minio_client()
-    bucket_name = "modelos"
+    bucket_name = "modelos-x"
     if not client.bucket_exists(bucket_name):
         client.make_bucket(bucket_name)
     client.fput_object(
@@ -332,7 +332,7 @@ def AlmacenarModelo(nombre,final_loss,best_loss,dataset_size,metricas,tipo="temp
         nombre,
         f"{MODEL_ROOT}/{nombre}"
     )
-    print(f"Modelo {nombre} subido")
+    print(f"Modelo x {nombre} subido")
 
 
 
@@ -526,13 +526,13 @@ def run():
             
             if nro > 0 and nro >= ultimo_size + 5:
                 print(f"Nuevo modelo requerido (Actual: {nro}, Ultimo: {ultimo_size})")
-                logearDB("Modelando")
+                logearDB("Modelando x")
                 descarga = TraerDeMiniOEntrenamientos()
                 if descarga == 0:
                     EntrenarModeloXGBoost(nro)
             elif ultimo_size == 0 and nro > 0:
                 print("Nuevo modelo inicial requerido")
-                logearDB("Modelando")
+                logearDB("Modelando x")
                 descarga = TraerDeMiniOEntrenamientos()
                 if descarga == 0:
                     EntrenarModeloXGBoost(nro)

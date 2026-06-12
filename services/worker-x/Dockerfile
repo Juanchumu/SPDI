@@ -9,18 +9,18 @@ RUN useradd -m appuser
 RUN apt-get update && apt-get install -y netcat-openbsd && rm -rf /var/lib/apt/lists/*
 
 # Copiar requirements primero (mejor caching)
-COPY worker/requirements.txt .
+COPY worker-x/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar código
-COPY worker/app ./app
+COPY worker-x/app ./app
 COPY db ./db
 
 # Dar permisos al usuario sobre /app
 RUN chown -R appuser:appuser /app
 
 # Script entrypoint
-COPY worker/entrypoint.sh /entrypoint.sh
+COPY worker-x/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && chown appuser:appuser /entrypoint.sh
 RUN mkdir -p /app/ordenes/inputs && chown -R appuser:appuser /app
 
