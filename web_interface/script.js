@@ -247,7 +247,7 @@ async function fetchExistingOrders() {
 async function triggerPrediction() {
     const lat = parseFloat(document.getElementById('input-lat').value);
     const lon = parseFloat(document.getElementById('input-lon').value);
-    const dateVal = document.getElementById('input-date').value;
+    const dateVal = document.getElementById('input-date').value.replace(/-/g, '');
 
     if (isNaN(lat) || isNaN(lon) || !dateVal) {
         alert("Por favor completa latitud, longitud y fecha.");
