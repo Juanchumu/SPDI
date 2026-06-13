@@ -294,6 +294,7 @@ async function pollOrder(id, lat, lon) {
             if(dbOrder) {
                 dbOrder.status = data.status || dbOrder.status;
                 updateDashboardTable(); // Update UI with intermediate state
+                updateStatusBanner(`Orden #${id}: ${dbOrder.status}`);
             }
 
             if (data.status === 'Predicha') {
