@@ -521,3 +521,34 @@ async function executeSearch() {
             document.getElementById('map-status-banner').classList.add('hidden');
         }, 4000);
 }
+
+// ==========================================
+// DARK MODE TOGGLE
+// ==========================================
+function toggleTheme() {
+    const html = document.documentElement;
+    const icon = document.getElementById('theme-icon');
+    if (html.classList.contains('dark')) {
+        html.classList.remove('dark');
+        html.classList.add('light');
+        localStorage.setItem('theme', 'light');
+        if(icon) icon.innerText = 'dark_mode';
+    } else {
+        html.classList.remove('light');
+        html.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+        if(icon) icon.innerText = 'light_mode';
+    }
+}
+
+// Load theme preference on load
+window.addEventListener('DOMContentLoaded', () => {
+    const theme = localStorage.getItem('theme');
+    const html = document.documentElement;
+    const icon = document.getElementById('theme-icon');
+    if (theme === 'dark') {
+        html.classList.remove('light');
+        html.classList.add('dark');
+        if(icon) icon.innerText = 'light_mode';
+    }
+});
