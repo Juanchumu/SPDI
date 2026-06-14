@@ -112,3 +112,11 @@
 .btn-primary:hover {
     background-color: #60ff99;
 }
+
+/* Map Dark Mode Filters */
+html.dark .leaflet-layer,
+html.dark .leaflet-control-zoom-in,
+html.dark .leaflet-control-zoom-out,
+html.dark .leaflet-control-attribution {
+    filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}

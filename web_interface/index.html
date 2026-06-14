@@ -231,6 +231,14 @@ html.dark {
     --color-tertiary-container: #c5d4be;
     --color-secondary-fixed-dim: #5a0f00;
 }
+
+/* Map Dark Mode Filters */
+html.dark .leaflet-layer,
+html.dark .leaflet-control-zoom-in,
+html.dark .leaflet-control-zoom-out,
+html.dark .leaflet-control-attribution {
+    filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
 </style>
 </head>
 <body class="font-body-md text-on-surface h-full m-0 p-0 overflow-x-hidden">
@@ -312,7 +320,11 @@ html.dark {
                 </a>
                 <a href="#" onclick="navTo('map')" id="nav-map" class="nav-item flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors">
                     <span class="material-symbols-outlined">landscape</span>
-                    <span>Risk Mapping</span>
+                    <span>Registro de Clientes</span>
+                </a>
+                <a href="#" onclick="navTo('alta')" id="nav-alta" class="nav-item flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined">person_add</span>
+                    <span>Alta de Clientes</span>
                 </a>
                 <a href="#" onclick="navTo('health')" id="nav-health" class="nav-item flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors">
                     <span class="material-symbols-outlined">monitor_heart</span>
@@ -437,24 +449,181 @@ html.dark {
                 </div>
             </div>
 
-            <!-- Risk Mapping View -->
+            <!-- Alta de Clientes View -->
+            <div id="content-alta" class="content-view flex-col w-full h-full bg-surface">
+                <!-- Page Header -->
+                <div class="px-gutter py-6 bg-surface-bright flex justify-between items-end border-b border-outline-variant">
+                    <div>
+                        <nav class="flex mb-2 space-x-2 text-label-bold font-label-bold text-on-surface-variant">
+                            <span class="hover:text-primary cursor-pointer">ALTA DE CLIENTE</span>
+                            <span class="">/</span>
+                            <span class="text-primary">NUEVO REGISTRO</span>
+                        </nav>
+                        <h2 class="font-headline-lg text-headline-md text-primary font-bold">Alta de Clientes y Campos</h2>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="button" onclick="document.getElementById('form-alta-registro').reset()" class="px-6 py-2 border border-primary text-primary font-label-bold rounded hover:bg-primary-container hover:text-on-primary-container transition-all">
+                            CANCELAR
+                        </button>
+                        <button type="submit" form="form-alta-registro" class="px-6 py-2 bg-primary text-white font-label-bold rounded shadow-sm hover:bg-primary-container transition-all flex items-center">
+                            <span class="material-symbols-outlined text-[18px] mr-2">save</span>
+                            GUARDAR REGISTRO
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Scrollable Content -->
+                <div class="flex-1 overflow-hidden flex h-full">
+                    <form id="form-alta-registro" onsubmit="guardarRegistroAlta(event)" class="w-full flex h-full">
+                        <!-- Left Panel: Form Sections -->
+                        <div class="w-1/2 overflow-y-auto custom-scrollbar p-gutter bg-white">
+                            <!-- Section 1: Selection & Basic Info -->
+                            <div class="mb-10">
+                                <div class="flex items-center justify-between mb-6">
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 rounded bg-primary-container flex items-center justify-center text-on-primary-container mr-3">
+                                            <span class="material-symbols-outlined text-[18px]">person_add</span>
+                                        </div>
+                                        <h3 class="font-headline text-lg font-bold text-primary">Información del Cliente</h3>
+                                    </div>
+                                    <div class="inline-flex rounded border border-outline-variant p-1 bg-surface-container-low">
+                                        <button type="button" class="px-4 py-1 text-[12px] font-bold rounded bg-primary text-white shadow-sm transition-all" id="toggle-new">NUEVO</button>
+                                        <button type="button" class="px-4 py-1 text-[12px] font-bold text-on-surface-variant hover:bg-white transition-all" id="toggle-existing">EXISTENTE</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Campos para NUEVO cliente -->
+                                <div id="section-cliente-nuevo" class="grid grid-cols-2 gap-gutter">
+                                    <div class="col-span-2">
+                                        <label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Nombre de la Empresa / Cliente</label>
+                                        <input id="alta-cli-nombre" class="w-full px-4 py-3 bg-white border border-[#8C9C82] rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Ej. Agrícola del Valle S.A." type="text">
+                                    </div>
+                                    <div>
+                                        <label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Código de Cliente</label>
+                                        <input id="alta-cli-codigo" class="w-full px-4 py-3 bg-white border border-[#8C9C82] rounded focus:border-primary outline-none transition-all" placeholder="Ej. CL-99210" type="text">
+                                    </div>
+                                    <div>
+                                        <label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Teléfono Empresa</label>
+                                        <input id="alta-cli-telefono" class="w-full px-4 py-3 bg-white border border-[#8C9C82] rounded focus:border-primary outline-none transition-all" placeholder="+56 9 1234 5678" type="tel">
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Email Corporativo</label>
+                                        <input id="alta-cli-email" class="w-full px-4 py-3 bg-white border border-[#8C9C82] rounded focus:border-primary outline-none transition-all" placeholder="contacto@empresa.com" type="email">
+                                    </div>
+                                </div>
+
+                                <!-- Campos para EXISTENTE cliente -->
+                                <div id="section-cliente-existente" class="hidden">
+                                    <label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Seleccione un Cliente Registrado</label>
+                                    <select id="alta-area-cliente" class="w-full px-4 py-3 bg-white border border-[#8C9C82] rounded focus:border-primary outline-none transition-all">
+                                        <option value="">Cargando clientes...</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Section 2: Field Details -->
+                            <div class="pt-6 border-t border-outline-variant">
+                                <div class="flex items-center mb-6">
+                                    <div class="w-8 h-8 rounded bg-tertiary-container flex items-center justify-center text-on-tertiary-container mr-3">
+                                        <span class="material-symbols-outlined text-[18px]">agriculture</span>
+                                    </div>
+                                    <h3 class="font-headline text-lg font-bold text-primary">Detalles del Predio / Campo</h3>
+                                </div>
+                                <div class="grid grid-cols-1 gap-6">
+                                    <div>
+                                        <label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Nombre del Predio</label>
+                                        <input id="alta-area-lote" required class="w-full px-4 py-3 bg-white border border-[#8C9C82] rounded focus:border-primary outline-none transition-all" placeholder="Ej. Lote Principal - Sector Norte" type="text">
+                                    </div>
+                                    <div>
+                                        <label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Uso del Suelo / Descripción (Directivas Gemini)</label>
+                                        <textarea id="alta-area-desc" class="w-full px-4 py-3 bg-white border border-[#8C9C82] rounded focus:border-primary outline-none transition-all resize-none" placeholder="Ej. Ganadería, cultivos de rotación, cercanía a líneas eléctricas, terreno despejado, bosque nativo..." rows="3"></textarea>
+                                    </div>
+                                    <div class="bg-surface-container border border-outline-variant rounded-lg p-4 flex items-center justify-between">
+                                        <div class="flex space-x-8">
+                                            <div>
+                                                <p class="text-[10px] font-bold text-outline uppercase">Latitud</p>
+                                                <input id="alta-area-lat" required type="number" step="any" class="font-data-mono text-primary font-bold text-lg bg-transparent w-28 border-none p-0 focus:ring-0" placeholder="-34.6037" value="-34.6037">
+                                            </div>
+                                            <div>
+                                                <p class="text-[10px] font-bold text-outline uppercase">Longitud</p>
+                                                <input id="alta-area-lon" required type="number" step="any" class="font-data-mono text-primary font-bold text-lg bg-transparent w-28 border-none p-0 focus:ring-0" placeholder="-58.3816" value="-58.3816">
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center text-on-surface-variant italic text-body-sm">
+                                            <span class="material-symbols-outlined text-[18px] mr-2">touch_app</span>
+                                            Arrastre el marcador en el mapa
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Panel: Mapping (Interactive Map) -->
+                        <div class="w-1/2 relative bg-surface-container-low overflow-hidden border-l border-outline-variant" id="alta-map-container">
+                            <div id="alta-leaflet-map" class="absolute inset-0 z-0 w-full h-full"></div>
+                            
+                            <div class="absolute top-6 right-6 z-10 pointer-events-none">
+                                <div class="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-primary/20 flex items-center space-x-3">
+                                    <div class="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
+                                    <span class="font-label-bold text-[11px] text-primary tracking-wider uppercase">Modo: Selección de Área</span>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Risk Mapping / Client Registry View -->
             <div id="content-map" class="content-view flex-col p-gutter w-full h-full">
                 <!-- Customer Detail Header Card -->
                 <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0px_4px_20px_rgba(27,67,50,0.05)] border border-outline-variant mb-6">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
                             <nav class="flex items-center gap-2 text-on-surface-variant font-label-bold mb-2">
-                                <span>HERRAMIENTAS PREDICTIVAS</span>
+                                <span>REGISTRO DE CLIENTES</span>
+                                <span class="material-symbols-outlined text-[12px]">chevron_right</span>
+                                <span class="text-primary" id="client-code-display">EXP-2024-0000</span>
                             </nav>
-                            <h2 class="font-headline-md text-primary mb-1">Mapeo y Detección Temprana (XGBoost)</h2>
-                            <p class="text-sm text-on-surface-variant">Selecciona un punto geográfico, o ingresa coordenadas para que el modelo evalúe el riesgo forestal (resolución 20km²).</p>
+                            <div class="flex gap-2">
+                                <button onclick="navTo('alta')" class="px-3 py-2 bg-surface-container-low text-primary rounded-lg font-label-bold hover:bg-surface-container-high flex items-center gap-1 transition-colors border border-outline-variant">
+                                    <span class="material-symbols-outlined text-[18px]">add</span> Nuevo Lote
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex flex-wrap gap-3">
+                            <button onclick="triggerPrediction()" class="flex-1 min-w-[140px] px-4 py-2 bg-primary-container text-on-primary-container rounded-lg font-bold hover:opacity-90 flex items-center justify-center gap-2 transition-opacity">
+                                <span class="material-symbols-outlined">update</span> Actualizar Todo
+                            </button>
+                            <button onclick="enviarAlerta()" class="flex-1 min-w-[140px] px-4 py-2 bg-secondary text-on-secondary rounded-lg font-bold hover:opacity-90 flex items-center justify-center gap-2 transition-opacity">
+                                <span class="material-symbols-outlined">campaign</span> Enviar Alerta
+                            </button>
+                        </div>
+                        <h2 class="font-headline-md text-primary mb-1" id="client-name-display">Seleccione un Cliente</h2>
+                        <div class="flex flex-wrap gap-4 mt-3">
+                            <div class="flex items-center gap-2 px-3 py-1 bg-surface-container-low rounded-full">
+                                <span class="material-symbols-outlined text-sm text-on-surface-variant">fingerprint</span>
+                                <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider" id="client-id-display">ID: -</span>
+                            </div>
+                            <div class="flex items-center gap-2 px-3 py-1 bg-surface-container-low rounded-full">
+                                <span class="material-symbols-outlined text-sm text-on-surface-variant">mail</span>
+                                <span class="text-xs font-bold text-on-surface-variant" id="client-email-display">---</span>
+                            </div>
+                            <div class="flex items-center gap-2 px-3 py-1 bg-surface-container-low rounded-full">
+                                <span class="material-symbols-outlined text-sm text-on-surface-variant">call</span>
+                                <span class="text-xs font-bold text-on-surface-variant" id="client-phone-display">---</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <select id="client-select" onchange="loadClientAreas()" class="px-5 py-2 border border-primary text-primary font-label-bold rounded-lg hover:bg-surface-container-low transition-all bg-surface">
+                                <option value="">Seleccionar Cliente...</option>
+                            </select>
                         </div>
                     </div>
                 </section>
 
                 <div class="flex-1 grid grid-cols-12 gap-gutter relative h-[600px] mb-8">
                     <!-- Map Container -->
-                    <section class="col-span-12 lg:col-span-8 relative rounded-xl overflow-hidden border border-outline-variant shadow-md h-full">
+                    <section class="col-span-12 lg:col-span-9 relative rounded-xl overflow-hidden border border-outline-variant shadow-md h-full">
                         <div id="leaflet-map" class="absolute inset-0 w-full h-full z-0"></div>
                         <!-- Status Banner Floating Over Map -->
                         <div id="map-status-banner" class="absolute top-4 left-1/2 -translate-x-1/2 bg-surface border border-outline-variant px-4 py-2 rounded-full elevation-2 z-10 flex items-center gap-2 hidden">
@@ -463,39 +632,44 @@ html.dark {
                         </div>
                     </section>
 
-                    <!-- Tools Panel -->
-                    <aside class="col-span-12 lg:col-span-4 flex flex-col gap-4 h-full">
-                        <!-- Input Tool -->
-                        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-6">
-                            <h3 class="font-label-bold text-primary mb-4 flex items-center gap-2">
-                                <span class="material-symbols-outlined text-[18px]">draw</span> PARÁMETROS DE ANÁLISIS
-                            </h3>
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="text-[10px] font-bold text-on-surface-variant mb-1 block">LATITUD</label>
-                                    <input type="number" id="input-lat" class="w-full px-3 py-2 border border-outline-variant rounded bg-surface focus:ring-1 focus:border-primary" placeholder="Ej. -34.2498" step="0.0001">
+                    <!-- Coordinates List Panel -->
+                    <aside class="col-span-12 lg:col-span-3 flex flex-col gap-4 h-full">
+                        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm flex flex-col h-full overflow-hidden">
+                            <div class="p-4 bg-surface-container-low border-b border-outline-variant flex justify-between items-center">
+                                <h3 class="font-label-bold text-primary uppercase">ZONAS DE CONTROL</h3>
+                                <span class="bg-primary text-on-primary text-[10px] px-2 py-0.5 rounded-full" id="points-count">0 PUNTOS</span>
+                            </div>
+                            <div class="flex-1 overflow-y-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-surface-container-low sticky top-0 z-10">
+                                        <tr>
+                                            <th class="p-3 text-[10px] font-label-bold text-on-surface-variant border-b border-outline-variant">PUNTO</th>
+                                            <th class="p-3 text-[10px] font-label-bold text-on-surface-variant border-b border-outline-variant">COORDENADAS</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="areas-table-body" class="font-data-mono text-[12px]">
+                                        <tr class="hover:bg-surface-container-low transition-colors group">
+                                            <td class="p-3 border-b border-outline-variant" colspan="2">Seleccione un cliente...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="p-4 bg-surface-container-low mt-auto border-t border-outline-variant">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-[10px] font-bold text-on-surface-variant uppercase">RIESGO PROMEDIO</span>
+                                    <span class="text-sm font-bold text-secondary">--%</span>
                                 </div>
-                                <div>
-                                    <label class="text-[10px] font-bold text-on-surface-variant mb-1 block">LONGITUD</label>
-                                    <input type="number" id="input-lon" class="w-full px-3 py-2 border border-outline-variant rounded bg-surface focus:ring-1 focus:border-primary" placeholder="Ej. -58.8801" step="0.0001">
+                                <div class="w-full bg-outline-variant h-1 rounded-full overflow-hidden">
+                                    <div class="bg-secondary h-full w-[0%]"></div>
                                 </div>
-                                <div>
-                                    <label class="text-[10px] font-bold text-on-surface-variant mb-1 block">FECHA DE IMAGEN</label>
-                                    <input type="date" id="input-date" class="w-full px-3 py-2 border border-outline-variant rounded bg-surface focus:ring-1 focus:border-primary" value="2021-11-25">
-                                </div>
-                                <button onclick="triggerPrediction()" class="w-full mt-4 bg-primary text-on-primary py-3 rounded-lg font-label-bold shadow-md hover:opacity-90 flex justify-center items-center gap-2 transition-all">
-                                    <span class="material-symbols-outlined text-[18px]">radar</span>
-                                    Analizar Riesgo
-                                </button>
-                                <p class="text-[10px] text-center text-outline">Tip: Podés hacer clic en cualquier lugar del mapa para autocompletar las coordenadas.</p>
                             </div>
                         </div>
 
-                        <!-- Prediction Result Card -->
-                        <div id="prediction-card" class="bg-surface-container-low border border-outline-variant p-4 rounded-xl text-on-surface transition-opacity hidden">
+                        <!-- Risk Analysis Summary Card -->
+                        <div id="prediction-card" class="bg-primary-container p-4 rounded-xl text-on-primary transition-opacity hidden">
                             <div class="flex items-center gap-2 mb-3">
-                                <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">analytics</span>
-                                <h4 class="font-label-bold uppercase text-primary">Resultado de Modelo</h4>
+                                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">warning</span>
+                                <h4 class="font-label-bold uppercase text-on-primary">Análisis de Riesgo</h4>
                             </div>
                             <div id="prediction-content">
                                 <!-- Filled via JS -->
@@ -677,6 +851,39 @@ html.dark {
 
 
         </main>
+    </div>
+
+    <!-- Gemini Modal (Alert Preview) -->
+    <div id="gemini-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeGeminiModal()"></div>
+        <div class="relative bg-surface rounded-xl shadow-2xl w-[800px] max-w-[95vw] border border-outline-variant flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest rounded-t-xl">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-secondary">campaign</span>
+                    <h3 class="font-headline-md text-primary" id="gemini-title">Vista Previa de Alerta (Generada por IA)</h3>
+                </div>
+                <button onclick="closeGeminiModal()" class="text-on-surface-variant hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <p class="text-sm text-on-surface-variant mb-4">El asistente inteligente ha redactado el siguiente correo basado en el contexto del campo y el riesgo detectado. Puedes editar el texto antes de enviarlo.</p>
+                <div class="mb-4">
+                    <label class="block text-sm font-label-bold text-on-surface-variant mb-1">Asunto</label>
+                    <input id="gemini-asunto" type="text" class="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary outline-none font-bold" />
+                </div>
+                <div>
+                    <label class="block text-sm font-label-bold text-on-surface-variant mb-1">Cuerpo del Mensaje</label>
+                    <textarea id="gemini-cuerpo" rows="12" class="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary outline-none"></textarea>
+                </div>
+            </div>
+            <div class="p-4 border-t border-outline-variant flex justify-end gap-3 bg-surface-container-lowest rounded-b-xl">
+                <button onclick="closeGeminiModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg font-bold transition-colors border border-outline-variant">Cancelar</button>
+                <button onclick="confirmarEnvioAlerta()" class="px-4 py-2 bg-secondary text-on-secondary rounded-lg font-bold hover:opacity-90 flex items-center gap-2 transition-opacity">
+                    <span class="material-symbols-outlined">send</span> Confirmar y Enviar
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts (SPA Logic & Map Integration) -->

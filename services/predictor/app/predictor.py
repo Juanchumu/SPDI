@@ -315,7 +315,7 @@ def predecir_xgboost(model, ruta_stack, orden_id):
     # Concatenar: (H*W, 17)
     x_flat = np.concatenate([x_s2_flat, x_osm_flat], axis=1)
     
-    # Predecir probabilidades
+    # Predecir probabilidades usando todas las 17 variables
     pred_proba = model.predict_proba(x_flat)[:, 1]  # (H*W,)
     pred = pred_proba.reshape(H, W)  # (H, W)
     

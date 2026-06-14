@@ -8,8 +8,14 @@ import requests
 from datetime import timedelta, datetime, timezone
 
 from db.db import SessionLocal
-from db.models import Orden, Entrenamiento, Modelos, Descargas, WorkersLogs, Informes
+from db.models import Orden, Entrenamiento, Modelos, Descargas, WorkersLogs, Informes, Cliente, AreaAsegurada
 import os
+import google.generativeai as genai
+
+# Configuración de Gemini (Se asume que la key se carga en las variables de entorno de docker-compose)
+gemini_api_key = os.getenv("GEMINI_API_KEY", "")
+if gemini_api_key:
+    genai.configure(api_key=gemini_api_key)
 
 
 # Guardamos el timestamp al momento de cargar el script
@@ -99,6 +105,42 @@ class OrdenRequest(BaseModel):
     lat: float
     lon: float
 
+class AreaAseguradaResponse(BaseModel):
+    id: int
+    nombre_lote: str
+    latitud: float
+    longitud: float
+    riesgo_promedio: float | None = None
+    descripcion_entorno: str | None = None
+
+    class Config:
+        orm_mode = True
+
+class ClienteResponse(BaseModel):
+    id: int
+    nombre: str
+    codigo_cliente: str
+    email: str | None = None
+    telefono: str | None = None
+
+    class Config:
+        orm_mode = True
+
+class ClienteCreate(BaseModel):
+    nombre: str
+    codigo_cliente: str
+    email: str | None = None
+    telefono: str | None = None
+
+class AreaAseguradaCreate(BaseModel):
+    nombre_lote: str
+    latitud: float
+    longitud: float
+    descripcion_entorno: str | None = None
+
+class AlertaPreviewRequest(BaseModel):
+    area_id: int | None = None # si viene vacío se hace un batch de todas las áreas
+
 
 def get_db():
     db = SessionLocal()
@@ -118,7 +160,7 @@ def crear_orden(request: OrdenRequest, db: Session = Depends(get_db)):
     }
     nueva = Orden(
         args=json.dumps(args),
-        status="Pendiente.."
+        status="Lista para el worker.."
     )
     db.add(nueva)
     db.commit()
@@ -306,3 +348,108 @@ def ultimo_informe(db: Session = Depends(get_db)):
             "created_at": informe.created_at.isoformat(),
             "contenido": informe.contenido
             }
+
+@app.get("/api/v1/clientes", response_model=list[ClienteResponse])
+def listar_clientes(db: Session = Depends(get_db)):
+    return db.query(Cliente).order_by(Cliente.id.asc()).all()
+
+@app.get("/api/v1/clientes/{cliente_id}/areas", response_model=list[AreaAseguradaResponse])
+def listar_areas_cliente(cliente_id: int, db: Session = Depends(get_db)):
+    cliente = db.query(Cliente).filter(Cliente.id == cliente_id).first()
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    return db.query(AreaAsegurada).filter(AreaAsegurada.cliente_id == cliente_id).order_by(AreaAsegurada.id.asc()).all()
+
+@app.post("/api/v1/clientes", response_model=ClienteResponse, status_code=status.HTTP_201_CREATED)
+def crear_cliente(req: ClienteCreate, db: Session = Depends(get_db)):
+    nuevo = Cliente(nombre=req.nombre, codigo_cliente=req.codigo_cliente, email=req.email, telefono=req.telefono)
+    db.add(nuevo)
+    db.commit()
+    db.refresh(nuevo)
+    return nuevo
+
+@app.post("/api/v1/clientes/{cliente_id}/areas", response_model=AreaAseguradaResponse, status_code=status.HTTP_201_CREATED)
+def crear_area_cliente(cliente_id: int, req: AreaAseguradaCreate, db: Session = Depends(get_db)):
+    cliente = db.query(Cliente).filter(Cliente.id == cliente_id).first()
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    nueva = AreaAsegurada(cliente_id=cliente_id, nombre_lote=req.nombre_lote, latitud=req.latitud, longitud=req.longitud, descripcion_entorno=req.descripcion_entorno)
+    db.add(nueva)
+    db.commit()
+    db.refresh(nueva)
+    return nueva
+
+@app.post("/api/v1/clientes/{cliente_id}/alerta/preview")
+def preview_alerta_gemini(cliente_id: int, req: AlertaPreviewRequest, db: Session = Depends(get_db)):
+    if not gemini_api_key:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY no configurada en el servidor.")
+        
+    cliente = db.query(Cliente).filter(Cliente.id == cliente_id).first()
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+        
+    query = db.query(AreaAsegurada).filter(AreaAsegurada.cliente_id == cliente_id)
+    if req.area_id:
+        query = query.filter(AreaAsegurada.id == req.area_id)
+    areas = query.all()
+    
+    if not areas:
+        raise HTTPException(status_code=404, detail="No hay áreas para generar alerta.")
+
+    # Para este MVP si se piden múltiples áreas, generamos el texto para la que tiene el riesgo más alto o las concatenamos.
+    # Por simplicidad del prompt pedido, vamos a tomar el área con el mayor riesgo_promedio de la lista obtenida.
+    area_critica = max(areas, key=lambda a: a.riesgo_promedio if a.riesgo_promedio is not None else -1)
+    riesgo_val = area_critica.riesgo_promedio if area_critica.riesgo_promedio is not None else 0
+    nivel_riesgo = "ALTO" if riesgo_val > 0.5 else "MEDIO" if riesgo_val > 0.2 else "BAJO"
+    
+    # Mock NDMI/NDVI for demonstration purposes since we don't have them straight from DB yet
+    ndmi_valor = "-0.15"
+    ndvi_valor = "0.45"
+    
+    prompt = f'''Actúa como un Asistente Experto en Gestión de Riesgos Agropecuarios y Comunicación de Emergencias. Tu tarea es redactar un correo electrónico personalizado de alerta de riesgo de incendio para un productor agropecuario. El tono debe ser sumamente amable, preventivo, claro y de apoyo (compañerismo), evitando alarmismos innecesarios pero manteniendo la importancia de la prevención.
+
+Se te proporcionarán los siguientes datos específicos extraídos de la base de datos:
+- Nombre del Cliente (Dueño/Gestor): {cliente.nombre}
+- Nombre del Campo/Establecimiento: {area_critica.nombre_lote}
+- Nivel de Riesgo Detectado: {nivel_riesgo} (Valores posibles: MEDIO o ALTO)
+- Índices de Monitoreo Satelital Recientes: NDMI (Humedad de vegetación) = {ndmi_valor}, NDVI (Biomasa) = {ndvi_valor}
+- Directivas de Acción Interna (Extraídas del perfil del campo): {area_critica.descripcion_entorno or 'Sin directivas específicas.'}
+
+INSTRUCCIONES DE REDACCIÓN:
+1. Saluda cordialmente al cliente por su nombre.
+2. Infórmale de manera empática que el sistema de monitoreo satelital ha detectado un riesgo [{nivel_riesgo}] de incendio en su establecimiento "{area_critica.nombre_lote}", debido a un descenso en el índice de humedad de la vegetación (NDMI: {ndmi_valor}).
+3. Incorpora de forma natural, fluida y conversacional las "Directivas de Acción Interna" proporcionadas (por ejemplo, recordarles de manera amable que avisen a su grupo de WhatsApp de caporales, que coordinen con los encargados del campo, o que estén atentos a los canales informativos locales). No los listes de forma robótica; intégralos como consejos sugeridos para proteger el establecimiento.
+4. Cierra el correo ofreciendo el apoyo de la gerencia de riesgos y con un saludo cálido.
+
+RESTRICCIÓN DE FORMATO: Debe devolver ÚNICAMENTE un objeto JSON válido, sin bloques de código Markdown (no uses ```json), sin texto antes ni después. El JSON debe tener exactamente esta estructura:
+{{
+  "asunto": "Texto corto y claro para el asunto del mail, que incluya el nombre del campo y el nivel de alerta",
+  "cuerpo_mail": "Texto completo del cuerpo del mail estructurado con saltos de línea (\\n) para una lectura cómoda."
+}}'''
+
+    try:
+        model = genai.GenerativeModel("gemini-1.5-pro-latest")
+        response = model.generate_content(prompt)
+        # Parse JSON
+        import json
+        text = response.text.strip()
+        if text.startswith("```json"):
+            text = text[7:]
+        if text.endswith("```"):
+            text = text[:-3]
+        data = json.loads(text.strip())
+        return data
+    except Exception as e:
+        print("Gemini Error:", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/clientes/{cliente_id}/alerta/send")
+def send_alerta(cliente_id: int, req: dict, db: Session = Depends(get_db)):
+    # Aquí iría la lógica de SMTP.
+    print("=========================================")
+    print(f"SIMULANDO ENVIO DE MAIL PARA CLIENTE {cliente_id}")
+    print(f"ASUNTO: {req.get('asunto')}")
+    print("CUERPO:")
+    print(req.get('cuerpo_mail'))
+    print("=========================================")
+    return {"status": "ok", "message": "Correo enviado con éxito (Simulado)."}

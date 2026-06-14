@@ -11,7 +11,7 @@ services:
     volumes:
       # en produccion no se utilizan locales
       #- ./data/postgres:/var/lib/postgresql/data
-      - postgre_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d mydb"]
       interval: 5s
@@ -41,7 +41,7 @@ services:
       - DB_NAME=${DB_NAME}
       - DATABASE_URL=${DATABASE_URL}
     # Montamos el código fuente para Hot Reload
-    volumes:
+    # volumes:
       # en produccion no se utilizan locales
       #- ./api/app:/app/app
     # Lanzamos la API con --reload
@@ -87,7 +87,7 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - DB_MINIO_USER=${DB_MINIO_USER}
       - DB_MINIO_PASS=${DB_MINIO_PASS}
-    volumes:                           
+    # volumes:                           
       # en produccion no se utilizan locales
       # - ./data:/app/data               # 
       # - ./descargas:/app/descargas     # 
@@ -114,8 +114,8 @@ services:
       - DB_MINIO_USER=${DB_MINIO_USER}
       - DB_MINIO_PASS=${DB_MINIO_PASS}
     volumes:
-      #- ./dataset:/app/dataset
-      #- ../data/raw:/app/data/raw:ro
+      - ./dataset:/app/dataset
+      - ../data/raw:/app/data/raw:ro
     restart: unless-stopped
   analista:
     build:
@@ -208,7 +208,7 @@ services:
 
       - DB_MINIO_USER=${DB_MINIO_USER}
       - DB_MINIO_PASS=${DB_MINIO_PASS}
-    volumes:
+    # volumes:
     
       # en produccion no se utilizan locales
       #- ./tmp:/app/tmp

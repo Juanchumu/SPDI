@@ -101,21 +101,127 @@ document.addEventListener('DOMContentLoaded', () => {
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    // Click on map to set coordinates
-    map.on('click', function(e) {
-        const lat = parseFloat(e.latlng.lat).toFixed(4);
-        const lon = parseFloat(e.latlng.lng).toFixed(4);
-        
-        document.getElementById('input-lat').value = lat;
-        document.getElementById('input-lon').value = lon;
-        
-        if (marker) {
-            marker.setLatLng(e.latlng);
-        } else {
-            marker = L.marker(e.latlng).addTo(map);
-        }
-    });
+    // Click on map is disabled for manager view to avoid confusion, or can be kept.
+    // Cargar clientes en el select
+    loadClients();
 });
+
+let currentClientAreas = [];
+let clientMarkers = [];
+
+async function loadClients() {
+    try {
+        const resp = await fetch(`${API_URL}/clientes`);
+        if (!resp.ok) return;
+        const clientes = await resp.json();
+        
+        // Update main select
+        const selectMain = document.getElementById('client-select');
+        if(selectMain) {
+            selectMain.innerHTML = '<option value="">Seleccionar Cliente...</option>';
+            clientes.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.dataset.codigo = c.codigo_cliente || '';
+                opt.dataset.email = c.email || '';
+                opt.dataset.telefono = c.telefono || '';
+                opt.dataset.nombre = c.nombre || '';
+                opt.innerText = c.nombre;
+                selectMain.appendChild(opt);
+            });
+        }
+
+        // Update alta-area select
+        const selectAlta = document.getElementById('alta-area-cliente');
+        if(selectAlta) {
+            selectAlta.innerHTML = '<option value="">Seleccionar Cliente...</option>';
+            clientes.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.innerText = c.nombre;
+                selectAlta.appendChild(opt);
+            });
+        }
+    } catch(e) {
+        console.error("Error cargando clientes:", e);
+    }
+}
+
+async function loadClientAreas() {
+    const select = document.getElementById('client-select');
+    if(!select) return;
+    const clientId = select.value;
+    
+    // Update UI headers
+    if(clientId) {
+        const opt = select.selectedOptions[0];
+        document.getElementById('client-name-display').innerText = opt.dataset.nombre;
+        document.getElementById('client-code-display').innerText = opt.dataset.codigo;
+        document.getElementById('client-id-display').innerText = `ID: ${opt.dataset.codigo}`;
+        document.getElementById('client-email-display').innerText = opt.dataset.email || '---';
+        document.getElementById('client-phone-display').innerText = opt.dataset.telefono || '---';
+    } else {
+        document.getElementById('client-name-display').innerText = 'Seleccione un Cliente';
+        document.getElementById('client-code-display').innerText = 'EXP-2024-0000';
+        document.getElementById('client-id-display').innerText = 'ID: -';
+        document.getElementById('client-email-display').innerText = '---';
+        document.getElementById('client-phone-display').innerText = '---';
+        document.getElementById('areas-table-body').innerHTML = '<tr><td class="p-3 border-b border-outline-variant" colspan="2">Seleccione un cliente...</td></tr>';
+        document.getElementById('points-count').innerText = '0 PUNTOS';
+        clearMapMarkers();
+        return;
+    }
+
+    try {
+        const resp = await fetch(`${API_URL}/clientes/${clientId}/areas`);
+        if(!resp.ok) return;
+        currentClientAreas = await resp.json();
+        
+        const tbody = document.getElementById('areas-table-body');
+        tbody.innerHTML = '';
+        document.getElementById('points-count').innerText = `${currentClientAreas.length} PUNTOS`;
+        
+        clearMapMarkers();
+        let bounds = [];
+
+        currentClientAreas.forEach(area => {
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-surface-container-low transition-colors group';
+            tr.innerHTML = `
+                <td class="p-3 border-b border-outline-variant">
+                    <p class="font-bold text-primary text-sm">${area.nombre_lote}</p>
+                </td>
+                <td class="p-3 border-b border-outline-variant">
+                    <p class="text-on-surface-variant text-[10px]">${area.latitud.toFixed(4)}°, ${area.longitud.toFixed(4)}°</p>
+                </td>
+                <td class="p-3 border-b border-outline-variant text-right">
+                    <button onclick="triggerIndividualPrediction(${area.id}, ${area.latitud}, ${area.longitud})" class="text-secondary hover:text-secondary-container transition-colors" title="Actualizar Predicción">
+                        <span class="material-symbols-outlined text-[18px]">refresh</span>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+
+            const marker = L.marker([area.latitud, area.longitud]).addTo(map);
+            marker.bindPopup(`<b>${area.nombre_lote}</b>`);
+            clientMarkers.push(marker);
+            bounds.push([area.latitud, area.longitud]);
+        });
+
+        if(bounds.length > 0) {
+            map.fitBounds(bounds, { padding: [50, 50] });
+        }
+    } catch(e) {
+        console.error("Error loading areas:", e);
+    }
+}
+
+function clearMapMarkers() {
+    clientMarkers.forEach(m => map.removeLayer(m));
+    clientMarkers = [];
+    drawnRectangles.forEach(r => map.removeLayer(r));
+    drawnRectangles = [];
+}
 
 function drawRiskBox(lat, lon, riskPercent) {
     const kmDegrees = 0.09; // Approx 10km radius -> 20km square
@@ -243,40 +349,255 @@ async function fetchExistingOrders() {
     }
 }
 
-// API interaction
 async function triggerPrediction() {
-    const lat = parseFloat(document.getElementById('input-lat').value);
-    const lon = parseFloat(document.getElementById('input-lon').value);
-    const dateVal = document.getElementById('input-date').value.replace(/-/g, '');
-
-    if (isNaN(lat) || isNaN(lon) || !dateVal) {
-        alert("Por favor completa latitud, longitud y fecha.");
+    const clientId = document.getElementById('client-select') ? document.getElementById('client-select').value : null;
+    if(!clientId || currentClientAreas.length === 0) {
+        alert("Selecciona un cliente con áreas definidas.");
         return;
     }
 
-    updateStatusBanner('Solicitando análisis a la API...');
+    updateStatusBanner('Solicitando análisis batch a la API...');
     const card = document.getElementById('prediction-card');
-    card.classList.add('hidden');
+    if(card) card.classList.add('hidden');
 
+    const dateVal = "20211125"; // Por defecto usamos una fecha conocida con datos
+
+    for(const area of currentClientAreas) {
+        try {
+            const resp = await fetch(`${API_URL}/orden`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dia: parseInt(dateVal), lat: area.latitud, lon: area.longitud })
+            });
+            if(resp.ok) {
+                const data = await resp.json();
+                const newOrder = { id: data.id, lat: area.latitud, lon: area.longitud, dia: dateVal, status: 'Pendiente', prediction: null };
+                ordersDB.unshift(newOrder);
+                pollOrder(data.id, area.latitud, area.longitud);
+            }
+        } catch(e) {
+            console.error("Error creating order for area", area, e);
+            updateStatusBanner('Error de conexión con API', true);
+        }
+    }
+    updateDashboardTable();
+}
+
+async function triggerIndividualPrediction(areaId, lat, lon) {
+    const dateVal = "20211125";
+    updateStatusBanner('Solicitando actualización individual...');
+    
     try {
         const resp = await fetch(`${API_URL}/orden`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ dia: parseInt(dateVal), lat, lon })
         });
+        if(resp.ok) {
+            const data = await resp.json();
+            const newOrder = { id: data.id, lat, lon, dia: dateVal, status: 'Pendiente', prediction: null };
+            ordersDB.unshift(newOrder);
+            pollOrder(data.id, lat, lon);
+            updateDashboardTable();
+            navTo('dashboard'); // opcional, para ver cómo procesa
+        }
+    } catch(e) {
+        console.error("Error individual", e);
+        updateStatusBanner('Error en API', true);
+    }
+}
+
+// ==========================================
+// ALTA DE CLIENTES Y CAMPOS
+// ==========================================
+let isNewClientMode = true;
+let altaMap = null;
+let altaMarker = null;
+
+// Initialize Alta Logic
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleNew = document.getElementById('toggle-new');
+    const toggleExisting = document.getElementById('toggle-existing');
+    const secNew = document.getElementById('section-cliente-nuevo');
+    const secExist = document.getElementById('section-cliente-existente');
+    
+    if(toggleNew && toggleExisting) {
+        toggleNew.addEventListener('click', () => {
+            isNewClientMode = true;
+            toggleNew.classList.add('bg-primary', 'text-white', 'shadow-sm');
+            toggleNew.classList.remove('text-on-surface-variant');
+            toggleExisting.classList.remove('bg-primary', 'text-white', 'shadow-sm');
+            toggleExisting.classList.add('text-on-surface-variant');
+            secNew.classList.remove('hidden');
+            secNew.classList.add('grid');
+            secExist.classList.add('hidden');
+            
+            // Requisitos de form
+            document.getElementById('alta-cli-nombre').required = true;
+            document.getElementById('alta-cli-codigo').required = true;
+            document.getElementById('alta-area-cliente').required = false;
+        });
+
+        toggleExisting.addEventListener('click', () => {
+            isNewClientMode = false;
+            toggleExisting.classList.add('bg-primary', 'text-white', 'shadow-sm');
+            toggleExisting.classList.remove('text-on-surface-variant');
+            toggleNew.classList.remove('bg-primary', 'text-white', 'shadow-sm');
+            toggleNew.classList.add('text-on-surface-variant');
+            secExist.classList.remove('hidden');
+            secNew.classList.add('hidden');
+            secNew.classList.remove('grid');
+            
+            // Requisitos de form
+            document.getElementById('alta-cli-nombre').required = false;
+            document.getElementById('alta-cli-codigo').required = false;
+            document.getElementById('alta-area-cliente').required = true;
+        });
+    }
+
+    // Initialize the second map when navigating to 'alta' view
+    document.getElementById('nav-alta')?.addEventListener('click', () => {
+        if(!altaMap && document.getElementById('alta-leaflet-map')) {
+            altaMap = L.map('alta-leaflet-map', {
+                zoomControl: true,
+                attributionControl: false
+            }).setView([-34.6037, -58.3816], 5);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(altaMap);
+            
+            altaMarker = L.marker([-34.6037, -58.3816], { draggable: true }).addTo(altaMap);
+            
+            altaMarker.on('dragend', function (e) {
+                document.getElementById('alta-area-lat').value = altaMarker.getLatLng().lat.toFixed(4);
+                document.getElementById('alta-area-lon').value = altaMarker.getLatLng().lng.toFixed(4);
+            });
+            altaMap.on('click', function(e) {
+                altaMarker.setLatLng(e.latlng);
+                document.getElementById('alta-area-lat').value = e.latlng.lat.toFixed(4);
+                document.getElementById('alta-area-lon').value = e.latlng.lng.toFixed(4);
+            });
+        }
         
-        if (!resp.ok) throw new Error('Error al crear la orden.');
+        // Fix Leaflet rendering inside hidden div bug
+        if(altaMap) {
+            setTimeout(() => altaMap.invalidateSize(), 100);
+        }
+    });
+});
+
+async function guardarRegistroAlta(e) {
+    e.preventDefault();
+    
+    // Obtener campos de Área
+    const nombreLote = document.getElementById('alta-area-lote').value;
+    const lat = parseFloat(document.getElementById('alta-area-lat').value);
+    const lon = parseFloat(document.getElementById('alta-area-lon').value);
+    const desc = document.getElementById('alta-area-desc').value;
+    
+    let clientId = null;
+
+    try {
+        if(isNewClientMode) {
+            const nombre = document.getElementById('alta-cli-nombre').value;
+            const codigo = document.getElementById('alta-cli-codigo').value;
+            const email = document.getElementById('alta-cli-email').value;
+            const telefono = document.getElementById('alta-cli-telefono').value;
+            
+            const respCli = await fetch(`${API_URL}/clientes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, codigo_cliente: codigo, email, telefono })
+            });
+            if(!respCli.ok) throw new Error("Error al crear cliente. Puede que el código de cliente ya exista.");
+            const dataCli = await respCli.json();
+            clientId = dataCli.id;
+        } else {
+            clientId = document.getElementById('alta-area-cliente').value;
+            if(!clientId) { alert("Seleccione un cliente registrado primero."); return; }
+        }
+        
+        // Crear Área
+        const respArea = await fetch(`${API_URL}/clientes/${clientId}/areas`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre_lote: nombreLote, latitud: lat, longitud: lon, descripcion_entorno: desc })
+        });
+        if(!respArea.ok) throw new Error("Error al crear campo en el servidor.");
+        
+        alert("Registro de cliente y/o campo guardado exitosamente");
+        document.getElementById('form-alta-registro').reset();
+        
+        // Si creamos un cliente nuevo, recargar selects globales
+        if(isNewClientMode) {
+            loadClients();
+        }
+        
+    } catch(err) {
+        console.error(err);
+        alert(err.message || "Error al guardar el registro");
+    }
+}
+
+// ==========================================
+// GEMINI ALERTAS
+// ==========================================
+async function enviarAlerta() {
+    const clientId = document.getElementById('client-select') ? document.getElementById('client-select').value : null;
+    if(!clientId || currentClientAreas.length === 0) {
+        alert("Selecciona un cliente con áreas definidas.");
+        return;
+    }
+    
+    updateStatusBanner('Redactando alerta con Gemini AI...', false, false);
+    document.getElementById('map-status-banner').classList.remove('hidden');
+    
+    try {
+        const resp = await fetch(`${API_URL}/clientes/${clientId}/alerta/preview`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        });
+        
+        if(!resp.ok) throw new Error("Fallo la generación");
         const data = await resp.json();
         
-        // Add to DB
-        const newOrder = { id: data.id, lat, lon, dia: dateVal, status: 'Pendiente', prediction: null };
-        ordersDB.unshift(newOrder);
-        updateDashboardTable();
+        document.getElementById('gemini-asunto').value = data.asunto || '';
+        document.getElementById('gemini-cuerpo').value = data.cuerpo_mail || '';
+        
+        document.getElementById('map-status-banner').classList.add('hidden');
+        
+        // Show modal
+        const modal = document.getElementById('gemini-modal');
+        modal.classList.remove('hidden');
+    } catch(e) {
+        console.error(e);
+        updateStatusBanner('Error conectando con Gemini', true);
+        setTimeout(() => document.getElementById('map-status-banner').classList.add('hidden'), 3000);
+    }
+}
 
-        pollOrder(data.id, lat, lon);
-    } catch (err) {
-        updateStatusBanner('Error de conexión con API', true);
-        console.error(err);
+function closeGeminiModal() {
+    document.getElementById('gemini-modal').classList.add('hidden');
+}
+
+async function confirmarEnvioAlerta() {
+    const clientId = document.getElementById('client-select').value;
+    const asunto = document.getElementById('gemini-asunto').value;
+    const cuerpo = document.getElementById('gemini-cuerpo').value;
+    
+    try {
+        const resp = await fetch(`${API_URL}/clientes/${clientId}/alerta/send`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ asunto: asunto, cuerpo_mail: cuerpo })
+        });
+        if(resp.ok) {
+            closeGeminiModal();
+            updateStatusBanner('Alerta enviada exitosamente (Simulada).', false, true);
+            setTimeout(() => document.getElementById('map-status-banner').classList.add('hidden'), 4000);
+        }
+    } catch(e) {
+        console.error(e);
+        alert("Error al enviar");
     }
 }
 
@@ -468,8 +789,13 @@ async function executeSearch() {
     const query = input.value.trim();
     if(!query) return;
 
-    // Switch to Map view if not already there
-    navTo('map');
+    const isAltaActive = document.getElementById('content-alta').classList.contains('active');
+    
+    // Switch to Map view if not in Alta or Map
+    if(!isAltaActive && !document.getElementById('content-map').classList.contains('active')) {
+        navTo('map');
+    }
+
     // Check if query is directly coordinates (lat, lon)
     const coordMatch = query.match(/^\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)\s*$/);
     
@@ -503,24 +829,37 @@ async function executeSearch() {
         }
     }
 
-    // Update inputs
-        document.getElementById('input-lat').value = lat.toFixed(4);
-        document.getElementById('input-lon').value = lon.toFixed(4);
+    if(isAltaActive) {
+        // Update Alta inputs
+        document.getElementById('alta-area-lat').value = lat.toFixed(4);
+        document.getElementById('alta-area-lon').value = lon.toFixed(4);
 
-        // Update Map Marker
-        const latlng = [lat, lon];
-        if (marker) {
-            marker.setLatLng(latlng);
-        } else {
-            marker = L.marker(latlng).addTo(map);
+        if(typeof altaMarker !== 'undefined') {
+            altaMarker.setLatLng([lat, lon]);
+        } else if(typeof altaMap !== 'undefined') {
+            altaMarker = L.marker([lat, lon], {draggable: true}).addTo(altaMap);
         }
-        
-        map.flyTo(latlng, 12, { duration: 1.2 });
-        updateStatusBanner(`Ubicación encontrada: ${displayName}`, false, true);
-        
-        setTimeout(() => {
-            document.getElementById('map-status-banner').classList.add('hidden');
-        }, 4000);
+        if(typeof altaMap !== 'undefined') {
+            altaMap.setView([lat, lon], 12);
+        }
+    } else {
+        // Update main Map inputs
+        const inputLat = document.getElementById('input-lat');
+        const inputLon = document.getElementById('input-lon');
+        if(inputLat) inputLat.value = lat.toFixed(4);
+        if(inputLon) inputLon.value = lon.toFixed(4);
+
+        if (typeof marker !== 'undefined') {
+            marker.setLatLng([lat, lon]);
+        } else if (typeof map !== 'undefined') {
+            marker = L.marker([lat, lon]).addTo(map);
+        }
+        if (typeof map !== 'undefined') {
+            map.setView([lat, lon], 12);
+        }
+    }
+    
+    updateStatusBanner(''); // clear banner
 }
 
 // ==========================================
