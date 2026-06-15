@@ -47,12 +47,13 @@ def get_osm_distances(bounds, crs, shape, transform, degree_buffer=0.05, max_dis
     
     url = "https://overpass-api.de/api/interpreter"
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'User-Agent': 'SPDI-RiskManager/1.0 (bruno.w.163@gmail.com)',
+        'Content-Type': 'application/x-www-form-urlencoded',
         'Accept': 'application/json'
     }
     
     try:
-        response = requests.get(url, params={"data": query}, headers=headers, timeout=30)
+        response = requests.post(url, data={"data": query}, headers=headers, timeout=30)
         response.raise_for_status()
         osm_data = response.json()
         elements = osm_data.get("elements", [])
