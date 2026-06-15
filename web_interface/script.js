@@ -195,6 +195,9 @@ async function loadClientAreas() {
                     <p class="text-on-surface-variant text-[10px]">${area.latitud.toFixed(4)}°, ${area.longitud.toFixed(4)}°</p>
                 </td>
                 <td class="p-3 border-b border-outline-variant text-right">
+                    <button onclick="enviarAlerta(${area.id})" class="text-secondary hover:text-secondary-container transition-colors mr-2" title="Generar Alerta (Gemini)">
+                        <span class="material-symbols-outlined text-[18px]">campaign</span>
+                    </button>
                     <button onclick="triggerIndividualPrediction(${area.id}, ${area.latitud}, ${area.longitud})" class="text-secondary hover:text-secondary-container transition-colors" title="Actualizar Predicción">
                         <span class="material-symbols-outlined text-[18px]">refresh</span>
                     </button>
@@ -540,7 +543,7 @@ async function guardarRegistroAlta(e) {
 // ==========================================
 // GEMINI ALERTAS
 // ==========================================
-async function enviarAlerta() {
+async function enviarAlerta(areaId = null) {
     const clientId = document.getElementById('client-select') ? document.getElementById('client-select').value : null;
     if(!clientId || currentClientAreas.length === 0) {
         alert("Selecciona un cliente con áreas definidas.");
@@ -554,7 +557,7 @@ async function enviarAlerta() {
         const resp = await fetch(`${API_URL}/clientes/${clientId}/alerta/preview`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
+            body: JSON.stringify(areaId ? { area_id: areaId } : {})
         });
         
         if(!resp.ok) throw new Error("Fallo la generación");
