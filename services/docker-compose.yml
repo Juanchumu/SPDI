@@ -40,10 +40,10 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
       - DATABASE_URL=${DATABASE_URL}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     # Montamos el código fuente para Hot Reload
-    # volumes:
-      # en produccion no se utilizan locales
-      #- ./api/app:/app/app
+    volumes:
+      - ./api/app:/app/app
     # Lanzamos la API con --reload
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     restart: unless-stopped
