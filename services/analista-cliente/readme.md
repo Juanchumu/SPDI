@@ -16,10 +16,17 @@ a la empresa aseguradora para los proximos pasos.
 esto se busca como: informe para mi (cliente) de la tabla informes clientes
 
 
-
+curl -X POST "http://localhost:8000/api/v1/informes/clientes" \
+-H "Content-Type: application/json" \
+-d '{
+  "responsable": "ricardo",
+  "cliente": "Acme Seguros"
+}'
 
 
 curl -X GET "http://localhost:8000/api/v1/informes/clientes/2"
+
+
 {"id":2,"responsable":"ricardo","cliente":"juan","estado":"listo","contenido":"**Asunto: Anuncio de Evaluación de Riesgo de Incendio - Propiedad de Juan**\n\nEstimado Juan,\n\nLe escribimos en relación con la evaluación reciente de riesgo de incendio realizada para su propiedad ubicada en Latitud -34.9118363580797 y Longitud -59.83016967773438 el día 12 de junio de 2026.\n\nNos complace informarle que, según nuestro análisis, el **riesgo actual es bajo**. Esto significa que la probabilidad de un incendio en su zona es baja en este momento. Sin embargo, queremos insistir en la importancia de mantener siempre medidas preventivas para proteger lo más valioso: su hogar y su familia.\n\n**Recomendaciones:**\n\n*   Verifique regularmente sus instalaciones eléctricas y sistemas de calefacción.\n*   Mantenga extintores en lugares accesibles y asegúrese de que sus ocupantes sepan cómo usarlos.\n*   Elimine cualquier material inflamable cerca de fuentes de calor y no fume dentro de la propiedad.\n*   Tenga un plan de evacuación familiar y practíquenlo regularmente.\n\nAgradecemos su confianza en nuestra compañía aseguradora. Ante cualquier duda o si desea conocer más detalles sobre nuestros productos y servicios, no dude en contactarnos para recibir asistencia y explorar los próximos pasos de protección para su hogar. \n\nAtentamente,\n\n[Nombre de la Compañía Aseguradora]\n","created_at":"2026-06-17T21:40:55.971525","updated_at":"2026-06-17T21:42:24.806497"}
 
 
