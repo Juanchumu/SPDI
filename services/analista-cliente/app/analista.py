@@ -105,39 +105,26 @@ def run():
                 print("No hay informes requeridos. Durmiendo...")
                 time.sleep(60)
                 continue
-
             print(f"Generando informe para {informe.cliente}")
-
-            prediccion = obtener_ultima_prediccion(
-                db,
-                informe.responsable
-            )
-
+            prediccion = obtener_ultima_prediccion(db,informe.cliente)
             if prediccion is None:
                 print("No se encontraron predicciones para el cliente.")
-                time.sleep(60)
-                continue
-
-            texto = generar_informe(
-                informe.cliente,
-                prediccion
-            )
-
-            informe.contenido = texto
-            informe.estado = "listo"
-            informe.updated_at = datetime.utcnow()
-
+                print("Como minimo tiene que existir una.")
+                informe.estado = "error"
+                informe.updated_at = datetime.utcnow()
+            else:
+                texto = generar_informe(informe.cliente,prediccion)
+                informe.contenido = texto
+                informe.estado = "listo"
+                informe.updated_at = datetime.utcnow()
+                print(f"Informe generado para {informe.cliente}")
             db.commit()
-
-            print(f"Informe generado para {informe.cliente}")
-
         except Exception as e:
             db.rollback()
             print(f"Error: {e}")
 
         finally:
             db.close()
-
         time.sleep(10)
 
 
