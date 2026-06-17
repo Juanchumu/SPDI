@@ -190,7 +190,8 @@ def listar_ordenes(db: Session = Depends(get_db)):
             "lon": lon,
             "dia": dia,
             "status": orden.status,
-            "prediction": orden.prediccion
+            "prediction": orden.prediccion,
+            "created_at": orden.created_at.isoformat() if orden.created_at else None
         }
         resultado.append(item)
     return resultado

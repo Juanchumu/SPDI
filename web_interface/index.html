@@ -363,10 +363,6 @@ html.dark .leaflet-control-attribution {
                     <button id="theme-toggle" class="hover:bg-surface-container-low p-2 rounded-full transition-colors relative" onclick="toggleTheme()">
                         <span id="theme-icon" class="material-symbols-outlined">dark_mode</span>
                     </button>
-                    <button class="hover:bg-surface-container-low p-2 rounded-full transition-colors relative">
-                        <span class="material-symbols-outlined">notifications</span>
-                        <span class="absolute top-2 right-2 w-2 h-2 bg-secondary rounded-full"></span>
-                    </button>
                 </div>
                 <div class="flex items-center gap-3 pl-6 border-l border-outline-variant">
                     <div class="text-right">
@@ -590,7 +586,11 @@ html.dark .leaflet-control-attribution {
                                 </button>
                             </div>
                         </div>
-                        <div class="mt-6 flex flex-wrap gap-3">
+                        <div class="mt-6 flex flex-wrap items-center gap-3">
+                            <div class="relative">
+                                <input type="date" id="prediction-date" value="2021-11-25" class="px-4 py-2 bg-surface border border-outline-variant rounded-lg font-bold text-on-surface focus:outline-none focus:border-primary transition-colors">
+                                <span class="absolute top-[-10px] left-3 bg-surface px-1 text-[10px] text-outline font-bold uppercase">Fecha de Simulación</span>
+                            </div>
                             <button onclick="triggerPrediction()" class="flex-1 min-w-[140px] px-4 py-2 bg-primary-container text-on-primary-container rounded-lg font-bold hover:opacity-90 flex items-center justify-center gap-2 transition-opacity">
                                 <span class="material-symbols-outlined">update</span> Actualizar Todo
                             </button>

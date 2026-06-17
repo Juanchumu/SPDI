@@ -90,16 +90,22 @@ const API_URL = 'http://localhost:8000/api/v1';
 
 // Init Map
 document.addEventListener('DOMContentLoaded', () => {
+    const streetLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
+    const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' });
+
     map = L.map('leaflet-map', {
         zoomControl: false,
-        attributionControl: false
+        attributionControl: false,
+        layers: [streetLayer]
     }).setView([-34.6037, -58.3816], 5);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        maxZoom: 19
+    L.control.layers({
+        "Mapa Base": streetLayer,
+        "Satélite (Esri)": satLayer
     }).addTo(map);
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
+    L.control.scale({ metric: true, imperial: false }).addTo(map);
 
     // Click on map is disabled for manager view to avoid confusion, or can be kept.
     // Cargar clientes en el select
@@ -205,8 +211,52 @@ async function loadClientAreas() {
             `;
             tbody.appendChild(tr);
 
-            const marker = L.marker([area.latitud, area.longitud]).addTo(map);
-            marker.bindPopup(`<b>${area.nombre_lote}</b>`);
+            let latestOrder = ordersDB.find(o => Math.abs(o.lat - area.latitud) < 0.001 && Math.abs(o.lon - area.longitud) < 0.001 && o.status === 'Predicha');
+            
+            let riskVal = null;
+            let dateStr = 'Sin actualizaciones';
+
+            if (latestOrder && latestOrder.prediction) {
+                try {
+                    let predObj = typeof latestOrder.prediction === 'string' ? JSON.parse(latestOrder.prediction) : latestOrder.prediction;
+                    if (predObj && predObj.porcentaje_area_riesgo !== undefined) {
+                        riskVal = parseFloat(predObj.porcentaje_area_riesgo);
+                    } else {
+                        riskVal = parseFloat(latestOrder.prediction) * 100;
+                    }
+                } catch(e) {
+                    riskVal = parseFloat(latestOrder.prediction) * 100;
+                }
+                
+                if (latestOrder.created_at) {
+                    const dateObj = new Date(latestOrder.created_at + 'Z');
+                    dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString();
+                } else if (latestOrder.dia) {
+                    dateStr = "Simulación: " + latestOrder.dia;
+                }
+            } else if (area.riesgo_promedio !== null && area.riesgo_promedio !== undefined) {
+                riskVal = area.riesgo_promedio;
+                dateStr = "Promedio histórico";
+            }
+
+            drawRiskBox(area.latitud, area.longitud, riskVal, false);
+
+            let markerColor = '#717973'; 
+            if(riskVal !== null && riskVal > 50) markerColor = '#ba1a1a'; 
+            else if(riskVal !== null && riskVal >= 20) markerColor = '#ff9800'; 
+            else if(riskVal !== null) markerColor = '#4caf50';
+
+            const marker = L.circleMarker([area.latitud, area.longitud], {
+                radius: 8,
+                fillColor: markerColor,
+                color: '#ffffff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 1
+            }).addTo(map);
+
+            let displayRisk = riskVal !== null && !isNaN(riskVal) ? riskVal.toFixed(2) + '%' : 'No evaluado';
+            marker.bindPopup(`<b>${area.nombre_lote}</b><br>Riesgo: ${displayRisk}<br><span style="font-size: 10px; color: gray;">Última act: ${dateStr}</span>`);
             clientMarkers.push(marker);
             bounds.push([area.latitud, area.longitud]);
         });
@@ -226,13 +276,18 @@ function clearMapMarkers() {
     drawnRectangles = [];
 }
 
-function drawRiskBox(lat, lon, riskPercent) {
-    const kmDegrees = 0.09; // Approx 10km radius -> 20km square
+function drawRiskBox(lat, lon, riskPercent, fly = true) {
+    // 1 km radius -> 2 km x 2 km square
+    // 1 degree is approx 111 km, so 1 km is roughly 0.009 degrees.
+    const kmDegrees = 0.009; 
     const bounds = [[lat - kmDegrees, lon - kmDegrees], [lat + kmDegrees, lon + kmDegrees]];
     
-    let color = '#414844'; // Estable (Low)
-    if (riskPercent > 50) color = '#b5270e'; // Extremo (High)
-    else if (riskPercent > 20) color = '#d7e8cb'; // Moderado (Medium)
+    let color = '#717973'; // Gris (Low / Default / Null)
+    if (riskPercent !== null && riskPercent !== undefined) {
+        if (riskPercent > 50) color = '#ba1a1a'; // Rojo
+        else if (riskPercent >= 20) color = '#ff9800'; // Naranja
+        else color = '#4caf50'; // Verde
+    }
 
     const rect = L.rectangle(bounds, {
         color: color,
@@ -242,7 +297,8 @@ function drawRiskBox(lat, lon, riskPercent) {
     }).addTo(map);
     
     drawnRectangles.push(rect);
-    map.flyToBounds(bounds, { padding: [50, 50] });
+    if(fly) map.flyToBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+    return rect;
 }
 
 function updateStatusBanner(text, isError=false, isSuccess=false) {
@@ -291,9 +347,9 @@ function updateDashboardTable() {
             }
             
             if (!isNaN(pct)) {
-                if(pct > 50) resultBadge = `<span class="risk-high px-3 py-1 rounded-full text-[10px] font-bold uppercase text-error bg-error-container">Alto (${pct.toFixed(1)}%)</span>`;
-                else if(pct > 20) resultBadge = `<span class="risk-medium px-3 py-1 rounded-full text-[10px] font-bold uppercase text-on-tertiary-container bg-tertiary-container">Medio (${pct.toFixed(1)}%)</span>`;
-                else resultBadge = `<span class="risk-low px-3 py-1 rounded-full text-[10px] font-bold uppercase text-primary bg-primary-container">Bajo (${pct.toFixed(1)}%)</span>`;
+                if(pct > 50) resultBadge = `<span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase text-white" style="background-color: #ba1a1a;">Alto (${pct.toFixed(1)}%)</span>`;
+                else if(pct >= 20) resultBadge = `<span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase text-white" style="background-color: #ff9800;">Medio (${pct.toFixed(1)}%)</span>`;
+                else resultBadge = `<span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase text-white" style="background-color: #4caf50;">Bajo (${pct.toFixed(1)}%)</span>`;
             } else {
                 resultBadge = `<span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase">Error de Parseo</span>`;
             }
@@ -363,7 +419,8 @@ async function triggerPrediction() {
     const card = document.getElementById('prediction-card');
     if(card) card.classList.add('hidden');
 
-    const dateVal = "20211125"; // Por defecto usamos una fecha conocida con datos
+    let dateInput = document.getElementById('prediction-date') ? document.getElementById('prediction-date').value : "2021-11-25";
+    const dateVal = dateInput.replace(/-/g, '');
 
     for(const area of currentClientAreas) {
         try {
@@ -387,7 +444,8 @@ async function triggerPrediction() {
 }
 
 async function triggerIndividualPrediction(areaId, lat, lon) {
-    const dateVal = "20211125";
+    let dateInput = document.getElementById('prediction-date') ? document.getElementById('prediction-date').value : "2021-11-25";
+    const dateVal = dateInput.replace(/-/g, '');
     updateStatusBanner('Solicitando actualización individual...');
     
     try {
@@ -461,11 +519,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize the second map when navigating to 'alta' view
     document.getElementById('nav-alta')?.addEventListener('click', () => {
         if(!altaMap && document.getElementById('alta-leaflet-map')) {
+            const streetAlta = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
+            const satAlta = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' });
+            
             altaMap = L.map('alta-leaflet-map', {
                 zoomControl: true,
-                attributionControl: false
+                attributionControl: false,
+                layers: [streetAlta]
             }).setView([-34.6037, -58.3816], 5);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(altaMap);
+
+            L.control.layers({
+                "Mapa Base": streetAlta,
+                "Satélite (Esri)": satAlta
+            }).addTo(altaMap);
+
+            L.control.scale({ metric: true, imperial: false }).addTo(altaMap);
             
             altaMarker = L.marker([-34.6037, -58.3816], { draggable: true }).addTo(altaMap);
             
@@ -659,9 +727,9 @@ function showResultCard(predValue, lat, lon) {
     const content = document.getElementById('prediction-content');
     
     let riskLabel = 'BAJO';
-    let riskColorClass = 'text-primary';
-    if(val > 50) { riskLabel = 'EXTREMO'; riskColorClass = 'text-error'; }
-    else if(val > 20) { riskLabel = 'MEDIO'; riskColorClass = 'text-on-tertiary-container'; }
+    let riskColorClass = 'text-[#4caf50]';
+    if(val > 50) { riskLabel = 'ALTO'; riskColorClass = 'text-[#ba1a1a]'; }
+    else if(val >= 20) { riskLabel = 'MEDIO'; riskColorClass = 'text-[#ff9800]'; }
 
     content.innerHTML = `
         <div class="mb-4">
