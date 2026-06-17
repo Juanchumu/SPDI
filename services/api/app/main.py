@@ -11,7 +11,7 @@ import subprocess
 import sys
 
 from db.db import SessionLocal
-from db.models import Orden, Entrenamiento, Modelos, Descargas, InformesClientes, WorkersLogs, Informes, Usuario
+from db.models import Orden, Entrenamiento, Modelos, Descargas, InformesClientes, WorkersLogs, Informes, Usuario, InformesRiesgo
 import os
 
 from passlib.context import CryptContext
@@ -442,3 +442,27 @@ def crear_informe_riesgo(request: InformeRiesgoRequest,db: Session = Depends(get
     db.commit()
     db.refresh(informe)
     return {"id": informe.id,"estado": informe.estado}
+
+
+
+@app.get("/api/v1/informes/riesgo/{riesgo_id}")
+def obtener_informe_cliente(riesgo_id: int, db: Session = Depends(get_db) ):
+    informe = (
+        db.query(InformesRiesgo)
+        .filter(InformesRiesgo.id == riesgo_id)
+        .first()
+    )
+    if not informe:
+        raise HTTPException(status_code=404,detail="Informe de Riesgo no encontrado")
+    return {
+        "id": informe.id,
+        "responsable": informe.responsable,
+        "cliente": informe.cliente,
+        "estado": informe.estado,
+        "contenido": informe.contenido,
+        "descripcion": informe.contenido,
+        "created_at": informe.created_at,
+        "updated_at": informe.updated_at
+    }
+
+

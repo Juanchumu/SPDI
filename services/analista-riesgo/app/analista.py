@@ -157,69 +157,36 @@ Utilizar lenguaje profesional.
 # Worker principal
 # ==================================================
 def run():
-
     while True:
-
         db = SessionLocal()
-
         try:
-
             informe = obtener_requerido(db)
-
             if informe is None:
                 print("No hay informes de riesgo pendientes.")
                 time.sleep(60)
                 continue
-
-            print(
-                f"Generando informe de riesgo para {informe.cliente}"
-            )
-
+            print(f"Generando informe de riesgo para {informe.cliente}")
             predicciones = obtener_predicciones_cliente(
-                db,
-                informe.responsable
-            )
-
+                    db,informe.cliente)
             if len(predicciones) == 0:
-                print(
-                    "No existen predicciones para analizar."
-                )
-                time.sleep(60)
-                continue
-
-            predicciones_serializadas = serializar_predicciones(
-                predicciones
-            )
-
-            texto = generar_informe(
-                informe.cliente,
-                informe.descripcion,
-                predicciones_serializadas
-            )
-
-            informe.contenido = texto
-            informe.estado = "listo"
-            informe.updated_at = datetime.utcnow()
-
+                informe.estado = "error"
+                informe.updated_at = datetime.utcnow()
+                print("No existen predicciones para analizar.")
+            else:
+                predicciones_serializadas = serializar_predicciones(predicciones)
+                texto = generar_informe(
+                        informe.cliente,informe.descripcion,predicciones_serializadas)
+                informe.contenido = texto
+                informe.estado = "listo"
+                informe.updated_at = datetime.utcnow()
+                print(f"Informe de riesgo generado para {informe.cliente}")
             db.commit()
 
-            print(
-                f"Informe de riesgo generado para {informe.cliente}"
-            )
-
         except Exception as e:
-
             db.rollback()
-            print(
-                f"Error generando informe de riesgo: {e}"
-            )
-
+            print(f"Error generando informe de riesgo: {e}")
         finally:
-
             db.close()
-
         time.sleep(10)
-
-
 if __name__ == "__main__":
     run()
