@@ -105,13 +105,7 @@ Indicaciones:
 
 Generar:
 
-# Informe de Riesgo de Asegurabilidad
-
-## Resumen Ejecutivo
-
-## Análisis de Predicciones
-
-## Factores Atenuantes
+# Informe de Riesgo de Asegurabilidad (Maximo 100 Palabras).
 
 ## Factores Agravantes
 
