@@ -10,6 +10,7 @@ import os
 
 OLLAMA_URL = os.getenv("OLLAMA_URL_A")  # o B
 OLLAMA_TOKEN = os.getenv("OLLAMA_TOKEN")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL_A")
 
 if not OLLAMA_URL:
     raise RuntimeError("OLLAMA_URL_A no configurada")
@@ -18,10 +19,11 @@ if not OLLAMA_TOKEN:
     raise RuntimeError("OLLAMA_TOKEN no configurada")
 
 client = OpenAI(
-    base_url=f"{OLLAMA_URL}/v1",
+    base_url=OLLAMA_URL,
     api_key=OLLAMA_TOKEN
 )
-
+#print(OLLAMA_URL)
+#print(OLLAMA_TOKEN)
 
 
 def recolectar_metricas():
@@ -60,6 +62,10 @@ def recolectar_metricas():
 def generar_informe(metricas):
     prompt = f"""
 Analiza el estado operativo de este sistema.
+
+Estados posibles del los workers:
+
+
 Datos:
 
 {json.dumps(metricas, indent=2)}
@@ -75,7 +81,8 @@ Genera:
 La respuesta debe ser técnica y profesional.
 """
     respuesta = client.chat.completions.create(
-            model="llama3.2:3b",
+            #model="llama3.2:3b",
+            model= OLLAMA_MODEL,
             messages=[{
                 "role": "system",
                 "content": "Sos un auditor de sistemas distribuidos."
@@ -127,7 +134,7 @@ def run():
         print("Arranco el run")
         logearDB("Iniciado.")
         #Para que no haga un informe apenas inicia la api 
-        time.sleep(120)
+        time.sleep(30)
         try:
             logearDB("Generando Reporte.")
             metricas = recolectar_metricas()

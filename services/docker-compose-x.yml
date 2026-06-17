@@ -149,8 +149,10 @@ services:
       - DB_MINIO_PASS=${DB_MINIO_PASS}
         #ollama  
       - OLLAMA_URL_A=${OLLAMA_URL_A}
+      - OLLAMA_MODEL_A=${OLLAMA_MODEL_A}
       - OLLAMA_URL_B=${OLLAMA_URL_B}
       - OLLAMA_TOKEN=${OLLAMA_TOKEN}
+      
     restart: unless-stopped
 # Sucesor de analista:
 #  n8n:

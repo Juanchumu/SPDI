@@ -9,9 +9,10 @@ import os
 
 OLLAMA_URL = os.getenv("OLLAMA_URL_A")
 OLLAMA_TOKEN = os.getenv("OLLAMA_TOKEN")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL_A")
 
 client = OpenAI(
-    base_url=f"{OLLAMA_URL}/v1",
+    base_url=OLLAMA_URL,
     api_key=OLLAMA_TOKEN
 )
 
@@ -74,7 +75,7 @@ Reglas:
 """
 
     respuesta = client.chat.completions.create(
-        model="llama3.2:1b",
+        model=OLLAMA_MODEL,
         messages=[
             {
                 "role": "system",
