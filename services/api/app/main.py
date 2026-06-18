@@ -231,6 +231,40 @@ def crear_orden(request: OrdenRequest, db: Session = Depends(get_db)):
     db.refresh(nueva)
     
     return {"id": nueva.id, "status": "Pendiente.."}
+#
+# Pedir todas las ordenes
+#
+@app.get("/api/v1/orden")
+def listar_ordenes(db: Session = Depends(get_db)):
+    ordenes = db.query(Orden).order_by(Orden.created_at.desc()).limit(50).all()
+    resultado = []
+    for orden in ordenes:
+        try:
+            args = json.loads(orden.args)
+            lat = args.get("lat", 0)
+            lon = args.get("lon", 0)
+            dia = args.get("dia_de_la_imagen", "")
+        except:
+            lat = 0
+            lon = 0
+            dia = ""
+            
+        item = {
+            "id": orden.id,
+            "lat": lat,
+            "lon": lon,
+            "dia": dia,
+            "status": orden.status,
+            "prediction": orden.prediccion,
+            "created_at": orden.created_at.isoformat() if orden.created_at else None
+        }
+        resultado.append(item)
+    return resultado
+
+
+
+
+
 
 
 @app.get("/api/v1/orden/{id}")
