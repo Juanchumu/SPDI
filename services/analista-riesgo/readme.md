@@ -73,7 +73,9 @@ curl -X GET "http://localhost:8000/api/v1/informes/riesgo/3"
 
 **Factores Agravantes:** La presencia de zonas críticas de alto riesgo (predicciones “alto”) en la proximidad del cliente, junto con la reiteración de estos riesgos, es un factor preocupante. La ubicación específica también presenta vegetación abundante, lo que incrementa el potencial de propagación de incendios.
 
-**Evaluación General:** Alto\n\n**Recomendación para la Aseguradora:** Conviene solicitar información adicional. Es crucial conocer las medidas de prevención implementadas por el cliente (equipamiento, personal, acceso a agua) y la disponibilidad de recursos en caso de un incendio.  Se requiere una evaluación más profunda antes de considerar cualquier cobertura."
+**Evaluación General:** Alto
+
+**Recomendación para la Aseguradora:** Conviene solicitar información adicional. Es crucial conocer las medidas de prevención implementadas por el cliente (equipamiento, personal, acceso a agua) y la disponibilidad de recursos en caso de un incendio.  Se requiere una evaluación más profunda antes de considerar cualquier cobertura."
 
 ,"created_at":"2026-06-17T22:42:08.280635"
 ,"updated_at":"2026-06-17T22:43:34.131516"}
