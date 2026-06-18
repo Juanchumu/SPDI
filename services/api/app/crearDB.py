@@ -87,7 +87,9 @@ with engine.connect() as conn:
             password_hash varchar(255) not null,
             responsable TEXT,
             tipo TEXT,
-            descripcion TEXT
+            descripcion TEXT,
+            rol TEXT DEFAULT 'cliente',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """))
         
@@ -158,7 +160,31 @@ with engine.connect() as conn:
             updated_at TIMESTAMP
         )
         """))
+        # Cliente
+        conn.execute(text("""
+		CREATE TABLE IF NOT EXISTS clientes (
+    		id SERIAL PRIMARY KEY,
+    		nombre TEXT,
+    		codigo_cliente TEXT UNIQUE,
+    		email TEXT,
+    		telefono TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """))
 
+        # AreaAsegurada
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS areas_aseguradas (
+            id SERIAL PRIMARY KEY,
+            cliente_id INTEGER REFERENCES clientes(id),
+            nombre_lote TEXT,
+            latitud FLOAT,
+            longitud FLOAT,
+            riesgo_promedio FLOAT,
+            descripcion_entorno TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """))
        
         
         # Confirmar la transacción

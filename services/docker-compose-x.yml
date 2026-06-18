@@ -33,12 +33,14 @@ services:
       db:
         condition: service_healthy
     environment:
+      - PYTHONUNBUFFERED=1
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
       - DATABASE_URL=${DATABASE_URL}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     # Montamos el código fuente para Hot Reload
     #volumes:
     #  - ./api/app:/app/app

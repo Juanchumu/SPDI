@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html class="light h-full" lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Ignis Guard - Fire Risk Management</title>
+    
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <!-- Leaflet -->
+    <link crossorigin="" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" rel="stylesheet"/>
+    <script crossorigin="" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Tailwind Config -->
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed": "var(--color-on-tertiary-fixed)",
+                        "inverse-surface": "var(--color-inverse-surface)",
+                        "primary-container": "var(--color-primary-container)",
+                        "tertiary-fixed": "var(--color-tertiary-fixed)",
+                        "on-error": "var(--color-on-error)",
+                        "on-tertiary": "var(--color-on-tertiary)",
+                        "tertiary": "var(--color-tertiary)",
+                        "error-container": "var(--color-error-container)",
+                        "on-secondary-container": "var(--color-on-secondary-container)",
+                        "primary-fixed": "var(--color-primary-fixed)",
+                        "background": "var(--color-background)",
+                        "surface-container-lowest": "var(--color-surface-container-lowest)",
+                        "secondary": "var(--color-secondary)",
+                        "on-primary-fixed": "var(--color-on-primary-fixed)",
+                        "secondary-fixed": "var(--color-secondary-fixed)",
+                        "secondary-container": "var(--color-secondary-container)",
+                        "surface-container-low": "var(--color-surface-container-low)",
+                        "outline": "var(--color-outline)",
+                        "surface-container-highest": "var(--color-surface-container-highest)",
+                        "outline-variant": "var(--color-outline-variant)",
+                        "on-error-container": "var(--color-on-error-container)",
+                        "surface": "var(--color-surface)",
+                        "on-primary": "var(--color-on-primary)",
+                        "surface-tint": "var(--color-surface-tint)",
+                        "inverse-on-surface": "var(--color-inverse-on-surface)",
+                        "primary-fixed-dim": "var(--color-primary-fixed-dim)",
+                        "surface-dim": "var(--color-surface-dim)",
+                        "on-primary-fixed-variant": "var(--color-on-primary-fixed-variant)",
+                        "surface-container-high": "var(--color-surface-container-high)",
+                        "tertiary-fixed-dim": "var(--color-tertiary-fixed-dim)",
+                        "on-background": "var(--color-on-background)",
+                        "on-primary-container": "var(--color-on-primary-container)",
+                        "on-surface": "var(--color-on-surface)",
+                        "on-secondary-fixed": "var(--color-on-secondary-fixed)",
+                        "surface-container": "var(--color-surface-container)",
+                        "surface-variant": "var(--color-surface-variant)",
+                        "surface-bright": "var(--color-surface-bright)",
+                        "on-surface-variant": "var(--color-on-surface-variant)",
+                        "on-secondary-fixed-variant": "var(--color-on-secondary-fixed-variant)",
+                        "on-tertiary-fixed-variant": "var(--color-on-tertiary-fixed-variant)",
+                        "primary": "var(--color-primary)",
+                        "inverse-primary": "var(--color-inverse-primary)",
+                        "on-tertiary-container": "var(--color-on-tertiary-container)",
+                        "error": "var(--color-error)",
+                        "on-secondary": "var(--color-on-secondary)",
+                        "tertiary-container": "var(--color-tertiary-container)",
+                        "secondary-fixed-dim": "var(--color-secondary-fixed-dim)",
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "margin-desktop": "48px",
+                        "margin-mobile": "16px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "data-mono": ["Inter"],
+                        "headline-lg-mobile": ["Montserrat"],
+                        "label-bold": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg": ["Montserrat"],
+                        "headline-md": ["Montserrat"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                        "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f9f9f8; color: #191c1c; -webkit-font-smoothing: antialiased; }
+        h1, h2, h3 { font-family: 'Montserrat', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; display: inline-block; vertical-align: middle; }
+        
+        .login-card-shadow { box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.12); }
+        .bg-overlay { background: linear-gradient(to bottom, rgba(1, 45, 29, 0.2), rgba(1, 45, 29, 0.6)); }
+        .elevation-1 { border: 1px solid #e1e3e2; box-shadow: 0px 4px 20px rgba(27, 67, 50, 0.05); }
+        .elevation-2 { box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.12); }
+        
+        .risk-high { background-color: #b5270e; color: #ffffff; }
+        .risk-medium { background-color: #d7e8cb; color: #1d2a17; }
+        .risk-low { background-color: #f3f4f3; color: #414844; }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c1c8c2; border-radius: 10px; }
+
+        .app-view { display: none; }
+        .app-view.active { display: flex; }
+        .content-view { display: none; }
+        .content-view.active { display: flex; }
+        .bento-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; }
+        .status-chart-bar { transition: height 1s ease-in-out; }
+    </style>
+<style>
+:root {
+    --color-on-tertiary-fixed: #121f0d;
+    --color-inverse-surface: #2e3131;
+    --color-primary-container: #1b4332;
+    --color-tertiary-fixed: #d7e8cb;
+    --color-on-error: #ffffff;
+    --color-on-tertiary: #ffffff;
+    --color-tertiary: #1d2a17;
+    --color-error-container: #ffdad6;
+    --color-on-secondary-container: #5d0900;
+    --color-primary-fixed: #c1ecd4;
+    --color-background: #f9f9f8;
+    --color-surface-container-lowest: #ffffff;
+    --color-secondary: #b5270e;
+    --color-on-primary-fixed: #002114;
+    --color-secondary-fixed: #ffdad3;
+    --color-secondary-container: #ff5c3e;
+    --color-surface-container-low: #f3f4f3;
+    --color-outline: #717973;
+    --color-surface-container-highest: #e1e3e2;
+    --color-outline-variant: #c1c8c2;
+    --color-on-error-container: #93000a;
+    --color-surface: #f9f9f8;
+    --color-on-primary: #ffffff;
+    --color-surface-tint: #3f6653;
+    --color-inverse-on-surface: #f0f1f0;
+    --color-primary-fixed-dim: #a5d0b9;
+    --color-surface-dim: #d9dad9;
+    --color-on-primary-fixed-variant: #274e3d;
+    --color-surface-container-high: #e7e8e7;
+    --color-tertiary-fixed-dim: #bbccb0;
+    --color-on-background: #191c1c;
+    --color-on-primary-container: #86af99;
+    --color-on-surface: #191c1c;
+    --color-on-secondary-fixed: #3e0400;
+    --color-surface-container: #edeeed;
+    --color-surface-variant: #e1e3e2;
+    --color-surface-bright: #f9f9f8;
+    --color-on-surface-variant: #414844;
+    --color-on-secondary-fixed-variant: #8e1300;
+    --color-on-tertiary-fixed-variant: #3c4b35;
+    --color-primary: #012d1d;
+    --color-inverse-primary: #a5d0b9;
+    --color-on-tertiary-container: #9bac91;
+    --color-error: #ba1a1a;
+    --color-on-secondary: #ffffff;
+    --color-tertiary-container: #32402b;
+    --color-secondary-fixed-dim: #ffb4a5;
+}
+html.dark {
+    --color-on-tertiary-fixed: #e4f2e0;
+    --color-inverse-surface: #ced1d1;
+    --color-primary-container: #bce3d3;
+    --color-tertiary-fixed: #233417;
+    --color-on-error: #191919;
+    --color-on-tertiary: #191919;
+    --color-tertiary: #dbe8d4;
+    --color-error-container: #330400;
+    --color-on-secondary-container: #ffaba2;
+    --color-primary-fixed: #123e26;
+    --color-background: #1b1b17;
+    --color-surface-container-lowest: #191919;
+    --color-secondary: #f16249;
+    --color-on-primary-fixed: #defff2;
+    --color-secondary-fixed: #330800;
+    --color-secondary-container: #c11e00;
+    --color-surface-container-low: #181a18;
+    --color-outline: #868e88;
+    --color-surface-container-highest: #1c1e1d;
+    --color-outline-variant: #373e38;
+    --color-on-error-container: #ff6c75;
+    --color-surface: #1b1b17;
+    --color-on-primary: #191919;
+    --color-surface-tint: #99c0ad;
+    --color-inverse-on-surface: #181a18;
+    --color-primary-fixed-dim: #2e5942;
+    --color-surface-dim: #252625;
+    --color-on-primary-fixed-variant: #b1d7c6;
+    --color-surface-container-high: #181a18;
+    --color-tertiary-fixed-dim: #3d4f32;
+    --color-on-background: #e3e6e6;
+    --color-on-primary-container: #4f7862;
+    --color-on-surface: #e3e6e6;
+    --color-on-secondary-fixed: #ffc5c1;
+    --color-surface-container: #181a18;
+    --color-surface-variant: #1c1e1d;
+    --color-surface-bright: #1b1b17;
+    --color-on-surface-variant: #b7beba;
+    --color-on-secondary-fixed-variant: #ff8471;
+    --color-on-tertiary-fixed-variant: #bbcab3;
+    --color-primary: #d2fdee;
+    --color-inverse-primary: #2e5942;
+    --color-on-tertiary-container: #5c6e52;
+    --color-error: #e44545;
+    --color-on-secondary: #191919;
+    --color-tertiary-container: #c5d4be;
+    --color-secondary-fixed-dim: #5a0f00;
+}
+
+/* Map Dark Mode Filters */
+html.dark .leaflet-layer,
+html.dark .leaflet-control-zoom-in,
+html.dark .leaflet-control-zoom-out,
+html.dark .leaflet-control-attribution {
+    filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+</style>
+</head>
+<body class="font-body-md text-on-surface h-full m-0 p-0 overflow-x-hidden">
+
+    <!-- ========================= -->
+    <!-- VIEW: LOGIN               -->
+    <!-- ========================= -->
+    <div id="view-login" class="app-view h-full w-full relative active">
+        <!-- Background Section with Image -->
+        <div class="fixed inset-0 z-0 overflow-hidden">
+            <div class="absolute inset-0 bg-overlay z-10"></div>
+            <img alt="Managed Forest Aerial View" id="login-bg-img" class="w-full h-full object-cover scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkpahhVwiM31bNJnCiAy7lU-cJF5Uyu1enohADqUK0wujHtgSKgOcDmrFBJNgMTBPvH1W7oDBxUEk44g6PCVXCFaGSvhAXiF5oxJARlgTsmaqzlFX42Sl7HsjXI2S2VIDJVhtn6yTklmsHvA35nJRd5dAyMIR1Gyg9v5koAMRmlFnWyhwwKJgvT_wdoysNTPppKrHlEQf0doc7SzJkMAq0xmHun91JXsAJhmYyy2QE67EjpUG78990XtYAcnhO4_hCLktcFNjE_A"/>
+        </div>
+        <!-- Login Container -->
+        <main class="relative z-20 flex min-h-full w-full items-center justify-center p-margin-mobile md:p-margin-desktop">
+            <div class="w-full max-w-md">
+                <!-- White Centered Card -->
+                <div class="bg-surface-container-lowest login-card-shadow border border-outline-variant p-10 rounded-lg flex flex-col items-center">
+                    <div class="mb-10 text-center">
+                        <div class="flex items-center justify-center gap-2 mb-2">
+                            <span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+                            <h1 class="font-headline-md text-headline-md font-bold text-primary tracking-tight">Ignis Guard</h1>
+                        </div>
+                        <p class="font-label-bold text-label-bold text-outline uppercase tracking-widest">Gestión de Riesgos</p>
+                    </div>
+                    <form id="login-form" class="w-full space-y-6">
+                        <div class="space-y-2">
+                            <label class="font-label-bold text-label-bold text-on-surface-variant block">Nombre de Usuario</label>
+                            <div class="relative group">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">person</span>
+                                <input id="username-input" class="w-full pl-10 pr-4 py-3 bg-white border border-[#8C9C82] rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" value="admin" type="text"/>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center">
+                                <label class="font-label-bold text-label-bold text-on-surface-variant block">Contraseña</label>
+                            </div>
+                            <div class="relative group">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">lock</span>
+                                <input id="password-input" class="w-full pl-10 pr-10 py-3 bg-white border border-[#8C9C82] rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" value="password123" type="password"/>
+                                <button class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors" onclick="togglePassword()" type="button">
+                                    <span class="material-symbols-outlined" id="pw_icon">visibility</span>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-primary-container text-white py-4 rounded-lg font-label-bold uppercase tracking-widest hover:opacity-90 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
+                            <span>Iniciar Sesión</span>
+                            <span class="material-symbols-outlined text-[18px]">login</span>
+                        </button>
+                    </form>
+                    <div class="mt-8 pt-8 border-t border-outline-variant w-full text-center">
+                        <div class="flex items-center justify-center gap-2 text-on-surface-variant mb-1">
+                            <span class="material-symbols-outlined text-[16px]">shield</span>
+                            <p class="font-body-sm font-medium">Acceso Seguro</p>
+                        </div>
+                        <p class="font-body-sm text-outline leading-relaxed">
+                            Este portal es exclusivamente para agentes autorizados y administradores del sistema.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ========================= -->
+    <!-- VIEW: MAIN APP            -->
+    <!-- ========================= -->
+    <div id="view-app" class="app-view min-h-full w-full">
+        <!-- Side Navigation Shell -->
+        <aside class="h-screen w-64 fixed left-0 top-0 bg-surface border-r border-outline-variant flex flex-col py-6 z-20">
+            <div class="px-6 mb-8">
+                <h1 class="font-headline-md text-headline-md font-bold text-primary">Ignis Guard</h1>
+                <p class="text-on-surface-variant font-label-bold text-[10px] tracking-widest uppercase">Risk Management Pro</p>
+            </div>
+            <nav class="flex-1 px-4 space-y-1">
+                <a href="#" onclick="navTo('dashboard')" id="nav-dashboard" class="nav-item flex items-center gap-3 px-4 py-3 text-primary font-bold border-r-4 border-primary bg-surface-container-high transition-all duration-200">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" onclick="navTo('map')" id="nav-map" class="nav-item flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined">landscape</span>
+                    <span>Registro de Clientes</span>
+                </a>
+                <a href="#" onclick="navTo('alta')" id="nav-alta" class="nav-item flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined">person_add</span>
+                    <span>Alta de Clientes</span>
+                </a>
+                <a href="#" onclick="navTo('health')" id="nav-health" class="nav-item flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined">monitor_heart</span>
+                    <span>System Health</span>
+                </a>
+            </nav>
+            <div class="mt-auto px-6 mb-6">
+                <button onclick="navTo('map')" class="w-full bg-secondary text-on-secondary py-3 rounded-lg font-label-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+                    <span class="material-symbols-outlined">campaign</span>
+                    <span>Report Alert</span>
+                </button>
+            </div>
+            <div class="px-4 space-y-1 border-t border-outline-variant pt-6">
+                <a href="#" class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:bg-surface-container-high transition-colors" onclick="logout()">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span>Cerrar Sesión</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Top Navigation Shell -->
+        <header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 bg-surface border-b border-outline-variant flex justify-between items-center px-gutter z-10">
+            <div class="flex items-center flex-1">
+                <div class="relative w-full max-w-md flex gap-2">
+                    <div class="relative flex-1">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+                        <input id="address-input" onkeypress="if(event.key === 'Enter') executeSearch()" class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" placeholder="Buscar localidades o zonas..." type="text"/>
+                    </div>
+                    <button onclick="executeSearch()" class="px-4 py-2 bg-primary text-on-primary rounded-lg font-label-bold hover:opacity-90 flex items-center gap-1">
+                        Buscar
+                    </button>
+                </div>
+            </div>
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-4 text-on-surface-variant">
+                    <button id="theme-toggle" class="hover:bg-surface-container-low p-2 rounded-full transition-colors relative" onclick="toggleTheme()">
+                        <span id="theme-icon" class="material-symbols-outlined">dark_mode</span>
+                    </button>
+                </div>
+                <div class="flex items-center gap-3 pl-6 border-l border-outline-variant">
+                    <div class="text-right">
+                        <p class="font-label-bold text-primary">Admin User</p>
+                        <p class="text-[10px] text-on-surface-variant">Administrator</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden elevation-1 text-on-primary font-bold">
+                        AD
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="ml-64 mt-16 flex-1 bg-surface min-h-[calc(100vh-64px)] w-full relative">
+            
+            <!-- Dashboard View -->
+            <div id="content-dashboard" class="content-view flex-col p-gutter w-full active">
+                <div class="flex justify-between items-end mb-8">
+                    <div>
+                        <h2 class="font-headline-lg text-primary">Panel de Control</h2>
+                        <p class="text-on-surface-variant font-body-md">Visión general de la gestión de riesgos forestales.</p>
+                    </div>
+                </div>
+                <!-- Metric Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-8">
+                    <div class="elevation-1 bg-surface-container-lowest p-6 rounded-xl border-l-4 border-secondary">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="material-symbols-outlined text-secondary text-3xl">warning</span>
+                            <span class="text-secondary font-label-bold">Métricas simuladas</span>
+                        </div>
+                        <h3 class="font-label-bold text-on-surface-variant uppercase tracking-wider mb-1">Órdenes Procesadas</h3>
+                        <p class="font-headline-lg text-primary">142</p>
+                    </div>
+                    <div class="elevation-1 bg-surface-container-lowest p-6 rounded-xl border-l-4 border-primary">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="material-symbols-outlined text-primary text-3xl">map</span>
+                            <span class="text-primary font-label-bold">Predicción AI</span>
+                        </div>
+                        <h3 class="font-label-bold text-on-surface-variant uppercase tracking-wider mb-1">Zonas bajo Monitoreo</h3>
+                        <p class="font-headline-lg text-primary">18</p>
+                    </div>
+                    <div class="elevation-1 bg-surface-container-lowest p-6 rounded-xl border-l-4 border-on-tertiary-container">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="material-symbols-outlined text-on-tertiary-container text-3xl">model_training</span>
+                        </div>
+                        <h3 class="font-label-bold text-on-surface-variant uppercase tracking-wider mb-1">Versión de XGBoost</h3>
+                        <p class="font-headline-lg text-primary">v2.1</p>
+                    </div>
+                </div>
+                <!-- Client Registry (Recent orders) -->
+                <div class="col-span-12 bg-surface-container-lowest rounded-xl elevation-1 overflow-hidden">
+                    <div class="p-6 border-b border-outline-variant flex justify-between items-center">
+                        <h3 class="font-headline-md text-primary">Registro de Predicciones</h3>
+                        <button onclick="navTo('map')" class="px-4 py-2 bg-primary text-on-primary rounded-lg font-label-bold hover:opacity-90 flex items-center gap-2">
+                            <span class="material-symbols-outlined">add</span> Nueva Predicción
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left" id="orders-table">
+                            <thead class="bg-surface-container-high border-b border-outline-variant">
+                                <tr>
+                                    <th class="px-6 py-4 font-label-bold text-primary">ID Órden</th>
+                                    <th class="px-6 py-4 font-label-bold text-primary">Latitud</th>
+                                    <th class="px-6 py-4 font-label-bold text-primary">Longitud</th>
+                                    <th class="px-6 py-4 font-label-bold text-primary">Fecha Sim.</th>
+                                    <th class="px-6 py-4 font-label-bold text-primary">Estado</th>
+                                    <th class="px-6 py-4 font-label-bold text-primary">Resultado (Modelo)</th>
+                                    <th class="px-6 py-4 font-label-bold text-primary text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-outline-variant" id="orders-table-body">
+                                <!-- Populated dynamically -->
+                                <tr class="hover:bg-surface-container-low transition-colors group">
+                                    <td class="px-6 py-4 font-body-md font-semibold text-outline" colspan="7">Aún no hay órdenes generadas en esta sesión. Ve a Risk Mapping para predecir.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alta de Clientes View -->
+            <div id="content-alta" class="content-view flex-col w-full h-full bg-surface">
+                <!-- Page Header -->
+                <div class="px-gutter py-6 bg-surface-bright flex justify-between items-end border-b border-outline-variant">
+                    <div>
+                        <nav class="flex mb-2 space-x-2 text-label-bold font-label-bold text-on-surface-variant">
+                            <span class="hover:text-primary cursor-pointer">ALTA DE CLIENTE</span>
+                            <span class="">/</span>
+                            <span class="text-primary">NUEVO REGISTRO</span>
+                        </nav>
+                        <h2 class="font-headline-lg text-headline-md text-primary font-bold">Alta de Clientes y Campos</h2>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="button" onclick="document.getElementById('form-alta-registro').reset()" class="px-6 py-2 border border-primary text-primary font-label-bold rounded hover:bg-primary-container hover:text-on-primary-container transition-all">
+                            CANCELAR
+                        </button>
+                        <button type="submit" form="form-alta-registro" class="px-6 py-2 bg-primary text-white font-label-bold rounded shadow-sm hover:bg-primary-container transition-all flex items-center">
+                            <span class="material-symbols-outlined text-[18px] mr-2">save</span>
+                            GUARDAR REGISTRO
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Scrollable Content -->
+                <div class="flex-1 overflow-hidden flex h-full">
+                    <form id="form-alta-registro" onsubmit="guardarRegistroAlta(event)" class="w-full flex h-full">
+                        <!-- Left Panel: Form Sections -->
+                        <div class="w-1/2 overflow-y-auto custom-scrollbar p-gutter bg-white">
+                            <!-- Section 1: Selection & Basic Info -->
+                            <div class="mb-10">
+                                <div class="flex items-center justify-between mb-6">
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 rounded bg-primary-container flex items-center justify-center text-on-primary-container mr-3">
+                                            <span class="material-symbols-outlined text-[18px]">person_add</span>
+                                        </div>
+                                        <h3 class="font-headline text-lg font-bold text-primary">Información del Cliente</h3>
+                                    </div>
+                                    <div class="inline-flex rounded border border-outline-variant p-1 bg-surface-container-low">
+                                        <button type="button" class="px-4 py-1 text-[12px] font-bold rounded bg-primary text-white shadow-sm transition-all" id="toggle-new">NUEVO</button>
+                                        <button type="button" class="px-4 py-1 text-[12px] font-bold text-on-surface-variant hover:bg-white transition-all" id="toggle-existing">EXISTENTE</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Campos para NUEVO cliente -->
+                                <div id="section-cliente-nuevo" class="grid grid-cols-2 gap-gutter">
+                                    <div class="col-span-2">
+                                        <label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Nombre de la Empresa / Cliente</label>
+                                        <input id="alta-cli-nombre" class="w-full px-4 py-3 bg-white border border-[#8C9C82] rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Ej. Agrícola del Valle S.A." type="text">
+                                    </div>
+                                    <div>
+                                        <label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Código de Cliente</label>
+                                        <input id="alta-cli-codigo" class="w-full px-4 py-3 bg-white border border-[#8C9C82] rounded focus:border-primary outline-none transition-all" placeholder="Ej. CL-99210" type="text">
+                                    </div>
+                                    <div>
+                                        <label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Teléfono Empresa</label>
+                                        <input id="alta-cli-telefono" class="w-full px-4 py-3 bg-white border border-[#8C9C82] rounded focus:border-primary outline-none transition-all" placeholder="+56 9 1234 5678" type="tel">
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Email Corporativo</label>
+                                        <input id="alta-cli-email" class="w-full px-4 py-3 bg-white border border-[#8C9C82] rounded focus:border-primary outline-none transition-all" placeholder="contacto@empresa.com" type="email">
+                                    </div>
+                                </div>
+
+                                <!-- Campos para EXISTENTE cliente -->
+                                <div id="section-cliente-existente" class="hidden">
+                                    <label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Seleccione un Cliente Registrado</label>
+                                    <select id="alta-area-cliente" class="w-full px-4 py-3 bg-white border border-[#8C9C82] rounded focus:border-primary outline-none transition-all">
+                                        <option value="">Cargando clientes...</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Section 2: Field Details -->
+                            <div class="pt-6 border-t border-outline-variant">
+                                <div class="flex items-center mb-6">
+                                    <div class="w-8 h-8 rounded bg-tertiary-container flex items-center justify-center text-on-tertiary-container mr-3">
+                                        <span class="material-symbols-outlined text-[18px]">agriculture</span>
+                                    </div>
+                                    <h3 class="font-headline text-lg font-bold text-primary">Detalles del Predio / Campo</h3>
+                                </div>
+                                <div class="grid grid-cols-1 gap-6">
+                                    <div>
+                                        <label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Nombre del Predio</label>
+                                        <input id="alta-area-lote" required class="w-full px-4 py-3 bg-white border border-[#8C9C82] rounded focus:border-primary outline-none transition-all" placeholder="Ej. Lote Principal - Sector Norte" type="text">
+                                    </div>
+                                    <div>
+                                        <label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Uso del Suelo / Descripción (Directivas Gemini)</label>
+                                        <textarea id="alta-area-desc" class="w-full px-4 py-3 bg-white border border-[#8C9C82] rounded focus:border-primary outline-none transition-all resize-none" placeholder="Ej. Ganadería, cultivos de rotación, cercanía a líneas eléctricas, terreno despejado, bosque nativo..." rows="3"></textarea>
+                                    </div>
+                                    <div class="bg-surface-container border border-outline-variant rounded-lg p-4 flex items-center justify-between">
+                                        <div class="flex space-x-8">
+                                            <div>
+                                                <p class="text-[10px] font-bold text-outline uppercase">Latitud</p>
+                                                <input id="alta-area-lat" required type="number" step="any" class="font-data-mono text-primary font-bold text-lg bg-transparent w-28 border-none p-0 focus:ring-0" placeholder="-34.6037" value="-34.6037">
+                                            </div>
+                                            <div>
+                                                <p class="text-[10px] font-bold text-outline uppercase">Longitud</p>
+                                                <input id="alta-area-lon" required type="number" step="any" class="font-data-mono text-primary font-bold text-lg bg-transparent w-28 border-none p-0 focus:ring-0" placeholder="-58.3816" value="-58.3816">
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center text-on-surface-variant italic text-body-sm">
+                                            <span class="material-symbols-outlined text-[18px] mr-2">touch_app</span>
+                                            Arrastre el marcador en el mapa
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Panel: Mapping (Interactive Map) -->
+                        <div class="w-1/2 relative bg-surface-container-low overflow-hidden border-l border-outline-variant" id="alta-map-container">
+                            <div id="alta-leaflet-map" class="absolute inset-0 z-0 w-full h-full"></div>
+                            
+                            <div class="absolute top-6 right-6 z-10 pointer-events-none">
+                                <div class="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-primary/20 flex items-center space-x-3">
+                                    <div class="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
+                                    <span class="font-label-bold text-[11px] text-primary tracking-wider uppercase">Modo: Selección de Área</span>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Risk Mapping / Client Registry View -->
+            <div id="content-map" class="content-view flex-col p-gutter w-full h-full">
+                <!-- Customer Detail Header Card -->
+                <section class="bg-surface-container-lowest p-6 rounded-xl shadow-[0px_4px_20px_rgba(27,67,50,0.05)] border border-outline-variant mb-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <nav class="flex items-center gap-2 text-on-surface-variant font-label-bold mb-2">
+                                <span>REGISTRO DE CLIENTES</span>
+                                <span class="material-symbols-outlined text-[12px]">chevron_right</span>
+                                <span class="text-primary" id="client-code-display">EXP-2024-0000</span>
+                            </nav>
+                            <div class="flex gap-2">
+                                <button onclick="navTo('alta')" class="px-3 py-2 bg-surface-container-low text-primary rounded-lg font-label-bold hover:bg-surface-container-high flex items-center gap-1 transition-colors border border-outline-variant">
+                                    <span class="material-symbols-outlined text-[18px]">add</span> Nuevo Lote
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex flex-wrap items-center gap-3">
+                            <div class="relative">
+                                <input type="date" id="prediction-date" class="px-4 py-2 bg-surface border border-outline-variant rounded-lg font-bold text-on-surface focus:outline-none focus:border-primary transition-colors">
+                                <span class="absolute top-[-10px] left-3 bg-surface px-1 text-[10px] text-outline font-bold uppercase">Fecha de Simulación</span>
+                            </div>
+                            <button onclick="triggerPrediction()" class="flex-1 min-w-[140px] px-4 py-2 bg-primary-container text-on-primary-container rounded-lg font-bold hover:opacity-90 flex items-center justify-center gap-2 transition-opacity">
+                                <span class="material-symbols-outlined">update</span> Actualizar Todo
+                            </button>
+                        </div>
+                        <h2 class="font-headline-md text-primary mb-1" id="client-name-display">Seleccione un Cliente</h2>
+                        <div class="flex flex-wrap gap-4 mt-3">
+                            <div class="flex items-center gap-2 px-3 py-1 bg-surface-container-low rounded-full">
+                                <span class="material-symbols-outlined text-sm text-on-surface-variant">fingerprint</span>
+                                <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider" id="client-id-display">ID: -</span>
+                            </div>
+                            <div class="flex items-center gap-2 px-3 py-1 bg-surface-container-low rounded-full">
+                                <span class="material-symbols-outlined text-sm text-on-surface-variant">mail</span>
+                                <span class="text-xs font-bold text-on-surface-variant" id="client-email-display">---</span>
+                            </div>
+                            <div class="flex items-center gap-2 px-3 py-1 bg-surface-container-low rounded-full">
+                                <span class="material-symbols-outlined text-sm text-on-surface-variant">call</span>
+                                <span class="text-xs font-bold text-on-surface-variant" id="client-phone-display">---</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <select id="client-select" onchange="loadClientAreas()" class="px-5 py-2 border border-primary text-primary font-label-bold rounded-lg hover:bg-surface-container-low transition-all bg-surface">
+                                <option value="">Seleccionar Cliente...</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="flex-1 grid grid-cols-12 gap-gutter relative h-[600px] mb-8">
+                    <!-- Map Container -->
+                    <section class="col-span-12 lg:col-span-9 relative rounded-xl overflow-hidden border border-outline-variant shadow-md h-full">
+                        <div id="leaflet-map" class="absolute inset-0 w-full h-full z-0"></div>
+                        <!-- Status Banner Floating Over Map -->
+                        <div id="map-status-banner" class="absolute top-4 left-1/2 -translate-x-1/2 bg-surface border border-outline-variant px-4 py-2 rounded-full elevation-2 z-10 flex items-center gap-2 hidden">
+                            <div class="w-3 h-3 rounded-full bg-secondary animate-pulse"></div>
+                            <span class="font-label-bold text-primary" id="map-status-text">Procesando imagen satelital...</span>
+                        </div>
+                    </section>
+
+                    <!-- Coordinates List Panel -->
+                    <aside class="col-span-12 lg:col-span-3 flex flex-col gap-4 h-full">
+                        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm flex flex-col h-full overflow-hidden">
+                            <div class="p-4 bg-surface-container-low border-b border-outline-variant flex justify-between items-center">
+                                <h3 class="font-label-bold text-primary uppercase">ZONAS DE CONTROL</h3>
+                                <span class="bg-primary text-on-primary text-[10px] px-2 py-0.5 rounded-full" id="points-count">0 PUNTOS</span>
+                            </div>
+                            <div class="flex-1 overflow-y-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-surface-container-low sticky top-0 z-10">
+                                        <tr>
+                                            <th class="p-3 text-[10px] font-label-bold text-on-surface-variant border-b border-outline-variant">PUNTO</th>
+                                            <th class="p-3 text-[10px] font-label-bold text-on-surface-variant border-b border-outline-variant">COORDENADAS</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="areas-table-body" class="font-data-mono text-[12px]">
+                                        <tr class="hover:bg-surface-container-low transition-colors group">
+                                            <td class="p-3 border-b border-outline-variant" colspan="2">Seleccione un cliente...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="p-4 bg-surface-container-low mt-auto border-t border-outline-variant">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-[10px] font-bold text-on-surface-variant uppercase">RIESGO PROMEDIO</span>
+                                    <span class="text-sm font-bold text-secondary">--%</span>
+                                </div>
+                                <div class="w-full bg-outline-variant h-1 rounded-full overflow-hidden">
+                                    <div class="bg-secondary h-full w-[0%]"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Risk Analysis Summary Card -->
+                        <div id="prediction-card" class="bg-primary-container p-4 rounded-xl text-on-primary transition-opacity hidden">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">warning</span>
+                                <h4 class="font-label-bold uppercase text-on-primary">Análisis de Riesgo</h4>
+                            </div>
+                            <div id="prediction-content">
+                                <!-- Filled via JS -->
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+
+            <!-- Health View -->
+            <div id="content-health" class="content-view flex-col p-gutter w-full">
+                <div class="flex justify-between items-end mb-8">
+                    <div>
+                        <h2 class="font-headline-lg text-primary">Estado del Sistema</h2>
+                        <p class="font-body-md text-on-surface-variant">Monitorización de infraestructura crítica y contenedores Docker.</p>
+                    </div>
+                </div>
+                <div class="bento-grid">
+                    <div class="col-span-12 lg:col-span-8 bg-surface-container-lowest border border-outline-variant p-6 rounded-xl shadow-[0px_4px_20px_rgba(27,67,50,0.05)]">
+                        <h3 class="font-label-bold text-on-surface-variant uppercase mb-6 tracking-wider">Infraestructura de Microservicios</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                            <!-- API -->
+                            <div class="p-4 border border-outline-variant rounded-lg">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-primary-fixed text-primary rounded-lg">
+                                            <span class="material-symbols-outlined">api</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-body-md font-bold text-primary">API Principal</h4>
+                                            <p class="text-[12px] text-on-surface-variant">FastAPI (Puerto 8000)</p>
+                                        </div>
+                                    </div>
+                                    <span id="badge-api" class="px-2 py-1 bg-primary-container/10 text-primary font-label-bold text-[10px] rounded uppercase">Operativo</span>
+                                </div>
+                            </div>
+                            <!-- Validador -->
+                            <div class="p-4 border border-outline-variant rounded-lg cursor-pointer hover:shadow-md transition-all hover:border-primary" onclick="showHealthDetails('validador')">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-primary-fixed text-primary rounded-lg">
+                                            <span class="material-symbols-outlined">rule</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-body-md font-bold text-primary">Validador</h4>
+                                        </div>
+                                    </div>
+                                    <span id="badge-validador" class="px-2 py-1 bg-surface-container text-on-surface-variant font-label-bold text-[10px] rounded uppercase">CARGANDO</span>
+                                </div>
+                            </div>
+                            <!-- Worker -->
+                            <div class="p-4 border border-outline-variant rounded-lg cursor-pointer hover:shadow-md transition-all hover:border-primary" onclick="showHealthDetails('worker')">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-primary-fixed text-primary rounded-lg">
+                                            <span class="material-symbols-outlined">memory</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-body-md font-bold text-primary">Worker</h4>
+                                        </div>
+                                    </div>
+                                    <span id="badge-worker" class="px-2 py-1 bg-surface-container text-on-surface-variant font-label-bold text-[10px] rounded uppercase">CARGANDO</span>
+                                </div>
+                            </div>
+                            <!-- Predictor -->
+                            <div class="p-4 border border-outline-variant rounded-lg cursor-pointer hover:shadow-md transition-all hover:border-primary" onclick="showHealthDetails('predictor')">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-primary-fixed text-primary rounded-lg">
+                                            <span class="material-symbols-outlined">online_prediction</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-body-md font-bold text-primary">Predictor</h4>
+                                        </div>
+                                    </div>
+                                    <span id="badge-predictor" class="px-2 py-1 bg-surface-container text-on-surface-variant font-label-bold text-[10px] rounded uppercase">CARGANDO</span>
+                                </div>
+                            </div>
+                            <!-- Entrenador -->
+                            <div class="p-4 border border-outline-variant rounded-lg cursor-pointer hover:shadow-md transition-all hover:border-primary" onclick="showHealthDetails('entrenador')">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-primary-fixed text-primary rounded-lg">
+                                            <span class="material-symbols-outlined">model_training</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-body-md font-bold text-primary">Entrenador</h4>
+                                        </div>
+                                    </div>
+                                    <span id="badge-entrenador" class="px-2 py-1 bg-surface-container text-on-surface-variant font-label-bold text-[10px] rounded uppercase">CARGANDO</span>
+                                </div>
+                            </div>
+                            <!-- Modelador -->
+                            <div class="p-4 border border-outline-variant rounded-lg cursor-pointer hover:shadow-md transition-all hover:border-primary" onclick="showHealthDetails('modelador')">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-primary-fixed text-primary rounded-lg">
+                                            <span class="material-symbols-outlined">science</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-body-md font-bold text-primary">Modelador</h4>
+                                        </div>
+                                    </div>
+                                    <span id="badge-modelador" class="px-2 py-1 bg-surface-container text-on-surface-variant font-label-bold text-[10px] rounded uppercase">CARGANDO</span>
+                                </div>
+                            </div>
+                            <!-- Base de datos -->
+                            <div class="p-4 border border-outline-variant rounded-lg">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-primary-fixed text-primary rounded-lg">
+                                            <span class="material-symbols-outlined">database</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-body-md font-bold text-primary">PostgreSQL</h4>
+                                            <p class="text-[12px] text-on-surface-variant">Estado de Órdenes</p>
+                                        </div>
+                                    </div>
+                                    <span id="badge-db" class="px-2 py-1 bg-primary-container/10 text-primary font-label-bold text-[10px] rounded uppercase">Operativo</span>
+                                </div>
+                            </div>
+                            <!-- MinIO -->
+                            <div class="p-4 border border-outline-variant rounded-lg">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2 bg-primary-fixed text-primary rounded-lg">
+                                            <span class="material-symbols-outlined">storage</span>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-body-md font-bold text-primary">MinIO (S3 Local)</h4>
+                                            <p class="text-[12px] text-on-surface-variant">Volumen de imágenes TIF</p>
+                                        </div>
+                                    </div>
+                                    <span id="badge-minio" class="px-2 py-1 bg-primary-container/10 text-primary font-label-bold text-[10px] rounded uppercase">Operativo</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal para Detalles del Health -->
+            <div id="health-modal" class="fixed inset-0 bg-surface/80 backdrop-blur-sm z-50 hidden flex items-center justify-center transition-opacity opacity-0">
+                <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg w-full max-w-md mx-4 p-6 transform scale-95 transition-transform">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="p-3 bg-primary-fixed text-primary rounded-xl" id="modal-icon">
+                                <span class="material-symbols-outlined text-2xl">memory</span>
+                            </div>
+                            <div>
+                                <h3 id="modal-title" class="font-headline-sm font-bold text-primary capitalize">Worker Name</h3>
+                                <span id="modal-badge" class="px-2 py-1 text-[10px] font-label-bold rounded uppercase mt-1 inline-block">STATUS</span>
+                            </div>
+                        </div>
+                        <button onclick="closeHealthModal()" class="text-on-surface-variant hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-surface-container p-4 rounded-lg">
+                            <p class="text-[12px] font-label-bold text-on-surface-variant uppercase mb-1">Actividad Actual</p>
+                            <p id="modal-desc" class="font-body-md text-on-surface font-medium">Cargando...</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-surface-container-low border border-outline-variant p-4 rounded-lg">
+                                <p class="text-[11px] font-label-bold text-on-surface-variant uppercase mb-1">Cola de Tareas</p>
+                                <p id="modal-queue" class="font-headline-sm text-primary">0</p>
+                            </div>
+                            <div class="bg-surface-container-low border border-outline-variant p-4 rounded-lg">
+                                <p class="text-[11px] font-label-bold text-on-surface-variant uppercase mb-1">Última Señal</p>
+                                <p id="modal-ping" class="font-headline-sm text-primary">0s</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </main>
+    </div>
+
+    <!-- Gemini Modal (Alert Preview) -->
+    <div id="gemini-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeGeminiModal()"></div>
+        <div class="relative bg-surface rounded-xl shadow-2xl w-[800px] max-w-[95vw] border border-outline-variant flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest rounded-t-xl">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-secondary">campaign</span>
+                    <h3 class="font-headline-md text-primary" id="gemini-title">Vista Previa de Alerta (Generada por IA)</h3>
+                </div>
+                <button onclick="closeGeminiModal()" class="text-on-surface-variant hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <p class="text-sm text-on-surface-variant mb-4">El asistente inteligente ha redactado el siguiente correo basado en el contexto del campo y el riesgo detectado. Puedes editar el texto antes de enviarlo.</p>
+                <div class="mb-4">
+                    <label class="block text-sm font-label-bold text-on-surface-variant mb-1">Asunto</label>
+                    <input id="gemini-asunto" type="text" class="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary outline-none font-bold" />
+                </div>
+                <div>
+                    <label class="block text-sm font-label-bold text-on-surface-variant mb-1">Cuerpo del Mensaje</label>
+                    <textarea id="gemini-cuerpo" rows="12" class="w-full px-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary outline-none"></textarea>
+                </div>
+            </div>
+            <div class="p-4 border-t border-outline-variant flex justify-end gap-3 bg-surface-container-lowest rounded-b-xl">
+                <button onclick="closeGeminiModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg font-bold transition-colors border border-outline-variant">Cancelar</button>
+                <button onclick="confirmarEnvioAlerta()" class="px-4 py-2 bg-secondary text-on-secondary rounded-lg font-bold hover:opacity-90 flex items-center gap-2 transition-opacity">
+                    <span class="material-symbols-outlined">send</span> Confirmar y Enviar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts (SPA Logic & Map Integration) -->
+    <script src="script.js?v=2"></script>
+</body>
+</html>
