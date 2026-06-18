@@ -1,143 +1,186 @@
-from sqlalchemy import func
+from sqlalchemy.orm import Session
 from db.db import SessionLocal
-from db.models import Orden, Modelos, WorkersLogs, InformesClientes
-import time
+from db.models import InformesRiesgo, Orden
 from datetime import datetime
-
 import json
+import time
 from openai import OpenAI
 import os
 
-OLLAMA_URL = os.getenv("OLLAMA_URL_A")  # o B
+OLLAMA_URL = os.getenv("OLLAMA_URL_A")
 OLLAMA_TOKEN = os.getenv("OLLAMA_TOKEN")
-
-if not OLLAMA_URL:
-    raise RuntimeError("OLLAMA_URL_A no configurada")
-
-if not OLLAMA_TOKEN:
-    raise RuntimeError("OLLAMA_TOKEN no configurada")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL_A")
 
 client = OpenAI(
-    base_url=f"{OLLAMA_URL}/v1",
+    base_url=OLLAMA_URL,
     api_key=OLLAMA_TOKEN
 )
 
+# ==================================================
+# Busca un informe de riesgo pendiente
+# ==================================================
+def obtener_requerido(db: Session):
+    return (
+        db.query(InformesRiesgo)
+        .filter(InformesRiesgo.estado == "requerido")
+        .order_by(InformesRiesgo.created_at.asc())
+        .first()
+    )
 
+# ==================================================
+# Busca todas las predicciones del cliente
+# ==================================================
+def obtener_predicciones_cliente(db: Session, username: str):
+    return (
+        db.query(Orden)
+        .filter(
+            Orden.username == username,
+            Orden.status == "Predicha"
+        )
+        .order_by(Orden.created_at.desc())
+        .all()
+    )
 
-def recolectar_metricas():
-    db = SessionLocal()
-    try:
-        total_ordenes = db.query(Orden).filter(Orden.cliente == 'cliente buscado' ).count()
-        pendientes = db.query(Orden).filter(Orden.status == "Pendiente..").count()
-        predichas = db.query(Orden).filter(Orden.status == "Predicha").count()
-        errores = db.query(Orden).filter(Orden.status.like("Error%")).count()
-        ultimo_modelo = (db.query(Modelos).order_by(Modelos.created_at.desc()).first())
-        workers = db.query(WorkersLogs).all()
-        return {
-                "total_ordenes": total_ordenes,
-                "pendientes": pendientes,
-                "predichas": predichas,
-                "errores": errores,
-                "modelo": {
-                    "name": ultimo_modelo.name if ultimo_modelo else None,
-                    "final_loss": ultimo_modelo.final_loss if ultimo_modelo else None,
-                    "accuracy": ultimo_modelo.accuracy if ultimo_modelo else None,
-                    "precision": ultimo_modelo.precision if ultimo_modelo else None,
-                    "recall": ultimo_modelo.recall if ultimo_modelo else None,
-                    "f1_score": ultimo_modelo.f1_score if ultimo_modelo else None,
-                    "iou": ultimo_modelo.iou if ultimo_modelo else None,
-                    "dice": ultimo_modelo.dice if ultimo_modelo else None,
-                    "dataset_size": ultimo_modelo.dataset_size if ultimo_modelo else None
-                    },
-                "workers": [{
-                    "name": w.name,
-                    "descripcion": w.descripcion
-                    }for w in workers]
-                }
-    finally:
-        db.close()
+# ==================================================
+# Convierte las predicciones a un formato simple
+# ==================================================
+def serializar_predicciones(predicciones):
+    resultado = []
 
-def generar_informe(metricas):
+    for pred in predicciones:
+        try:
+            resultado.append({
+                "fecha": pred.created_at.isoformat() if pred.created_at else None,
+                "args": json.loads(pred.args),
+                "prediccion": json.loads(pred.prediccion),
+                "modelo": pred.modelo_utilizado
+            })
+        except Exception:
+            continue
+
+    return resultado
+
+# ==================================================
+# Genera informe de asegurabilidad
+# ==================================================
+def generar_informe(cliente, descripcion, predicciones):
+
     prompt = f"""
-Analiza el estado de las predicciones para un cliente.
-Datos:
+Sos un analista de riesgos de una compañía aseguradora.
 
-{json.dumps(metricas, indent=2)}
+Tu tarea es evaluar si conviene asegurar a un cliente teniendo en cuenta:
 
-Genera:
+1. Las predicciones históricas disponibles.
+2. La descripción del cliente.
+3. Los factores que puedan ayudar o dificultar la prevención y combate de incendios.
 
-1. Resumen claro.
-4. Riesgos.
-5. Recomendaciones.
+Cliente:
+{cliente}
 
-La respuesta debe ser personalizada para el rubro del cliente, no muy tecnica. 
+Descripción:
+{descripcion if descripcion else "No se proporcionó descripción adicional."}
+
+Predicciones:
+{json.dumps(predicciones, indent=2)}
+
+Indicaciones:
+
+- El informe puede basarse en una única predicción.
+- Si existen varias predicciones, analizarlas en conjunto.
+- Una única ubicación puede no representar toda la superficie asegurada.
+- Considerar factores positivos:
+    * Disponibilidad de personal.
+    * Pozos, lagunas o reservorios de agua.
+    * Infraestructura de acceso.
+    * Equipamiento preventivo.
+    * Medidas de mitigación.
+
+- Considerar factores negativos:
+    * Vegetación abundante.
+    * Riesgos elevados repetidos.
+    * Escasez de personal.
+    * Falta de acceso a agua.
+    * Ubicación aislada.
+    * Falta de medidas preventivas.
+
+Generar:
+
+# Informe de Riesgo de Asegurabilidad (Maximo 100 Palabras).
+
+## Factores Agravantes
+
+## Evaluación General
+Clasificar:
+- Bajo
+- Medio
+- Alto
+
+## Recomendación para la Aseguradora
+
+Elegir una:
+
+- Conviene asegurar.
+- Conviene asegurar con condiciones especiales.
+- Conviene solicitar información adicional.
+- No se recomienda asegurar actualmente.
+
+Justificar la decisión.
+
+No inventar información.
+Utilizar lenguaje profesional.
 """
+
     respuesta = client.chat.completions.create(
-            model="llama3.2:1b",
-            messages=[{
+        model=OLLAMA_MODEL,
+        messages=[
+            {
                 "role": "system",
-                "content": "Sos un revisador de predicciones."
-                },{
+                "content": "Sos un analista senior de riesgos para compañías aseguradoras."
+            },
+            {
                 "role": "user",
-                "content": prompt}],
-             timeout=400
-                )
+                "content": prompt
+            }
+        ],
+        timeout=300
+    )
+
     return respuesta.choices[0].message.content
 
-def guardar_informe(texto):
-    db = SessionLocal()
-    try:
-        informe = Informes(contenido=texto)
-        db.add(informe)
-        db.commit()
-    finally:
-        db.close()
-
 # ==================================================
-# logs de estado en la db (actualiza)
+# Worker principal
 # ==================================================
-def logearDB(descripcion):
-    db = SessionLocal()
-    try:
-        registro = (
-            db.query(WorkersLogs)
-            .filter(WorkersLogs.name == "analista-clientes")
-            .first()
-        )
-        if registro is None:
-            registro = WorkersLogs(
-                name="analista-clientes",
-                descripcion=descripcion
-            )
-            db.add(registro)
-        else:
-            registro.descripcion = descripcion
-            registro.updated_at = datetime.utcnow()
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        print(f"Error guardando heartbeat: {e}")
-    finally:
-        db.close()
-
 def run():
     while True:
-        print("Analista para Clientes UP!")
-        logearDB("Iniciado.")
-        #Para que no haga un informe apenas inicia la api 
-        time.sleep(120)
+        db = SessionLocal()
         try:
-            #tiene que buscar si hay ordenes de analisis para clientes 
-            logearDB("Generando Reporte.")
-            metricas = recolectar_metricas()
-            informe = generar_informe(metricas)
-            guardar_informe(informe)
-            logearDB("Reporte Generado, me duermo.")
-            print("Informe generado")
-        except Exception as e:
-            print(e)
-            logearDB("No pude reportar, lo intentare la proxima.")
-        time.sleep(300)
+            informe = obtener_requerido(db)
+            if informe is None:
+                print("No hay informes de riesgo pendientes.")
+                time.sleep(60)
+                continue
+            print(f"Generando informe de riesgo para {informe.cliente}")
+            predicciones = obtener_predicciones_cliente(
+                    db,informe.cliente)
+            if len(predicciones) == 0:
+                informe.estado = "error"
+                informe.updated_at = datetime.utcnow()
+                print("No existen predicciones para analizar.")
+            else:
+                predicciones_serializadas = serializar_predicciones(predicciones)
+                texto = generar_informe(
+                        informe.cliente,informe.descripcion,predicciones_serializadas)
+                informe.contenido = texto
+                informe.estado = "listo"
+                informe.updated_at = datetime.utcnow()
+                print(f"Informe de riesgo generado para {informe.cliente}")
+            db.commit()
 
+        except Exception as e:
+            db.rollback()
+            print(f"Error generando informe de riesgo: {e}")
+        finally:
+            db.close()
+        time.sleep(10)
 if __name__ == "__main__":
     run()

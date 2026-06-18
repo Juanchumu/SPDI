@@ -138,17 +138,22 @@ with engine.connect() as conn:
             id SERIAL PRIMARY KEY,
             responsable TEXT,
             cliente TEXT,
+            estado TEXT,
             contenido TEXT,
-            created_at TIMESTAMP
+            created_at TIMESTAMP,
+            updated_at TIMESTAMP
         )
         """))
 
-        # Pedido de analisis personalizado 
+        # Informes-riesgo 
         conn.execute(text("""
-        CREATE TABLE IF NOT EXISTS analisispersonalizado (
+        CREATE TABLE IF NOT EXISTS informesriesgo (
             id SERIAL PRIMARY KEY,
-            status TEXT,
+            responsable TEXT,
             cliente TEXT,
+            estado TEXT,
+            contenido TEXT,
+            descripcion TEXT,
             created_at TIMESTAMP,
             updated_at TIMESTAMP
         )

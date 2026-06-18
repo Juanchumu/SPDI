@@ -1,5 +1,5 @@
 este worker genera un informe sobre un cliente, en particular, y analisa que tan riesgoso es
-asegurarlo o tomarlo.
+asegurarlo.
 
 ya que puede haber clientes que con un unico punto no ocupe toda el area del mismo 
 
@@ -11,9 +11,25 @@ se le pasan las predicciones "predicha" del cliente.
 + 
 se le pasa una descripcion del cliente, el cual se tiene que anotar al dar de alta:
 
-se tiene que preguntar: 
+[
+la descripcion se puede sacar de descripcion de la tabla: 
+# si el estado es: requerido | listo 
+class InformesRiesgo(Base):
+    __tablename__ = "informesriesgo"
+    id = Column(Integer, primary_key=True)
+    responsable = Column(Text)
+    cliente = Column(Text)
+    descripcion = Column(Text)
+    estado = Column(Text)
+    contenido = Column(Text) 
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime,server_default=func.now(),onupdate=func.now())
+    
+ ]
+
+en la descripcion puede que no haya nada o si haya algo: 
 cuanto personal posee | esto es para saber si el cliente posee la capacidad de prepararse para un incendio 
-si utiliza agua de pozo o tiene una laguna cerca 
+si utiliza agua de pozo o tiene una laguna cerca, si tiene una cantidad inmensa de arboles ..etc
 
 --------
 esto crea un informe personalizado de si conviene ono asegurarlo.
@@ -31,35 +47,129 @@ si se considera tomar al cliente, se lo da de alta en el sistema, asi puede acce
 
 ----
 
+Los Endpoints utilizados:
 
+curl -X POST "http://localhost:8000/api/v1/informes/riesgo" \
+-H "Content-Type: application/json" \
+-d '{
+  "responsable": "ricardo",
+  "cliente": "Acme Seguros",
+  "descripcion": "Cliente ubicado en zona con antecedentes de incendios forestales"
+}'
 
+curl -X GET "http://localhost:8000/api/v1/informes/riesgo/3"
+{"id":3,"responsable":"ricardo","cliente":"juan","estado":"listo","contenido":"
 
+## Informe de Riesgo de Asegurabilidad - Juan
 
-## Servicio de análisis automático con LLM
+**Factores Agravantes:**La presencia de zonas críticas de alto riesgo (predicciones “alto”) en la proximidad del cliente, junto con la reiteración de estos riesgos, es un factor preocupante. La ubicación específica también presenta vegetación abundante, lo que incrementa el potencial de propagación de incendios.
 
-Este worker genera informes técnicos automáticos sobre el estado operativo del sistema utilizando un modelo de lenguaje (LLM).
+**Evaluación General:** Alto
+
+**Recomendación para la Aseguradora:** Conviene solicitar información adicional. Es crucial conocer las medidas de prevención implementadas por el cliente (equipamiento, personal, acceso a agua) y la disponibilidad de recursos en caso de un incendio.  Se requiere una evaluación más profunda antes de considerar cualquier cobertura.
+
+"descripcion":"
+## Informe de Riesgo de Asegurabilidad - Juan
+
+**Factores Agravantes:** La presencia de zonas críticas de alto riesgo (predicciones “alto”) en la proximidad del cliente, junto con la reiteración de estos riesgos, es un factor preocupante. La ubicación específica también presenta vegetación abundante, lo que incrementa el potencial de propagación de incendios.
+
+**Evaluación General:** Alto
+
+**Recomendación para la Aseguradora:** Conviene solicitar información adicional. Es crucial conocer las medidas de prevención implementadas por el cliente (equipamiento, personal, acceso a agua) y la disponibilidad de recursos en caso de un incendio.  Se requiere una evaluación más profunda antes de considerar cualquier cobertura."
+
+,"created_at":"2026-06-17T22:42:08.280635"
+,"updated_at":"2026-06-17T22:43:34.131516"}
+
+## Servicio de generación de informes de riesgo de asegurabilidad
+
+Este worker genera informes automáticos de evaluación de riesgo para clientes potenciales de una aseguradora utilizando un modelo de lenguaje (LLM).
+
+Su objetivo es asistir al personal de análisis de riesgo durante el proceso de suscripción de pólizas, proporcionando una evaluación técnica sobre la conveniencia de asegurar a un cliente en función de su exposición a incendios y de su capacidad para prevenir o mitigar dichos eventos.
 
 ### ¿Cómo funciona?
 
-Cada 5 minutos el servicio:
+Cuando se registra una nueva solicitud de evaluación:
 
-1. Recolecta métricas desde la base de datos.
-2. Obtiene información sobre:
-   - Cantidad total de órdenes.
-   - Órdenes pendientes.
-   - Órdenes procesadas.
-   - Errores detectados.
-   - Último modelo entrenado.
-   - Estado de los distintos workers.
-3. Envía estas métricas al servicio LLM.
-4. Genera un informe técnico automático.
-5. Almacena el informe en la tabla `Informes`.
+1. Se crea un registro en la tabla `InformesRiesgo`.
+2. Se recupera la descripción asociada al cliente.
+3. Se obtienen las predicciones de incendios vinculadas al cliente.
+4. Toda la información es enviada al modelo de lenguaje.
+5. El modelo analiza:
+
+   * Predicciones históricas y actuales.
+   * Riesgo observado en las distintas ubicaciones disponibles.
+   * Características operativas del cliente.
+   * Factores atenuantes y agravantes.
+6. Se genera un informe técnico estructurado.
+7. El resultado queda almacenado en la tabla `InformesRiesgo`.
+
+### Información analizada
+
+El informe se construye utilizando dos fuentes principales de información.
+
+#### Predicciones de incendios
+
+El sistema analiza una o más predicciones asociadas al cliente.
+
+Las predicciones permiten evaluar:
+
+* Nivel de riesgo detectado.
+* Persistencia del riesgo en el tiempo.
+* Existencia de zonas críticas.
+* Concentración geográfica del riesgo.
+* Historial reciente de eventos.
+
+El análisis puede realizarse utilizando una única predicción o varias predicciones en conjunto.
+
+Una única ubicación no necesariamente representa toda la superficie asegurada, por lo que el modelo considera la información disponible como una muestra del área de interés.
+
+#### Descripción del cliente
+
+La descripción es ingresada por el analista al momento de solicitar el informe.
+
+Puede contener información como:
+
+* Cantidad de personal disponible.
+* Existencia de pozos de agua.
+* Presencia de lagunas o reservorios.
+* Infraestructura de acceso.
+* Equipamiento preventivo.
+* Medidas de mitigación implementadas.
+* Características de la vegetación.
+* Condiciones operativas relevantes.
+
+Esta información permite complementar las predicciones con factores reales que afectan la capacidad de respuesta ante incendios.
+
+### Criterios de evaluación
+
+Durante el análisis se consideran distintos factores.
+
+#### Factores atenuantes
+
+Elementos que podrían reducir el riesgo o facilitar la respuesta ante un incendio:
+
+* Disponibilidad de personal.
+* Pozos, lagunas o reservorios de agua.
+* Infraestructura de acceso adecuada.
+* Equipamiento preventivo.
+* Medidas de mitigación implementadas.
+
+#### Factores agravantes
+
+Elementos que podrían incrementar el riesgo:
+
+* Vegetación abundante.
+* Predicciones reiteradas de riesgo elevado.
+* Escasez de personal.
+* Falta de acceso a fuentes de agua.
+* Ubicaciones aisladas.
+* Ausencia de medidas preventivas.
 
 ### Backend LLM
 
 El proyecto utiliza un servicio remoto compatible con la API de OpenAI.
 
-La infraestructura es provista por los docentes de la materia mediante una URL y un token de acceso. El worker consume dicho servicio para realizar análisis automáticos del estado general de la plataforma.
+La infraestructura es provista por los docentes de la materia mediante una URL y un token de acceso. El worker consume dicho servicio para generar los informes automáticos.
 
 ### Modelo utilizado
 
@@ -69,70 +179,62 @@ llama3.2:3b
 
 ### Variables de entorno requeridas
 
-| Variable | Descripción |
-|-----------|-------------|
+| Variable       | Descripción                                      |
+| -------------- | ------------------------------------------------ |
 | `OLLAMA_URL_A` | URL del servidor LLM compartido por los docentes |
-| `OLLAMA_TOKEN` | Token de autenticación para acceder al servicio |
+| `OLLAMA_TOKEN` | Token de autenticación para acceder al servicio  |
 
-### Prueba de funcionamiento
+### Estructura de los informes
 
-Durante las pruebas iniciales se verificó la conectividad con el servicio y la capacidad de generación de informes automáticos.
+Todos los informes siguen la siguiente estructura:
 
-Se obtuvo correctamente un informe almacenado en la base de datos con la siguiente estructura:
+```md
+# Informe de Riesgo de Asegurabilidad
 
-```json
-{
-"id":1,
-"created_at":"2026-06-02T20:47:40.623231",
-"contenido":"**Resumen Ejecutivo**\n\nEl sistema distribuido analizado presentaba un estado operativo general de satisfacción, con una brecha significativa entre el número predictedo de órdenes y las órdenes reales. Esta diferencia se debe en gran parte a la alta tasa de errores detectados.\n\n**Estado General del Sistema**\n\nEl sistema distribuido presenta los siguientes factores relevantes:\n\n*   **Órdenes:** El sistema tiene un total de 2 órdenes pendientes y 2 predicte, lo que sugiere una brecha significativa entre la información predicta y real.\n*   **Errores:** Se detectaron 0 errores durante el estado revisión realizado al momento del examen.\n\n**Problemas Detectados**\n\nAl analizar el sistema distribuido se detectan los siguientes problemas en este caso:\n\n*   **Difera entre órdenes predita y órdenes reales**\n\n**Riesgos**\n\nLos riesgos más significativos incluyen la alta tasa de erroresdetectados, la brecha significant entre el número predictedo de ordenes y las órdenes reales y la posibilidad que los elementos que realizan estas operaciones tengan alguna falla en su funcionamiento.\n\n**Recomendaciones**\n\nPara abordar estos problemas se recomienda:\n\n*   **Desarrollar un sistema más preciso:** La implementación de algoritmos avanzados y técnicas de aprendizaje automático.\n*   **Validar la información prioralmente:** Para asegurarse que las órdenes sean validadas antes de implementarse en el sistema.\n*   **Diseñar un sistema de alerta para errores:** Para detectar los posibles errores antes de que afecten al público.\n*   **Entrenar a los trabajadores:** sobre la importancia de los datos precisos y cómo identificar errores cuando ocurren."}
+## Resumen Ejecutivo
+
+## Análisis de Predicciones
+
+## Factores Atenuantes
+
+## Factores Agravantes
+
+## Evaluación General
+
+Nivel de Riesgo:
+- Bajo
+- Medio
+- Alto
+
+## Recomendación para la Aseguradora
 ```
---- 
-### En version md
-**Resumen Ejecutivo**
 
-El sistema distribuido analizado presentaba un estado operativo general de satisfacción, con una brecha significativa entre el número predictedo de órdenes y las órdenes reales. Esta diferencia se debe en gran parte a la alta tasa de errores detectados.
+### Posibles recomendaciones
 
-**Estado General del Sistema**
+El modelo debe seleccionar una de las siguientes opciones:
 
-El sistema distribuido presenta los siguientes factores relevantes:
+* Conviene asegurar.
+* Conviene asegurar con condiciones especiales.
+* Conviene solicitar información adicional.
+* No se recomienda asegurar actualmente.
 
-**Órdenes:** El sistema tiene un total de 2 órdenes pendientes y 2 predicte, lo que sugiere una brecha significativa entre la información predicta y real.
+Todas las recomendaciones deben estar justificadas utilizando exclusivamente la información disponible.
 
-**Errores:** Se detectaron 0 errores durante el estado revisión realizado al momento del examen.
-**Problemas Detectados** Al analizar el sistema distribuido se detectan los siguientes problemas en este caso:
-**Difera entre órdenes predita y órdenes reales**
+### Restricciones del análisis
 
-**Riesgos** Los riesgos más significativos incluyen la alta tasa de erroresdetectados, la brecha significant entre el número predictedo de ordenes y las órdenes reales y la posibilidad que los elementos que realizan estas operaciones tengan alguna falla en su funcionamiento.
+El modelo tiene instrucciones explícitas para:
 
-**Recomendaciones** 
-Para abordar estos problemas se recomienda: 
-**Desarrollar un sistema más preciso:** La implementación de algoritmos avanzados y técnicas de aprendizaje automático.
+* No inventar información.
+* Utilizar únicamente las predicciones y la descripción proporcionadas.
+* Mantener lenguaje profesional.
+* Reconocer cuando la información disponible es insuficiente.
+* Solicitar información adicional cuando corresponda.
 
-**Validar la información prioralmente:** Para asegurarse que las órdenes sean validadas antes de implementarse en el sistema.
+### Objetivo del módulo
 
-**Diseñar un sistema de alerta para errores:** Para detectar los posibles errores antes de que afecten al público. 
+Este componente busca reducir el tiempo de análisis de nuevos clientes y brindar una evaluación homogénea basada en evidencia objetiva.
 
-**Entrenar a los trabajadores:** sobre la importancia de los datos precisos y cómo identificar errores cuando ocurren.
+Los informes generados ayudan a los analistas a comprender rápidamente el nivel de exposición al riesgo de incendios y la capacidad operativa del cliente para prevenir o mitigar eventos adversos.
 
----
-El informe generado incluyó:
+Todos los informes quedan almacenados en la tabla `InformesRiesgo` para su posterior consulta, auditoría y seguimiento.
 
-- Resumen ejecutivo del estado del sistema.
-- Análisis de órdenes procesadas y pendientes.
-- Evaluación de posibles problemas operativos.
-- Identificación de riesgos.
-- Recomendaciones técnicas para mejorar el funcionamiento de la plataforma.
-
-La generación exitosa de este informe confirmó el correcto funcionamiento de la integración entre la aplicación y el servicio LLM proporcionado por los docentes.
-
-### Generación de informes
-
-Los informes generados incluyen:
-
-- Resumen ejecutivo.
-- Estado general del sistema.
-- Problemas detectados.
-- Riesgos operativos.
-- Recomendaciones técnicas.
-
-Todos los informes quedan almacenados en la tabla `Informes` para su posterior consulta y auditoría.

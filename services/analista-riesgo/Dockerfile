@@ -8,18 +8,18 @@ RUN useradd -m appuser
 # Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y netcat-openbsd  && rm -rf /var/lib/apt/lists/*
 # Copiar requirements primero (mejor caching)
-COPY analista/requirements.txt .
+COPY analista-riesgo/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar código
-COPY analista/app ./app
+COPY analista-riesgo/app ./app
 COPY db ./db
 
 # Dar permisos al usuario sobre /app
 RUN chown -R appuser:appuser /app
 
 # Script entrypoint
-COPY analista/entrypoint.sh /entrypoint.sh
+COPY analista-riesgo/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && chown appuser:appuser /entrypoint.sh
 
 

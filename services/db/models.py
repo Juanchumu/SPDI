@@ -79,14 +79,31 @@ class Informes(Base):
     id = Column(Integer, primary_key=True)
     contenido = Column(Text) 
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+#esto seria asi: 
+# si el estado es: requerido | listo 
 class InformesClientes(Base):
     __tablename__ = "informesclientes"
     id = Column(Integer, primary_key=True)
     responsable = Column(Text)
     cliente = Column(Text)
+    estado = Column(Text)
     contenido = Column(Text) 
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime,server_default=func.now(),onupdate=func.now())
 
+# si el estado es: requerido | listo 
+class InformesRiesgo(Base):
+    __tablename__ = "informesriesgo"
+    id = Column(Integer, primary_key=True)
+    responsable = Column(Text)
+    cliente = Column(Text)
+    descripcion = Column(Text)
+    estado = Column(Text)
+    contenido = Column(Text) 
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime,server_default=func.now(),onupdate=func.now())
 
 
 

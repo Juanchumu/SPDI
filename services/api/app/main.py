@@ -11,7 +11,7 @@ import subprocess
 import sys
 
 from db.db import SessionLocal
-from db.models import Orden, Entrenamiento, Modelos, Descargas, InformesClientes, WorkersLogs, Informes, Usuario
+from db.models import Orden, Entrenamiento, Modelos, Descargas, InformesClientes, WorkersLogs, Informes, Usuario, InformesRiesgo
 import os
 
 from passlib.context import CryptContext
@@ -383,3 +383,86 @@ def login(
         "success": True,
         "username": usuario.username
     }
+    
+    
+#
+# SOLICITUD DE INFORMES 
+#
+class InformeClienteRequest(BaseModel):
+    responsable: str
+    cliente: str
+
+@app.post("/api/v1/informes/clientes", status_code=status.HTTP_201_CREATED)
+def crear_informe_cliente(request: InformeClienteRequest,db: Session = Depends(get_db) ):
+    informe = InformesClientes(
+        responsable=request.responsable,
+        cliente=request.cliente,
+        estado="requerido"
+    )
+    db.add(informe)
+    db.commit()
+    db.refresh(informe)
+    return {"id": informe.id,"estado": informe.estado}    
+@app.get("/api/v1/informes/clientes/{informe_id}")
+def obtener_informe_cliente(informe_id: int, db: Session = Depends(get_db) ):
+    informe = (
+        db.query(InformesClientes)
+        .filter(InformesClientes.id == informe_id)
+        .first()
+    )
+    if not informe:
+        raise HTTPException(
+            status_code=404,
+            detail="Informe no encontrado"
+        )
+
+    return {
+        "id": informe.id,
+        "responsable": informe.responsable,
+        "cliente": informe.cliente,
+        "estado": informe.estado,
+        "contenido": informe.contenido,
+        "created_at": informe.created_at,
+        "updated_at": informe.updated_at
+    }
+class InformeRiesgoRequest(BaseModel):
+    responsable: str
+    cliente: str
+    descripcion: str
+
+@app.post("/api/v1/informes/riesgo", status_code=status.HTTP_201_CREATED)
+def crear_informe_riesgo(request: InformeRiesgoRequest,db: Session = Depends(get_db) ):
+    informe = InformesRiesgo(
+        responsable=request.responsable,
+        cliente=request.cliente,
+        descripcion=request.descripcion,
+        estado="requerido"
+    )
+    db.add(informe)
+    db.commit()
+    db.refresh(informe)
+    return {"id": informe.id,"estado": informe.estado}
+
+
+
+@app.get("/api/v1/informes/riesgo/{riesgo_id}")
+def obtener_informe_cliente(riesgo_id: int, db: Session = Depends(get_db) ):
+    informe = (
+        db.query(InformesRiesgo)
+        .filter(InformesRiesgo.id == riesgo_id)
+        .first()
+    )
+    if not informe:
+        raise HTTPException(status_code=404,detail="Informe de Riesgo no encontrado")
+    return {
+        "id": informe.id,
+        "responsable": informe.responsable,
+        "cliente": informe.cliente,
+        "estado": informe.estado,
+        "contenido": informe.contenido,
+        "descripcion": informe.contenido,
+        "created_at": informe.created_at,
+        "updated_at": informe.updated_at
+    }
+
+

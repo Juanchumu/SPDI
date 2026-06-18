@@ -1,143 +1,132 @@
-from sqlalchemy import func
+from sqlalchemy.orm import Session
 from db.db import SessionLocal
-from db.models import Orden, Modelos, WorkersLogs, InformesClientes
-import time
+from db.models import InformesClientes, Orden
 from datetime import datetime
-
 import json
+import time
 from openai import OpenAI
 import os
 
-OLLAMA_URL = os.getenv("OLLAMA_URL_A")  # o B
+OLLAMA_URL = os.getenv("OLLAMA_URL_A")
 OLLAMA_TOKEN = os.getenv("OLLAMA_TOKEN")
-
-if not OLLAMA_URL:
-    raise RuntimeError("OLLAMA_URL_A no configurada")
-
-if not OLLAMA_TOKEN:
-    raise RuntimeError("OLLAMA_TOKEN no configurada")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL_A")
 
 client = OpenAI(
-    base_url=f"{OLLAMA_URL}/v1",
+    base_url=OLLAMA_URL,
     api_key=OLLAMA_TOKEN
 )
 
+# ==================================================
+# Busca un informe pendiente
+# ==================================================
+def obtener_requerido(db: Session):
+    return (
+        db.query(InformesClientes)
+        .filter(InformesClientes.estado == "requerido")
+        .order_by(InformesClientes.created_at.asc())
+        .first()
+    )
 
+# ==================================================
+# Busca la ultima prediccion del cliente
+# ==================================================
+def obtener_ultima_prediccion(db: Session, username: str):
+    return (
+        db.query(Orden)
+        .filter(
+            Orden.username == username,
+            Orden.status == "Predicha"
+        )
+        .order_by(Orden.created_at.desc())
+        .first()
+    )
 
-def recolectar_metricas():
-    db = SessionLocal()
-    try:
-        total_ordenes = db.query(Orden).filter(Orden.cliente == 'cliente buscado' ).count()
-        pendientes = db.query(Orden).filter(Orden.status == "Pendiente..").count()
-        predichas = db.query(Orden).filter(Orden.status == "Predicha").count()
-        errores = db.query(Orden).filter(Orden.status.like("Error%")).count()
-        ultimo_modelo = (db.query(Modelos).order_by(Modelos.created_at.desc()).first())
-        workers = db.query(WorkersLogs).all()
-        return {
-                "total_ordenes": total_ordenes,
-                "pendientes": pendientes,
-                "predichas": predichas,
-                "errores": errores,
-                "modelo": {
-                    "name": ultimo_modelo.name if ultimo_modelo else None,
-                    "final_loss": ultimo_modelo.final_loss if ultimo_modelo else None,
-                    "accuracy": ultimo_modelo.accuracy if ultimo_modelo else None,
-                    "precision": ultimo_modelo.precision if ultimo_modelo else None,
-                    "recall": ultimo_modelo.recall if ultimo_modelo else None,
-                    "f1_score": ultimo_modelo.f1_score if ultimo_modelo else None,
-                    "iou": ultimo_modelo.iou if ultimo_modelo else None,
-                    "dice": ultimo_modelo.dice if ultimo_modelo else None,
-                    "dataset_size": ultimo_modelo.dataset_size if ultimo_modelo else None
-                    },
-                "workers": [{
-                    "name": w.name,
-                    "descripcion": w.descripcion
-                    }for w in workers]
-                }
-    finally:
-        db.close()
+# ==================================================
+# Genera el informe con IA
+# ==================================================
+def generar_informe(cliente, prediccion):
+    datos_prediccion = json.loads(prediccion.prediccion)
+    args = json.loads(prediccion.args)
 
-def generar_informe(metricas):
     prompt = f"""
-Analiza el estado de las predicciones para un cliente.
+Sos un asesor de una compañía aseguradora.
+
+Debes generar un aviso personalizado para el cliente.
+
 Datos:
+Nombre de la compania aseguradora: "Ignis Guard"
+Cliente: {cliente}
+Fecha analizada: {args.get('dia_de_la_imagen')}
+Latitud: {args.get('lat')}
+Longitud: {args.get('lon')}
 
-{json.dumps(metricas, indent=2)}
+Resultado de la predicción:
+{json.dumps(datos_prediccion, indent=2)}
 
-Genera:
+Reglas:
 
-1. Resumen claro.
-4. Riesgos.
-5. Recomendaciones.
-
-La respuesta debe ser personalizada para el rubro del cliente, no muy tecnica. 
+- Si el riesgo es alto, advertir al cliente que su zona presenta un riesgo elevado de incendio.
+- Si el riesgo es medio, recomendar extremar precauciones.
+- Si el riesgo es bajo, informar que el riesgo actual es bajo pero que igualmente debe mantener medidas preventivas.
+- Explicar las recomendaciones con lenguaje simple.
+- No usar lenguaje técnico.
+- Máximo 250 palabras.
+- Finalizar indicando que ante cualquier duda puede contactar a la empresa aseguradora para recibir asistencia y conocer los próximos pasos.
 """
+
     respuesta = client.chat.completions.create(
-            model="llama3.2:1b",
-            messages=[{
+        model=OLLAMA_MODEL,
+        messages=[
+            {
                 "role": "system",
-                "content": "Sos un revisador de predicciones."
-                },{
+                "content": "Sos un asesor especializado en prevención de incendios."
+            },
+            {
                 "role": "user",
-                "content": prompt}],
-             timeout=400
-                )
+                "content": prompt
+            }
+        ],
+        timeout=300
+    )
+
     return respuesta.choices[0].message.content
 
-def guardar_informe(texto):
-    db = SessionLocal()
-    try:
-        informe = Informes(contenido=texto)
-        db.add(informe)
-        db.commit()
-    finally:
-        db.close()
-
 # ==================================================
-# logs de estado en la db (actualiza)
+# Worker principal
 # ==================================================
-def logearDB(descripcion):
-    db = SessionLocal()
-    try:
-        registro = (
-            db.query(WorkersLogs)
-            .filter(WorkersLogs.name == "analista-clientes")
-            .first()
-        )
-        if registro is None:
-            registro = WorkersLogs(
-                name="analista-clientes",
-                descripcion=descripcion
-            )
-            db.add(registro)
-        else:
-            registro.descripcion = descripcion
-            registro.updated_at = datetime.utcnow()
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        print(f"Error guardando heartbeat: {e}")
-    finally:
-        db.close()
-
 def run():
     while True:
-        print("Analista para Clientes UP!")
-        logearDB("Iniciado.")
-        #Para que no haga un informe apenas inicia la api 
-        time.sleep(120)
+        db = SessionLocal()
+
         try:
-            #tiene que buscar si hay ordenes de analisis para clientes 
-            logearDB("Generando Reporte.")
-            metricas = recolectar_metricas()
-            informe = generar_informe(metricas)
-            guardar_informe(informe)
-            logearDB("Reporte Generado, me duermo.")
-            print("Informe generado")
+            informe = obtener_requerido(db)
+
+            if informe is None:
+                print("No hay informes requeridos. Durmiendo...")
+                time.sleep(60)
+                continue
+            print(f"Generando informe para {informe.cliente}")
+            prediccion = obtener_ultima_prediccion(db,informe.cliente)
+            if prediccion is None:
+                print("No se encontraron predicciones para el cliente.")
+                print("Como minimo tiene que existir una.")
+                informe.estado = "error"
+                informe.updated_at = datetime.utcnow()
+            else:
+                texto = generar_informe(informe.cliente,prediccion)
+                informe.contenido = texto
+                informe.estado = "listo"
+                informe.updated_at = datetime.utcnow()
+                print(f"Informe generado para {informe.cliente}")
+            db.commit()
         except Exception as e:
-            print(e)
-            logearDB("No pude reportar, lo intentare la proxima.")
-        time.sleep(300)
+            db.rollback()
+            print(f"Error: {e}")
+
+        finally:
+            db.close()
+        time.sleep(10)
+
 
 if __name__ == "__main__":
     run()
