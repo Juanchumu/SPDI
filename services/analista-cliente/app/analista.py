@@ -54,7 +54,7 @@ Sos un asesor de una compañía aseguradora.
 Debes generar un aviso personalizado para el cliente.
 
 Datos:
-
+Nombre de la compania aseguradora: "Ignis Guard"
 Cliente: {cliente}
 Fecha analizada: {args.get('dia_de_la_imagen')}
 Latitud: {args.get('lat')}
