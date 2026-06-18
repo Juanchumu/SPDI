@@ -269,7 +269,7 @@ html.dark .leaflet-control-attribution {
                             <label class="font-label-bold text-label-bold text-on-surface-variant block">Nombre de Usuario</label>
                             <div class="relative group">
                                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">person</span>
-                                <input class="w-full pl-10 pr-4 py-3 bg-white border border-[#8C9C82] rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" value="admin" type="text"/>
+                                <input id="username-input" class="w-full pl-10 pr-4 py-3 bg-white border border-[#8C9C82] rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" value="admin" type="text"/>
                             </div>
                         </div>
                         <div class="space-y-2">
@@ -588,7 +588,7 @@ html.dark .leaflet-control-attribution {
                         </div>
                         <div class="mt-6 flex flex-wrap items-center gap-3">
                             <div class="relative">
-                                <input type="date" id="prediction-date" value="2021-11-25" class="px-4 py-2 bg-surface border border-outline-variant rounded-lg font-bold text-on-surface focus:outline-none focus:border-primary transition-colors">
+                                <input type="date" id="prediction-date" class="px-4 py-2 bg-surface border border-outline-variant rounded-lg font-bold text-on-surface focus:outline-none focus:border-primary transition-colors">
                                 <span class="absolute top-[-10px] left-3 bg-surface px-1 text-[10px] text-outline font-bold uppercase">Fecha de Simulación</span>
                             </div>
                             <button onclick="triggerPrediction()" class="flex-1 min-w-[140px] px-4 py-2 bg-primary-container text-on-primary-container rounded-lg font-bold hover:opacity-90 flex items-center justify-center gap-2 transition-opacity">

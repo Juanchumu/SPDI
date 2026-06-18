@@ -8,7 +8,7 @@ import requests
 from datetime import timedelta, datetime, timezone
 
 from db.db import SessionLocal
-from db.models import Orden, Entrenamiento, Modelos, Descargas, WorkersLogs, Informes, Cliente, AreaAsegurada
+from db.models import Orden, Entrenamiento, Modelos, Descargas, WorkersLogs, Informes, Cliente, AreaAsegurada, Usuario
 import os
 import google.generativeai as genai
 
@@ -142,12 +142,48 @@ class AlertaPreviewRequest(BaseModel):
     area_id: int | None = None # si viene vacío se hace un batch de todas las áreas
 
 
+import hashlib
+
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode()).hexdigest()
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+@app.on_event("startup")
+def create_default_admin():
+    db = SessionLocal()
+    try:
+        # Avoid creating the user if the table doesn't exist yet in an early startup, 
+        # though the worker typically handles db creation, here we rely on the DB being up.
+        admin_user = db.query(Usuario).filter(Usuario.username == "admin").first()
+        if not admin_user:
+            nuevo_admin = Usuario(
+                username="admin",
+                password_hash=hash_password("unluproyectofinal"),
+                rol="admin"
+            )
+            db.add(nuevo_admin)
+            db.commit()
+    except Exception as e:
+        print("Aún no se puede crear el admin o ya existe:", e)
+    finally:
+        db.close()
+
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
+@app.post("/api/v1/login")
+def login(request: LoginRequest, db: Session = Depends(get_db)):
+    user = db.query(Usuario).filter(Usuario.username == request.username).first()
+    if not user or user.password_hash != hash_password(request.password):
+        raise HTTPException(status_code=401, detail="Usuario o contraseña incorrectos")
+    return {"token": "dummy-token-for-now", "rol": user.rol}
 
 
 @app.post("/api/v1/orden", status_code=status.HTTP_201_CREATED)

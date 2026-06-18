@@ -124,6 +124,18 @@ with engine.connect() as conn:
         )
         """))
         
+        # Usuarios
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id SERIAL PRIMARY KEY,
+            username TEXT UNIQUE,
+            password_hash TEXT,
+            rol TEXT DEFAULT 'cliente',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """))
+
+        
         # Confirmar la transacción
         trans.commit()
         print("✅ Tablas creadas exitosamente")

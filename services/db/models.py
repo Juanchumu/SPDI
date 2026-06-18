@@ -4,6 +4,15 @@ from datetime import datetime
 from db.db import Base
 
 
+class Usuario(Base):
+    __tablename__ = "usuarios"
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String, unique=True, index=True)
+    password_hash = Column(String)
+    rol = Column(String, default="cliente") # "admin" o "cliente"
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 class Orden(Base):
     __tablename__ = "ordenes"
 

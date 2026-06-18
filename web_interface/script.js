@@ -30,10 +30,39 @@ function navTo(viewName) {
 // ==========================================
 const loginForm = document.getElementById('login-form');
 if (loginForm) {
-    loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        localStorage.setItem('isLoggedIn', 'true');
-        performLogin();
+        
+        const usernameInput = document.getElementById('username-input')?.value;
+        const passwordInput = document.getElementById('password-input')?.value;
+        const submitBtn = loginForm.querySelector('button[type="submit"]');
+        const oldText = submitBtn.innerText;
+        submitBtn.innerText = 'Verificando...';
+        submitBtn.disabled = true;
+
+        try {
+            const resp = await fetch(`${API_URL}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: usernameInput, password: passwordInput })
+            });
+            
+            if (resp.ok) {
+                const data = await resp.json();
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('userToken', data.token);
+                localStorage.setItem('userRole', data.rol);
+                performLogin();
+            } else {
+                alert("Usuario o contraseña incorrectos.");
+            }
+        } catch (error) {
+            console.error("Error logging in:", error);
+            alert("Error de conexión con el servidor.");
+        } finally {
+            submitBtn.innerText = oldText;
+            submitBtn.disabled = false;
+        }
     });
 }
 
@@ -954,6 +983,12 @@ function toggleTheme() {
 
 // Load theme preference on load
 window.addEventListener('DOMContentLoaded', () => {
+    // Set prediction date to today
+    const dateInput = document.getElementById('prediction-date');
+    if (dateInput) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+    }
+    
     const theme = localStorage.getItem('theme');
     const html = document.documentElement;
     const icon = document.getElementById('theme-icon');
