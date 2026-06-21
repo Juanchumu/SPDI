@@ -169,6 +169,7 @@ with engine.connect() as conn:
     		codigo_cliente TEXT UNIQUE,
     		email TEXT,
     		telefono TEXT,
+    		descripcion TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """))

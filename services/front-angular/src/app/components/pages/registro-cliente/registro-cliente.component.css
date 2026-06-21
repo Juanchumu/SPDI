@@ -1,7 +1,0 @@
-.osm-bg {
-  background-color: #f0f4f0;
-  background-image: 
-    linear-gradient(rgba(200, 215, 200, 0.3) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(200, 215, 200, 0.3) 1px, transparent 1px);
-  background-size: 40px 40px;
-}

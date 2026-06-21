@@ -1,0 +1,26 @@
+.login-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at top, #e9eefc, #f6f7fb);
+}
+
+.login-card {
+  width: 380px;
+  padding: 28px;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 24px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}

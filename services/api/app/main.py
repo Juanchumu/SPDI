@@ -257,6 +257,8 @@ def listar_ordenes(db: Session = Depends(get_db)):
             "lat": lat,
             "lon": lon,
             "dia": dia,
+            "username": orden.username,
+            "cliente": orden.cliente,
             "status": orden.status,
             "prediction": orden.prediccion,
             "created_at": orden.created_at.isoformat() if orden.created_at else None
@@ -552,6 +554,34 @@ def obtener_informe_cliente(riesgo_id: int, db: Session = Depends(get_db) ):
         "created_at": informe.created_at,
         "updated_at": informe.updated_at
     }
+@app.get("/api/v1/informes/riesgo")
+def obtener_informes_riesgo(username:str, db: Session = Depends(get_db) ):
+	if (username == 'admin'):
+		informes = (
+        db.query(InformesRiesgo).all() )
+    else:
+    	informes = (
+        db.query(InformesRiesgo).filter(
+        InformesRiesgo.responsable == username).all())
+    
+    if not informes:
+        raise HTTPException(status_code=404,detail="Informes de Riesgos no encontrados")
+    
+    features = []
+    for informe in informes:
+        features.append({"type": "Feature",
+                         "properties": {
+                             "id": informe.id,
+                             "responsable": informe.responsable,
+                             "cliente": informe.cliente,
+                             "estado": informe.estado,
+                             "contenido": informe.contenido,
+                             "descripcion": informe.contenido,
+                             "created_at": informe.created_at,
+                             "updated_at": informe.updated_at}
+                         })
+    return {"type": "FeatureCollection",
+            "features": features    }
 ### Endpoint Gemini
 import google.generativeai as genai
 
@@ -580,6 +610,7 @@ class ClienteResponse(BaseModel):
     codigo_cliente: str
     email: str | None = None
     telefono: str | None = None
+    descripcion: str | None = ""
 
     class Config:
         orm_mode = True
@@ -589,6 +620,7 @@ class ClienteCreate(BaseModel):
     codigo_cliente: str
     email: str | None = None
     telefono: str | None = None
+    descripcion: str
 
 class AreaAseguradaCreate(BaseModel):
     nombre_lote: str
@@ -613,7 +645,7 @@ def listar_areas_cliente(cliente_id: int, db: Session = Depends(get_db)):
 
 @app.post("/api/v1/clientes", response_model=ClienteResponse, status_code=status.HTTP_201_CREATED)
 def crear_cliente(req: ClienteCreate, db: Session = Depends(get_db)):
-    nuevo = Cliente(nombre=req.nombre, codigo_cliente=req.codigo_cliente, email=req.email, telefono=req.telefono)
+    nuevo = Cliente(nombre=req.nombre, codigo_cliente=req.codigo_cliente, email=req.email, telefono=req.telefono, descripcion=req.descripcion)
     db.add(nuevo)
     db.commit()
     db.refresh(nuevo)

@@ -93,6 +93,7 @@ class Cliente(Base):
     codigo_cliente = Column(String, unique=True)
     email = Column(String, nullable=True)
     telefono = Column(String, nullable=True)
+    descripcion = Column(Text)
     
     areas = relationship("AreaAsegurada", back_populates="cliente")
     created_at = Column(DateTime, default=datetime.utcnow)

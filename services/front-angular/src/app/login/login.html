@@ -1,209 +1,31 @@
-<!DOCTYPE html>
+<div class="login-container">
+  <mat-card class="login-card">
 
-<html class="h-full" lang="es"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Iniciar Sesión | Ignis Guard</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "on-tertiary-fixed": "#121f0d",
-                        "inverse-surface": "#2e3131",
-                        "primary-container": "#1b4332",
-                        "tertiary-fixed": "#d7e8cb",
-                        "on-error": "#ffffff",
-                        "on-tertiary": "#ffffff",
-                        "tertiary": "#1d2a17",
-                        "error-container": "#ffdad6",
-                        "on-secondary-container": "#5d0900",
-                        "primary-fixed": "#c1ecd4",
-                        "background": "#f9f9f8",
-                        "surface-container-lowest": "#ffffff",
-                        "secondary": "#b5270e",
-                        "on-primary-fixed": "#002114",
-                        "secondary-fixed": "#ffdad3",
-                        "secondary-container": "#ff5c3e",
-                        "surface-container-low": "#f3f4f3",
-                        "outline": "#717973",
-                        "surface-container-highest": "#e1e3e2",
-                        "outline-variant": "#c1c8c2",
-                        "on-error-container": "#93000a",
-                        "surface": "#f9f9f8",
-                        "on-primary": "#ffffff",
-                        "surface-tint": "#3f6653",
-                        "inverse-on-surface": "#f0f1f0",
-                        "primary-fixed-dim": "#a5d0b9",
-                        "surface-dim": "#d9dad9",
-                        "on-primary-fixed-variant": "#274e3d",
-                        "surface-container-high": "#e7e8e7",
-                        "tertiary-fixed-dim": "#bbccb0",
-                        "on-background": "#191c1c",
-                        "on-primary-container": "#86af99",
-                        "on-surface": "#191c1c",
-                        "on-secondary-fixed": "#3e0400",
-                        "surface-container": "#edeeed",
-                        "surface-variant": "#e1e3e2",
-                        "surface-bright": "#f9f9f8",
-                        "on-surface-variant": "#414844",
-                        "on-secondary-fixed-variant": "#8e1300",
-                        "on-tertiary-fixed-variant": "#3c4b35",
-                        "primary": "#012d1d",
-                        "inverse-primary": "#a5d0b9",
-                        "on-tertiary-container": "#9bac91",
-                        "error": "#ba1a1a",
-                        "on-secondary": "#ffffff",
-                        "tertiary-container": "#32402b",
-                        "secondary-fixed-dim": "#ffb4a5"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.125rem",
-                        "lg": "0.25rem",
-                        "xl": "0.5rem",
-                        "full": "0.75rem"
-                    },
-                    "spacing": {
-                        "unit": "8px",
-                        "gutter": "24px",
-                        "margin-desktop": "48px",
-                        "margin-mobile": "16px",
-                        "container-max": "1440px"
-                    },
-                    "fontFamily": {
-                        "body-lg": ["Inter"],
-                        "data-mono": ["Inter"],
-                        "headline-lg-mobile": ["Montserrat"],
-                        "label-bold": ["Inter"],
-                        "body-sm": ["Inter"],
-                        "headline-lg": ["Montserrat"],
-                        "headline-md": ["Montserrat"],
-                        "body-md": ["Inter"]
-                    },
-                    "fontSize": {
-                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
-                        "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
-                        "headline-lg-mobile": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
-                        "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
-                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
-                        "headline-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
-                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
-                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
-                    }
-                }
-            }
-        }
-    </script>
-<style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        .login-card-shadow {
-            box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.12);
-        }
-        .bg-overlay {
-            background: linear-gradient(to bottom, rgba(1, 45, 29, 0.2), rgba(1, 45, 29, 0.6));
-        }
-    </style>
-</head>
-<body class="h-full font-body-md text-on-surface bg-background">
-<!-- Background Section with Image -->
-<div class="fixed inset-0 z-0 overflow-hidden">
-<div class="absolute inset-0 bg-overlay z-10"></div>
-<img alt="Managed Forest Aerial View" class="w-full h-full object-cover scale-105" data-alt="A breathtaking high-angle aerial photograph of a vast, meticulously managed pine forest and adjacent agricultural fields. The lighting is the golden hour of sunset, casting long, soft shadows and highlighting the rich textures of the green canopy and the golden harvest land. The color palette is dominated by deep forest greens, earthy ochres, and a soft atmospheric haze, evoking a sense of calm authority and professional vigilance. The style is clean and cinematic, emphasizing the scale and value of the natural assets being protected by the platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkpahhVwiM31bNJnCiAy7lU-cJF5Uyu1enohADqUK0wujHtgSKgOcDmrFBJNgMTBPvH1W7oDBxUEk44g6PCVXCFaGSvhAXiF5oxJARlgTsmaqzlFX42Sl7HsjXI2S2VIDJVhtn6yTklmsHvA35nJRd5dAyMIR1Gyg9v5koAMRmlFnWyhwwKJgvT_wdoysNTPppKrHlEQf0doc7SzJkMAq0xmHun91JXsAJhmYyy2QE67EjpUG78990XtYAcnhO4_hCLktcFNjE_A"/>
-</div>
-<!-- Login Container -->
-<main class="relative z-20 flex min-h-full items-center justify-center p-margin-mobile md:p-margin-desktop">
-<div class="w-full max-w-md">
-<!-- White Centered Card -->
-<div class="bg-surface-container-lowest login-card-shadow border border-outline-variant p-10 rounded-lg flex flex-col items-center">
-<!-- Brand Identity -->
-<div class="mb-10 text-center">
-<div class="flex items-center justify-center gap-2 mb-2">
-<span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
-<h1 class="font-headline-md text-headline-md font-bold text-primary tracking-tight">Ignis Guard</h1>
-</div>
-<p class="font-label-bold text-label-bold text-outline uppercase tracking-widest">Gestión de Riesgos</p>
-</div>
-<!-- Login Form -->
-<form action="#" class="w-full space-y-6" method="POST">
-<!-- Username Field -->
-<div class="space-y-2">
-<label class="font-label-bold text-label-bold text-on-surface-variant block" for="username">
-                            Nombre de Usuario
-                        </label>
-<div class="relative group">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">person</span>
-<input class="w-full pl-10 pr-4 py-3 bg-white border border-[#8C9C82] rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-body-md text-on-surface transition-all" id="username" name="username" placeholder="usuario@ignisguard.com" required="" type="text"/>
-</div>
-</div>
-<!-- Password Field -->
-<div class="space-y-2">
-<div class="flex justify-between items-center">
-<label class="font-label-bold text-label-bold text-on-surface-variant block" for="password">
-                                Contraseña
-                            </label>
-<a class="font-label-bold text-label-bold text-primary hover:underline transition-all" href="#">
-                                ¿Olvidó su contraseña?
-                            </a>
-</div>
-<div class="relative group">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">lock</span>
-<input class="w-full pl-10 pr-10 py-3 bg-white border border-[#8C9C82] rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-body-md text-on-surface transition-all" id="password" name="password" placeholder="••••••••" required="" type="password"/>
-<button class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors" onclick="togglePassword()" type="button">
-<span class="material-symbols-outlined" id="pw_icon">visibility</span>
-</button>
-</div>
-</div>
-<!-- Sign In Button -->
-<button class="w-full bg-primary-container text-white py-4 rounded-lg font-label-bold text-label-bold uppercase tracking-widest hover:opacity-90 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2" type="submit">
-<span>Iniciar Sesión</span>
-<span class="material-symbols-outlined text-[18px]">login</span>
-</button>
-</form>
-<!-- Footer Note -->
-<div class="mt-8 pt-8 border-t border-outline-variant w-full text-center">
-<div class="flex items-center justify-center gap-2 text-on-surface-variant mb-1">
-<span class="material-symbols-outlined text-[16px]">shield</span>
-<p class="font-body-sm text-body-sm font-medium">Acceso Seguro</p>
-</div>
-<p class="font-body-sm text-body-sm text-outline leading-relaxed">
-                        Este portal es exclusivamente para agentes autorizados y administradores del sistema Ignis Guard.
-                    </p>
-</div>
-</div>
-<!-- Language / Copyright Footer (Optional) -->
-<div class="mt-6 text-center">
-<p class="font-body-sm text-body-sm text-surface-container-highest opacity-70">
-                    © 2024 Ignis Guard Risk Management Platform.
-                </p>
-</div>
-</div>
-</main>
-<script>
-        function togglePassword() {
-            const input = document.getElementById('password');
-            const icon = document.getElementById('pw_icon');
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.innerText = 'visibility_off';
-            } else {
-                input.type = 'password';
-                icon.innerText = 'visibility';
-            }
-        }
+    <h2 class="title">Iniciar sesión</h2>
 
-        // Atmospheric micro-interaction for the background
-        document.addEventListener('mousemove', (e) => {
-            const img = document.querySelector('img');
-            const x = (window.innerWidth / 2 - e.pageX) / 50;
-            const y = (window.innerHeight / 2 - e.pageY) / 50;
-            img.style.transform = `scale(1.05) translate(${x}px, ${y}px)`;
-        });
-    </script>
-</body></html>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Usuario</mat-label>
+      <input matInput [(ngModel)]="username" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Contraseña</mat-label>
+      <input matInput type="password" [(ngModel)]="password" />
+    </mat-form-field>
+
+    <button
+      mat-raised-button
+      color="primary"
+      class="full-width"
+      (click)="login()"
+      [disabled]="loading"
+    >
+      @if (!loading) {
+        <span>Ingresar</span>
+      } @else {
+        <mat-spinner diameter="20"></mat-spinner>
+      }
+    </button>
+
+  </mat-card>
+</div>

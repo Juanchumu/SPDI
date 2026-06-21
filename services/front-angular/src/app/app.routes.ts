@@ -4,47 +4,31 @@ import { Routes } from '@angular/router';
 import { Mapa } from './components/mapa/mapa';
 import { Error } from './components/error/error';
 import { Healt } from './components/healt/healt';
+import { Bienvenida } from './components/bienvenida/bienvenida';
+import { MapaUnico } from './components/mapa-unico/mapa-unico';
+import { ClienteAlta } from './components/cliente-alta/cliente-alta';
+import { InformeRiesgo } from './components/informe-riesgo/informe-riesgo';
+import { InformesDeRiesgo } from './components/informes-de-riesgo/informes-de-riesgo';
+import { OrdenesTableComponent } from './components/ordenes/ordenes';
 import { Login } from './login/login';
-//import { authGuard } from './auth-guard';
-import { AuthGuard } from './guards/auth.guard';
-
-
-// Layout
-import { SidebarComponent } from './components/layout/sidebar/sidebar.component';
-import { HeaderComponent } from './components/layout/header/header.component';
-import { FooterComponent } from './components/layout/footer/footer.component';
-
-// Pages
-import { WelcomeComponent } from './components/pages/welcome/welcome.component';
-import { LoginComponent } from './components/pages/login/login.component';
-import { DashboardComponent } from './components/pages/dashboard/dashboard.component';
-import { InformeRiesgoComponent } from './components/pages/informe-riesgo/informe-riesgo.component';
-import { InformeClienteComponent } from './components/pages/informe-cliente/informe-cliente.component';
-import { AltaClienteComponent } from './components/pages/alta-cliente/alta-cliente.component';
-import { RegistroClienteComponent } from './components/pages/registro-cliente/registro-cliente.component';
-import { GestionAlertasComponent } from './components/pages/gestion-alertas/gestion-alertas.component';
-
-
-
+import { authGuard } from './auth-guard';
 
 export const routes: Routes = [
-  //{path: 'login', component: Login},
-  //{path: 'mapa', component: Mapa, canActivate: [authGuard]},
-  //{path: 'healt', component: Healt, canActivate: [authGuard]},
+  {path: 'login', component: Login},
+  {path: 'home', component: Bienvenida},
+  {path: 'ordenes', component: OrdenesTableComponent},
+  {path: 'mapauni/:id', component: MapaUnico},
+  {path: 'cliente-alta', component: ClienteAlta},
+  {path: 'informe-riesgo', component: InformeRiesgo},
+  {path: 'informes-de-riesgo', component: InformesDeRiesgo},
+  {path: 'mapa', component: Mapa, canActivate: [authGuard]},
+  {path: 'healt', component: Healt, canActivate: [authGuard]},
   {path: 'error', component: Error},
   {path: '', redirectTo: 'login', pathMatch: 'full' },
-  //{path: '**' , component: Error}
-  { path: '', component: WelcomeComponent },
-  { path: 'login', component: LoginComponent },
-  { path: 'dashboard', component: DashboardComponent,canActivate: [AuthGuard]},
-  { path: 'informes-riesgo', component: InformeRiesgoComponent,canActivate: [AuthGuard]},
-  { path: 'informes-cliente', component: InformeClienteComponent,canActivate: [AuthGuard]},
-  { path: 'alta-cliente', component: AltaClienteComponent,canActivate: [AuthGuard]},
-  { path: 'registro-cliente/:id', component: RegistroClienteComponent,canActivate: [AuthGuard]},
-  { path: 'gestion-alertas/:id', component: GestionAlertasComponent,canActivate: [AuthGuard]},
-  { path: '**', redirectTo: '' }
-
+  {path: '**' , component: Error}
 ];
+
+
 
 
 

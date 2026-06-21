@@ -1,0 +1,151 @@
+<div class="container">
+
+  <mat-card class="card">
+
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>warning</mat-icon>
+        Generar Informe de Riesgo
+      </mat-card-title>
+
+      <mat-card-subtitle>
+        Seleccione un cliente para iniciar el análisis
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+
+      <mat-form-field
+        appearance="outline"
+        class="full-width">
+
+        <mat-label>Responsable</mat-label>
+
+        <input
+          matInput
+          [value]="responsable"
+          readonly>
+
+      </mat-form-field>
+
+      <mat-form-field
+        appearance="outline"
+        class="full-width">
+
+        <mat-label>Buscar cliente</mat-label>
+
+        <input
+          matInput
+          [formControl]="form.controls.cliente"
+          [matAutocomplete]="auto">
+
+        <mat-autocomplete
+          #auto="matAutocomplete"
+          [displayWith]="displayCliente"
+          (optionSelected)="seleccionarCliente($event.option.value)">
+
+          @for (cliente of (clientesFiltrados$ | async); track cliente.id) {
+
+            <mat-option [value]="cliente">
+
+              {{ cliente.nombre }}
+
+            </mat-option>
+
+          }
+
+        </mat-autocomplete>
+
+      </mat-form-field>
+
+      @if (clienteSeleccionado) {
+
+        <div class="cliente-info">
+
+          <mat-card appearance="outlined">
+
+            <mat-card-content>
+
+              <div class="info-grid">
+
+                <div>
+                  <strong>Código:</strong>
+                  {{ clienteSeleccionado.codigo_cliente }}
+                </div>
+
+                <div>
+                  <strong>Email:</strong>
+                  {{ clienteSeleccionado.email || '-' }}
+                </div>
+
+                <div>
+                  <strong>Teléfono:</strong>
+                  {{ clienteSeleccionado.telefono || '-' }}
+                </div>
+
+              </div>
+
+            </mat-card-content>
+
+          </mat-card>
+
+          <mat-form-field
+            appearance="outline"
+            class="full-width">
+
+            <mat-label>
+              Descripción del negocio
+            </mat-label>
+
+            <textarea
+              matInput
+              rows="8"
+              readonly>
+
+{{ clienteSeleccionado.descripcion }}
+
+            </textarea>
+
+          </mat-form-field>
+
+        </div>
+
+      }
+
+      @if (error) {
+
+        <div class="mensaje error">
+          {{ error }}
+        </div>
+
+      }
+
+      @if (exito) {
+
+        <div class="mensaje exito">
+          Informe generado correctamente
+        </div>
+
+      }
+
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+
+      <button
+        mat-flat-button
+        color="primary"
+        [disabled]="!clienteSeleccionado || cargando"
+        (click)="generarInforme()">
+
+        <mat-icon>description</mat-icon>
+
+        Generar Informe
+
+      </button>
+
+    </mat-card-actions>
+
+  </mat-card>
+
+</div>
