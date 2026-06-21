@@ -165,6 +165,7 @@ with engine.connect() as conn:
         conn.execute(text("""
 		CREATE TABLE IF NOT EXISTS clientes (
     		id SERIAL PRIMARY KEY,
+    		responsable TEXT,
     		nombre TEXT,
     		codigo_cliente TEXT UNIQUE,
     		email TEXT,
