@@ -3,7 +3,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: radial-gradient(circle at top, #e9eefc, #f6f7fb);
 }
 
 .login-card {

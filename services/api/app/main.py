@@ -210,9 +210,6 @@ class OrdenRequest(BaseModel):
     lon: float
     username: str
     cliente: str
-
-
-
 @app.post("/api/v1/orden", status_code=status.HTTP_201_CREATED)
 def crear_orden(request: OrdenRequest, db: Session = Depends(get_db)):
     dia_str = str(request.dia)
@@ -556,14 +553,10 @@ def obtener_informe_cliente(riesgo_id: int, db: Session = Depends(get_db) ):
     }
 @app.get("/api/v1/informes/riesgo")
 def obtener_informes_riesgo(username:str, db: Session = Depends(get_db) ):
-	if (username == 'admin'):
-		informes = (
-        db.query(InformesRiesgo).all() )
+    if (username == 'admin'):
+        informes = ( db.query(InformesRiesgo).all() )
     else:
-    	informes = (
-        db.query(InformesRiesgo).filter(
-        InformesRiesgo.responsable == username).all())
-    
+        informes = (db.query(InformesRiesgo).filter(InformesRiesgo.responsable == username).all())
     if not informes:
         raise HTTPException(status_code=404,detail="Informes de Riesgos no encontrados")
     
@@ -607,6 +600,7 @@ class AreaAseguradaResponse(BaseModel):
 class ClienteResponse(BaseModel):
     id: int
     nombre: str
+    responsable : str | None = ""
     codigo_cliente: str
     email: str | None = None
     telefono: str | None = None
@@ -618,6 +612,7 @@ class ClienteResponse(BaseModel):
 class ClienteCreate(BaseModel):
     nombre: str
     codigo_cliente: str
+    responsable : str | None = ''
     email: str | None = None
     telefono: str | None = None
     descripcion: str
@@ -633,8 +628,32 @@ class AlertaPreviewRequest(BaseModel):
 
 
 @app.get("/api/v1/clientes", response_model=list[ClienteResponse])
-def listar_clientes(db: Session = Depends(get_db)):
-    return db.query(Cliente).order_by(Cliente.id.asc()).all()
+def listar_clientes(username: str, db: Session = Depends(get_db)):
+	if (username == 'admin'):
+        clientes = db.query(Cliente).order_by(Cliente.id.asc()).all()
+    else:
+        clientes = db.query(Cliente).filter(Cliente.responsable == username).order_by(Cliente.id.asc()).all()
+    if not clientes:
+        raise HTTPException(status_code=404,detail="Clientes no encontrados")
+    features = []
+    for cliente in clientes:
+        features.append({"type": "Feature",
+                         "properties": {
+                             "id": cliente.id,
+                             "responsable": cliente.responsable,
+                             "cliente": cliente.nombre,
+                             "codigo": cliente.codigo_cliente,
+                             "email": cliente.email,
+                             "descripcion": cliente.descripcion,
+                             "telefono": cliente.telefono
+                             }
+                         })
+    return {"type": "FeatureCollection",
+            "features": features    }
+
+
+
+
 
 @app.get("/api/v1/clientes/{cliente_id}/areas", response_model=list[AreaAseguradaResponse])
 def listar_areas_cliente(cliente_id: int, db: Session = Depends(get_db)):

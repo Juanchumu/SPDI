@@ -6,8 +6,23 @@
     <mat-icon>logout</mat-icon>
     Cerrar Sesion
   </button>
-
   <span class="example-spacer"></span>
+<mat-form-field appearance="outline">
+  <mat-label>Cliente</mat-label>
+
+  <mat-select [(ngModel)]="clienteSeleccionado">
+
+    @for (cliente of clientes; track cliente.id) {
+
+      <mat-option [value]="cliente.nombre">
+        {{ cliente.nombre }}
+      </mat-option>
+
+    }
+
+  </mat-select>
+
+</mat-form-field>
 @if (!capturando && !capturaFinalizada) {
   <button
     mat-raised-button

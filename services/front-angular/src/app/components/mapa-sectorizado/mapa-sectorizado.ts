@@ -1,6 +1,7 @@
 import { Component, AfterViewInit, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import * as L from 'leaflet';
 
+
 @Component({
   selector: 'app-mapa-sectorizado',
   standalone: true,

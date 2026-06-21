@@ -89,6 +89,7 @@ class Informes(Base):
 class Cliente(Base):
     __tablename__ = "clientes"
     id = Column(Integer, primary_key=True, autoincrement=True)
+    responsable = Column(Text)
     nombre = Column(String)
     codigo_cliente = Column(String, unique=True)
     email = Column(String, nullable=True)
