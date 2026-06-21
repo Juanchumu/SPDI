@@ -1,21 +1,24 @@
+
+
 <mat-toolbar>
   <button mat-icon-button>
     <mat-icon>gite</mat-icon>
   </button>
   <span>Ignis Guard</span>
   <span class="example-spacer"></span>
-<button
-  mat-raised-button
-  routerLink="/mapa">
-  Mapa
-</button>
+  @if( estaLogueado() ) {
+  <button mat-raised-button routerLink="/alta-cliente">+ Clientes</button>
+<button mat-raised-button routerLink="/informe-riesgo">Informes Riesgo</button>
+<button mat-raised-button routerLink="/informes-de-riesgo">Informes de Riesgo</button>
+<button mat-raised-button routerLink="/ordenes">Lista Ordenes</button>
+<button mat-raised-button routerLink="/mapa">Mapa</button>
 
 <button
   mat-raised-button
   routerLink="/healt">
   Estado
 </button>
-
+}
 </mat-toolbar>
 <div  class="app-background" >
 <router-outlet>

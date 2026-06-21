@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../auth';
 
 // Angular Material
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -24,14 +25,15 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
-export class Login {
+export class Login implements OnInit{
   username = '';
   password = '';
   loading = false;
 
   constructor(
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private auth: AuthService
   ) {}
 
   login() {
@@ -59,4 +61,14 @@ export class Login {
       }
     });
   }
+  estaLogueado(): boolean {
+    return this.auth.isLogged();
+  }
+
+  ngOnInit(): void {
+    if (this.estaLogueado()) {
+      this.router.navigate(['/mapa']);
+    }
+  }
+
 }

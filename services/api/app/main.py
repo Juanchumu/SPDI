@@ -629,7 +629,7 @@ class AlertaPreviewRequest(BaseModel):
 
 @app.get("/api/v1/clientes", response_model=list[ClienteResponse])
 def listar_clientes(username: str, db: Session = Depends(get_db)):
-	if (username == 'admin'):
+    if (username == 'admin'):
         clientes = db.query(Cliente).order_by(Cliente.id.asc()).all()
     else:
         clientes = db.query(Cliente).filter(Cliente.responsable == username).order_by(Cliente.id.asc()).all()
@@ -645,14 +645,9 @@ def listar_clientes(username: str, db: Session = Depends(get_db)):
                              "codigo": cliente.codigo_cliente,
                              "email": cliente.email,
                              "descripcion": cliente.descripcion,
-                             "telefono": cliente.telefono
-                             }
+                             "telefono": cliente.telefono}
                          })
-    return {"type": "FeatureCollection",
-            "features": features    }
-
-
-
+    return {"type": "FeatureCollection", "features": features}
 
 
 @app.get("/api/v1/clientes/{cliente_id}/areas", response_model=list[AreaAseguradaResponse])

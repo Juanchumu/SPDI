@@ -18,7 +18,7 @@ export const routes: Routes = [
   {path: 'home', component: Bienvenida},
   {path: 'ordenes', component: OrdenesTableComponent},
   {path: 'mapauni/:id', component: MapaUnico},
-  {path: 'cliente-alta', component: ClienteAlta},
+  {path: 'alta-cliente', component: ClienteAlta},
   {path: 'informe-riesgo', component: InformeRiesgo},
   {path: 'informes-de-riesgo', component: InformesDeRiesgo},
   {path: 'mapa', component: Mapa, canActivate: [authGuard]},
