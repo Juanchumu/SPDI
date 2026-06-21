@@ -21,7 +21,7 @@ export class Login {
   login() {
 
     this.http.post<any>(
-      'http://localhost:8000/login',
+      'http://localhost:8000/api/v1/login',
       {
         username: this.username,
         password: this.password

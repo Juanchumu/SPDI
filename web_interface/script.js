@@ -49,6 +49,7 @@ if (loginForm) {
             
             if (resp.ok) {
                 const data = await resp.json();
+                localStorage.setItem('username', usernameInput);
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('userToken', data.token);
                 localStorage.setItem('userRole', data.rol);

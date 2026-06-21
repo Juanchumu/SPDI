@@ -1,0 +1,56 @@
+src/
+├── app/
+│   ├── components/
+│   │   ├── layout/
+│   │   │   ├── sidebar/
+│   │   │   │   ├── sidebar.component.ts
+│   │   │   │   ├── sidebar.component.html
+│   │   │   │   └── sidebar.component.css
+│   │   │   ├── header/
+│   │   │   │   ├── header.component.ts
+│   │   │   │   ├── header.component.html
+│   │   │   │   └── header.component.css
+│   │   │   └── footer/
+│   │   │       ├── footer.component.ts
+│   │   │       ├── footer.component.html
+│   │   │       └── footer.component.css
+│   │   ├── pages/
+│   │   │   ├── welcome/
+│   │   │   │   ├── welcome.component.ts
+│   │   │   │   ├── welcome.component.html
+│   │   │   │   └── welcome.component.css
+│   │   │   ├── login/
+│   │   │   │   ├── login.component.ts
+│   │   │   │   ├── login.component.html
+│   │   │   │   └── login.component.css
+│   │   │   ├── dashboard/
+│   │   │   │   ├── dashboard.component.ts
+│   │   │   │   ├── dashboard.component.html
+│   │   │   │   └── dashboard.component.css
+│   │   │   ├── informe-riesgo/
+│   │   │   │   ├── informe-riesgo.component.ts
+│   │   │   │   ├── informe-riesgo.component.html
+│   │   │   │   └── informe-riesgo.component.css
+│   │   │   └── informe-cliente/
+│   │   │       ├── informe-cliente.component.ts
+│   │   │       ├── informe-cliente.component.html
+│   │   │       └── informe-cliente.component.css
+│   ├── services/
+│   │   ├── auth.service.ts
+│   │   ├── orden.service.ts
+│   │   ├── informe.service.ts
+│   │   └── cliente.service.ts
+│   ├── models/
+│   │   ├── orden.model.ts
+│   │   ├── informe.model.ts
+│   │   ├── usuario.model.ts
+│   │   └── cliente.model.ts
+│   ├── guards/
+│   │   └── auth.guard.ts
+│   ├── app-routing.module.ts
+│   ├── app.module.ts
+│   └── app.component.ts
+├── environments/
+│   ├── environment.ts
+│   └── environment.prod.ts
+└── index.html

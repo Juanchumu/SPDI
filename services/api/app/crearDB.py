@@ -102,6 +102,7 @@ with engine.connect() as conn:
             prediccion TEXT,
             modelo_utilizado TEXT,
             username varchar(100),
+            cliente varchar(100),
             created_at TIMESTAMP,
             updated_at TIMESTAMP
         )

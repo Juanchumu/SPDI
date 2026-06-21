@@ -209,6 +209,7 @@ class OrdenRequest(BaseModel):
     lat: float
     lon: float
     username: str
+    cliente: str
 
 
 
@@ -216,6 +217,7 @@ class OrdenRequest(BaseModel):
 def crear_orden(request: OrdenRequest, db: Session = Depends(get_db)):
     dia_str = str(request.dia)
     usuario_str = str(request.username)
+    cliente_str = str(request.cliente)
     args = {
         "dia_de_la_imagen": dia_str,
         "lat": request.lat,
@@ -224,7 +226,8 @@ def crear_orden(request: OrdenRequest, db: Session = Depends(get_db)):
     nueva = Orden(
         args=json.dumps(args),
         status="Pendiente..",
-        username= usuario_str
+        username= usuario_str,
+        cliente= cliente_str
     )
     db.add(nueva)
     db.commit()

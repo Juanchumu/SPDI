@@ -1,0 +1,20 @@
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 bg-surface border-b border-outline-variant flex justify-between items-center px-gutter z-10">
+  <div class="flex items-center flex-1">
+    <div class="relative w-full max-w-md">
+      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+      <input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" 
+             placeholder="Buscar clientes o zonas..." type="text"/>
+    </div>
+  </div>
+  <div class="flex items-center gap-6">
+    <div class="flex items-center gap-3 pl-6 border-l border-outline-variant">
+      <div class="text-right">
+        <p class="font-label-bold text-primary">{{ username }}</p>
+        <p class="text-[10px] text-on-surface-variant">{{ isAdmin ? 'Administrador' : 'Usuario' }}</p>
+      </div>
+      <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden elevation-1">
+        <span class="text-on-primary text-lg font-bold">{{ username.charAt(0).toUpperCase() }}</span>
+      </div>
+    </div>
+  </div>
+</header>

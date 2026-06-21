@@ -1,14 +1,10 @@
-import { Component } from '@angular/core';
-//import { Router } from '@angular/router';
-//import { AuthService } from './services/auth.service';
-
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 
-//import { AppRoutingModule } from './app-routing.module';
-//import { AppComponent } from './app.component';
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
 
 // Layout Components
 import { SidebarComponent } from './components/layout/sidebar/sidebar.component';
@@ -24,43 +20,41 @@ import { InformeClienteComponent } from './components/pages/informe-cliente/info
 import { AltaClienteComponent } from './components/pages/alta-cliente/alta-cliente.component';
 import { RegistroClienteComponent } from './components/pages/registro-cliente/registro-cliente.component';
 import { GestionAlertasComponent } from './components/pages/gestion-alertas/gestion-alertas.component';
+
 // Services
 import { AuthService } from './services/auth.service';
 import { OrdenService } from './services/orden.service';
 import { InformeService } from './services/informe.service';
 import { ClienteService } from './services/cliente.service';
 
-
-import { RouterOutlet, RouterLink, Router } from '@angular/router';
-
-import { MarkdownPipe } from './pipes/markdown.pipe';
-
-@Component({
-  selector: 'app-root',
-  imports: [
-    RouterOutlet,
-    RouterLink,
-    SidebarComponent, HeaderComponent, FooterComponent,
-    WelcomeComponent, LoginComponent, DashboardComponent, InformeRiesgoComponent, InformeClienteComponent, AltaClienteComponent, RegistroClienteComponent, GestionAlertasComponent,
-    MarkdownPipe
+@NgModule({
+  declarations: [
+    AppComponent,
+    SidebarComponent,
+    HeaderComponent,
+    FooterComponent,
+    WelcomeComponent,
+    LoginComponent,
+    DashboardComponent,
+    InformeRiesgoComponent,
+    InformeClienteComponent,
+    AltaClienteComponent,
+    RegistroClienteComponent,
+    GestionAlertasComponent
   ],
-  templateUrl: './app.html',
-  styleUrls: ['./app.css']
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    FormsModule,
+    ReactiveFormsModule,
+    HttpClientModule
+  ],
+  providers: [
+    AuthService,
+    OrdenService,
+    InformeService,
+    ClienteService
+  ],
+  bootstrap: [AppComponent]
 })
-
-export class App {
-  title = 'ignis-guard';
-
-  constructor(
-    public authService: AuthService,
-    private router: Router
-  ) {}
-
-  isWelcomePage(): boolean {
-    return this.router.url === '/' || this.router.url === '';
-  }
-
-  isLoginPage(): boolean {
-    return this.router.url === '/login';
-  }
-}
+export class AppModule { }
