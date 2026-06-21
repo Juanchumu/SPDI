@@ -16,6 +16,14 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { Router } from '@angular/router';
+
+import { MensajeAlerta } from '../mensaje-alerta/mensaje-alerta';
+
+
+
+
 interface Cliente {
   id: number;
   nombre: string;
@@ -36,7 +44,8 @@ interface Cliente {
     MatInputModule,
     MatAutocompleteModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    MensajeAlerta
   ],
   templateUrl: './informe-riesgo.html',
   styleUrl: './informe-riesgo.scss'
@@ -69,32 +78,40 @@ export class InformeRiesgo implements OnInit {
 
   clientesFiltrados$!: Observable<Cliente[]>;
 
-  ngOnInit(): void {
+  constructor(private dialog: MatDialog,
+  private router: Router) {}
+ ngOnInit(): void {
 
-    this.http
-      .get<Cliente[]>(this.apiClientes)
-      .subscribe({
-        next: (clientes) => {
+  this.http
+    .get<Cliente[]>(
+      `${this.apiClientes}?username=${this.responsable}`
+    )
+    .subscribe({
+      next: (clientes) => {
 
-          this.clientes = clientes;
+        this.clientes = clientes;
 
-          this.clientesFiltrados$ =
-            this.form.controls.cliente.valueChanges.pipe(
-              startWith(''),
-              map(valor => {
+        this.clientesFiltrados$ =
+          this.form.controls.cliente.valueChanges.pipe(
+            startWith(''),
+            map(valor => {
 
-                const texto =
-                  typeof valor === 'string'
-                    ? valor
-                    : valor?.nombre ?? '';
+              const texto =
+                typeof valor === 'string'
+                  ? valor
+                  : valor?.nombre ?? '';
 
-                return this.filtrarClientes(texto);
-              })
-            );
-        }
-      });
-  }
+              return this.filtrarClientes(texto);
+            })
+          );
+      },
+      error: (err) => {
+        console.error('Error cargando clientes', err);
+        this.mostrarAlerta();
+      }
+    });
 
+}
   private filtrarClientes(texto: string): Cliente[] {
 
     const filtro = texto.toLowerCase();
@@ -147,4 +164,23 @@ export class InformeRiesgo implements OnInit {
         }
       });
   }
+mostrarAlerta(): void {
+
+  const dialogRef = this.dialog.open(MensajeAlerta, {
+    width: '400px',
+    disableClose: true,
+    data: {
+      titulo: 'No Hay clientes',
+      mensaje: 'Todavia no hay clientes dados de alta!!.'
+    }
+  });
+
+  dialogRef.afterClosed().subscribe(resultado => {
+    if (resultado) {
+      this.router.navigate(['/alta-cliente']);
+    }
+  });
+}
+
+
 }

@@ -5,17 +5,17 @@ import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
-import { DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 
 export interface InformeRiesgo {
   id: number;
   responsable: string;
   cliente: string;
   estado: string;
-  contenido: string;
-  descripcion: string;
+  contenido: string | null;
+  descripcion: string | null;
   created_at: string;
-  updated_at: string;
+  updated_at: string | null;
 }
 
 @Component({
@@ -26,7 +26,8 @@ export interface InformeRiesgo {
     MatExpansionModule,
     MatChipsModule,
     MatIconModule,
-    DatePipe
+    DatePipe,
+    CommonModule
   ],
   templateUrl: './informes-de-riesgo.html',
   styleUrls: ['./informes-de-riesgo.scss']
@@ -48,45 +49,31 @@ export class InformesDeRiesgo implements OnInit {
     const username =
       localStorage.getItem('username') ?? 'admin';
 
-    this.http.get<any>(
-      `${this.apiUrl}/informes/riesgo?username=${username}`
-    )
-    .subscribe({
-      next: (response) => {
+    this.http
+      .get<InformeRiesgo[]>(
+        `${this.apiUrl}/informes/riesgo?username=${username}`
+      )
+      .subscribe({
+        next: (response) => {
 
-        this.informes = response.features.map(
-          (f: any) => ({
-            id: f.properties.id,
-            responsable: f.properties.responsable,
-            cliente: f.properties.cliente,
-            estado: f.properties.estado,
-            contenido: f.properties.contenido,
-            descripcion: f.properties.descripcion,
-            created_at: f.properties.created_at,
-            updated_at: f.properties.updated_at
-          })
-        );
+          // ✔️ ahora es un array directo
+          this.informes = response;
+          console.log(this.informes);
 
-      },
-      error: console.error
-    });
+        },
+        error: (err) => {
+          console.error('Error cargando informes', err);
+        }
+      });
   }
 
   estadoClass(estado: string): string {
 
     const e = estado.toLowerCase();
 
-    if (e.includes('listo')) {
-      return 'estado-listo';
-    }
-
-    if (e.includes('pendiente')) {
-      return 'estado-pendiente';
-    }
-
-    if (e.includes('rechazado')) {
-      return 'estado-rechazado';
-    }
+    if (e.includes('listo')) return 'estado-listo';
+    if (e.includes('pendiente')) return 'estado-pendiente';
+    if (e.includes('rechazado')) return 'estado-rechazado';
 
     return 'estado-default';
   }

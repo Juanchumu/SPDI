@@ -1,21 +1,41 @@
-.card {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.up {
-  color: green;
-  font-weight: bold;
-}
-
-.down {
-  color: red;
-  font-weight: bold;
-}
-.example-spacer {
+.spacer {
   flex: 1 1 auto;
 }
 
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  padding: 12px;
+}
+
+.service-card {
+  border-left: 5px solid transparent;
+}
+
+.chip-up {
+  background-color: #c8e6c9 !important;
+  color: #256029 !important;
+}
+
+.chip-down {
+  background-color: #ffcdd2 !important;
+  color: #8b1e1e !important;
+}
+
+.deps-card {
+  margin: 12px;
+}
+
+.deps {
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.dep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

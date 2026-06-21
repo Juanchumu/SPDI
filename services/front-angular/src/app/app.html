@@ -5,6 +5,15 @@
     <mat-icon>gite</mat-icon>
   </button>
   <span>Ignis Guard</span>
+  @if (estaLogueado()  ){
+ <button
+    mat-raised-button
+    (click)="cerrarSesion()">
+    <mat-icon>logout</mat-icon>
+    Cerrar Sesion
+    {{nombreDeSesion()}}
+  </button>
+  }
   <span class="example-spacer"></span>
   @if( estaLogueado() ) {
   <button mat-raised-button routerLink="/alta-cliente">+ Clientes</button>

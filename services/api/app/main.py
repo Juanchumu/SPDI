@@ -562,19 +562,16 @@ def obtener_informes_riesgo(username:str, db: Session = Depends(get_db) ):
     
     features = []
     for informe in informes:
-        features.append({"type": "Feature",
-                         "properties": {
-                             "id": informe.id,
-                             "responsable": informe.responsable,
-                             "cliente": informe.cliente,
-                             "estado": informe.estado,
-                             "contenido": informe.contenido,
-                             "descripcion": informe.contenido,
-                             "created_at": informe.created_at,
-                             "updated_at": informe.updated_at}
-                         })
-    return {"type": "FeatureCollection",
-            "features": features    }
+        features.append({
+            "id": informe.id,
+            "responsable": informe.responsable,
+            "cliente": informe.cliente,
+            "estado": informe.estado,
+            "contenido": informe.contenido,
+            "descripcion": informe.contenido,
+            "created_at": informe.created_at,
+            "updated_at": informe.updated_at})
+    return features
 ### Endpoint Gemini
 import google.generativeai as genai
 
@@ -598,12 +595,12 @@ class AreaAseguradaResponse(BaseModel):
         orm_mode = True
 
 class ClienteResponse(BaseModel):
-    id: int
-    nombre: str
-    responsable : str | None = ""
-    codigo_cliente: str
-    email: str | None = None
-    telefono: str | None = None
+    id: int 
+    nombre: str | None = None
+    responsable : str | None = None
+    codigo_cliente: str | None = None
+    email: str | None = ""
+    telefono: str | None = ""
     descripcion: str | None = ""
 
     class Config:
@@ -635,19 +632,19 @@ def listar_clientes(username: str, db: Session = Depends(get_db)):
         clientes = db.query(Cliente).filter(Cliente.responsable == username).order_by(Cliente.id.asc()).all()
     if not clientes:
         raise HTTPException(status_code=404,detail="Clientes no encontrados")
+    if len(clientes) == 0:
+        raise HTTPException(status_code=404,detail="Todavia no hay clientes dados de alta!")
     features = []
     for cliente in clientes:
-        features.append({"type": "Feature",
-                         "properties": {
-                             "id": cliente.id,
-                             "responsable": cliente.responsable,
-                             "cliente": cliente.nombre,
-                             "codigo": cliente.codigo_cliente,
-                             "email": cliente.email,
-                             "descripcion": cliente.descripcion,
-                             "telefono": cliente.telefono}
+        features.append({"id": cliente.id,
+                         "nombre": cliente.nombre,
+                         "responsable": cliente.responsable,
+                         "codigo_cliente": cliente.codigo_cliente,
+                         "email": cliente.email,
+                         "descripcion": cliente.descripcion,
+                         "telefono": cliente.telefono
                          })
-    return {"type": "FeatureCollection", "features": features}
+    return features
 
 
 @app.get("/api/v1/clientes/{cliente_id}/areas", response_model=list[AreaAseguradaResponse])

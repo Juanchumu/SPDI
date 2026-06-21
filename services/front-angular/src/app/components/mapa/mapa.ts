@@ -3,6 +3,12 @@ import { MapaSectorizado } from '../mapa-sectorizado/mapa-sectorizado'
 import { Component, signal, ViewChild, OnInit } from '@angular/core';
 
 
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { Router } from '@angular/router';
+
+import { MensajeAlerta } from '../mensaje-alerta/mensaje-alerta';
+
+
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
@@ -17,6 +23,8 @@ import { AuthService } from '../../auth';
   selector: 'app-mapa',
   imports: [
     MatButtonModule, FormsModule, MatFormFieldModule, MatSelectModule,
+    //MatDialog, MatDialogModule,
+    MensajeAlerta,
     MatToolbarModule,
     MatIconModule,
     MapaSectorizado,
@@ -29,13 +37,14 @@ export class Mapa implements OnInit {
   mapa!: MapaSectorizado;
   protected readonly title = signal('front-angular-spdi');
   geojsonData: any;
-  
+
   clientes: any[] = [];
   clienteSeleccionado = '';
 
   public nombreUsuario: string | null = null;
 
-  constructor(private http: HttpClient,private auth: AuthService) {
+  constructor(private http: HttpClient,private auth: AuthService,private dialog: MatDialog,
+  private router: Router) {
     this.nombreUsuario = this.auth.getUsername();
   }
   ngOnInit(): void {
@@ -94,7 +103,7 @@ export class Mapa implements OnInit {
     this.capturaFinalizada = false;
   }
   */
-  
+
   enviarPuntos() {
 
   if (!this.clienteSeleccionado) {
@@ -167,6 +176,24 @@ cargarClientes() {
     },
     error: (err) => {
       console.error(err);
+      this.mostrarAlerta();
+    }
+  });
+}
+mostrarAlerta(): void {
+
+  const dialogRef = this.dialog.open(MensajeAlerta, {
+    width: '400px',
+    disableClose: true,
+    data: {
+      titulo: 'No Hay clientes',
+      mensaje: 'Todavia no hay clientes dados de alta!!.'
+    }
+  });
+
+  dialogRef.afterClosed().subscribe(resultado => {
+    if (resultado) {
+      this.router.navigate(['/alta-cliente']);
     }
   });
 }

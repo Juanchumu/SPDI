@@ -23,4 +23,5 @@ export class App {
   constructor(private auth: AuthService) {}
   estaLogueado(): boolean {return this.auth.isLogged();}
   cerrarSesion() {this.auth.logout();}
+  nombreDeSesion(): string {return this.auth.getUsername();}
 }

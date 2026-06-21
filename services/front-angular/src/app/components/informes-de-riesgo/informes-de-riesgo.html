@@ -10,7 +10,12 @@
       Historial de informes generados
     </mat-card-subtitle>
   </mat-card>
-
+<div style="display:flex; gap:12px; margin-bottom:16px;">
+  <button mat-raised-button color="primary" (click)="cargarInformes()">
+    <mat-icon>refresh</mat-icon>
+    Actualizar
+  </button>
+</div>
   <mat-accordion multi="false">
 
     @for (informe of informes; track informe.id) {
@@ -33,8 +38,7 @@
               {{ informe.responsable }}
             </span>
 
-            <mat-chip
-              [class]="estadoClass(informe.estado)">
+            <mat-chip [ngClass]="estadoClass(informe.estado)">
               {{ informe.estado }}
             </mat-chip>
 
@@ -64,7 +68,7 @@
           <div>
             <strong>Actualizado</strong>
             <div>
-              {{ informe.updated_at | date:'dd/MM/yyyy HH:mm' }}
+              {{ informe.updated_at ? (informe.updated_at | date:'dd/MM/yyyy HH:mm') : '-' }}
             </div>
           </div>
 
@@ -73,11 +77,9 @@
         <mat-card class="contenido-card">
 
           <div class="contenido">
-
             <pre>
-{{ informe.contenido }}
+{{ informe.contenido ?? 'Sin contenido' }}
             </pre>
-
           </div>
 
         </mat-card>
