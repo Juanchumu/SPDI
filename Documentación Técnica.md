@@ -122,12 +122,25 @@ A nivel computacional, XGBoost no procesa la imagen en su estructura matricial b
 
 A partir de este conjunto de datos (que puede superar el millón de filas al agregar múltiples imágenes), XGBoost construye iterativamente un ensamble de árboles de decisión. El algoritmo infiere patrones estadísticos complejos multivariables, determinando probabilidades basadas en la combinación de los índices espectrales y factores antrópicos.
 
-#### Consideraciones sobre las fuentes de datos
-Durante el desarrollo del proyecto se utilizaron principalmente datos obtenidos mediante otra api, ya que el acceso masivo a imágenes satelitales sin procesar generó restricciones y bloqueos por IP.
-Según lo indicado por el profesor de la materia, estos datos presentan una menor precisión que los datos satelitales originales, debido a que son distribuidos con una menor cantidad de decimales y ya procesados previamente. Esto puede haber afectado negativamente la calidad de los entrenamientos y los resultados obtenidos.
+#### APIs y Fuentes de Datos Utilizadas
+El sistema se nutre de distintas APIs para componer tanto el dataset de entrenamiento como la interfaz de usuario:
 
-Se recomienda, cuando sea posible:
-- Descargar cada archivo `.SAFE` una única vez.
-- Mantener una copia local de los datos descargados.
-- Trabajar directamente con las imágenes satelitales originales para conservar la máxima precisión disponible.
-- Utilizar las fuentes procesadas únicamente cuando existan limitaciones de acceso o recursos de hardware.
+1. **Microsoft Planetary Computer (MPC):** Se utiliza su API STAC (`stac/v1`) para consultar y descargar las imágenes satelitales multiespectrales históricas y recientes (Sentinel-2). Estas imágenes son la base para calcular los índices espectrales (NDVI, NBR, etc.) que alimentan al modelo.
+2. **OpenStreetMap (OSM):** Mediante esta API se obtienen vectores de infraestructura y factores antrópicos (rutas y zonas de acampe), fundamentales como variables predictoras de riesgo.
+3. **ESRI (ArcGIS World Imagery):** Se emplea como capa base (*basemap*) en el frontend (portal web), brindando imágenes satelitales de alta resolución para que el usuario tenga una referencia visual clara al visualizar el mapa de riesgos superpuesto.
+
+#### Cálculo de Distancias Antrópicas (Rutas y Campings)
+Para determinar el impacto humano en el riesgo de incendio, el sistema calcula la distancia exacta desde cada píxel del mapa hasta la ruta o camping más cercano. El proceso técnico (implementado en `osm_utils.py`) es el siguiente:
+
+1. **Extracción y Filtrado:** Se consulta la API de OSM solicitando geometrías específicas dentro del perímetro de la imagen extendida. Para las rutas se buscan vías de tránsito, y para los campings se filtra estrictamente por la etiqueta `tourism=camp_site`.
+2. **Proyección y Rasterización:** Las coordenadas obtenidas se reproyectan al sistema de coordenadas local UTM. Esto es crítico para que los cálculos métricos sean exactos. Luego, las geometrías vectoriales se rasterizan, convirtiéndose en una máscara binaria sobre la grilla satelital.
+3. **Transformada de Distancia Euclidiana:** Se aplica un algoritmo de *Distance Transform* (mediante `scipy.ndimage.distance_transform_edt`). Este algoritmo calcula la distancia euclidiana más corta desde cada píxel de la imagen hasta el píxel más cercano marcado como ruta o camping. Al multiplicar el resultado por la resolución espacial (10 metros por píxel), se obtiene una matriz donde cada celda contiene su distancia real en metros. Para evitar errores de cálculo en los bordes (*edge effects*), el sistema descarga un perímetro extendido de OSM antes de realizar el cómputo y luego recorta el resultado al tamaño exacto de la imagen.
+
+#### Consideraciones y Restricciones de Datos
+Durante etapas tempranas del proyecto, el acceso masivo a imágenes satelitales sin procesar generó bloqueos por IP.
+Según los lineamientos académicos, el uso de datos pre-procesados de terceros presenta una menor precisión que los datos satelitales originales, debido al truncamiento de decimales. Esto puede mermar la calidad predictiva.
+
+Se recomienda para uso en producción intensivo:
+- Descargar cada imagen `.SAFE` una única vez y mantener copias locales.
+- Trabajar directamente con la imagen original para conservar la máxima precisión flotante.
+- Utilizar fuentes procesadas únicamente como plan de contingencia ante caídas de la API principal.
