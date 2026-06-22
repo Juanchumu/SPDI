@@ -32,25 +32,55 @@ export class MapaSectorizado implements AfterViewInit, OnChanges {
   }
 
   private initMap(): void {
-    this.map = L.map('map').setView([-34.6037, -58.3816], 7);
+  this.map = L.map('map').setView([-34.6037, -58.3816], 7);
 
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 11,
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(this.map);
+  // --- CAPAS BASE ---
+  const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  });
 
-    this.map.on('click', (e: any) => {
-      if (!this.modoCaptura) return;
+  // ESRI Streets
+  const esriStreets = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    {
+      attribution: 'Tiles &copy; Esri'
+    }
+  );
 
-      const lat = e.latlng.lat;
-      const lon = e.latlng.lng;
+  // ESRI Satélite
+  const esriSat = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    {
+      attribution: 'Tiles &copy; Esri'
+    }
+  );
 
-      const marker = L.marker([lat, lon]).addTo(this.map);
-      this.marcadoresCapturados.push(marker);
+  // capa por defecto
+  osm.addTo(this.map);
 
-      this.puntoSeleccionado.emit({ lat, lon });
-    });
-  }
+  // --- CONTROL DE CAPAS ---
+  const baseMaps = {
+    'OpenStreetMap': osm,
+    'ESRI Streets': esriStreets,
+    'ESRI Satélite': esriSat
+  };
+
+  L.control.layers(baseMaps, {}, { collapsed: false }).addTo(this.map);
+
+  // click handler (lo tuyo igual)
+  this.map.on('click', (e: any) => {
+    if (!this.modoCaptura) return;
+
+    const lat = e.latlng.lat;
+    const lon = e.latlng.lng;
+
+    const marker = L.marker([lat, lon]).addTo(this.map);
+    this.marcadoresCapturados.push(marker);
+
+    this.puntoSeleccionado.emit({ lat, lon });
+  });
+}
 
   ngOnChanges(changes: SimpleChanges) {
     if (!this.map) return;

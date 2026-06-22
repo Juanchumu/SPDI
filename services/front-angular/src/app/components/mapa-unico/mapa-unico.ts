@@ -21,10 +21,41 @@ export class MapaUnico implements AfterViewInit {
 
     this.map = L.map('map').setView([coords[1], coords[0]], 10);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: 'OSM',
-    }).addTo(this.map);
+    // -------------------------
+    // BASE LAYERS
+    // -------------------------
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap',
+    });
 
+    const esriStreets = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+      {
+        attribution: 'Tiles © Esri',
+      }
+    );
+
+    const esriSat = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      {
+        attribution: 'Tiles © Esri',
+      }
+    );
+
+    // default
+    osm.addTo(this.map);
+
+    const baseMaps = {
+      'OpenStreetMap': osm,
+      'ESRI Streets': esriStreets,
+      'ESRI Satélite': esriSat,
+    };
+
+    L.control.layers(baseMaps, {}).addTo(this.map);
+
+    // -------------------------
+    // MARKER
+    // -------------------------
     L.marker([coords[1], coords[0]])
       .addTo(this.map)
       .bindPopup(
