@@ -86,6 +86,14 @@ Para mejorar los resultados es necesario incorporar nuevas fuentes de informaci�
 #### Requisitos de hardware
 Se recomienda disponer de al menos **64 GB de RAM** para procesar imágenes satelitales en formato bruto (`.SAFE`).
 
+#### Optimización del Entrenamiento (Submuestreo de Píxeles)
+Durante la etapa de entrenamiento en el módulo **Modelador**, se aplica un submuestreo aleatorio limitado a **10.000 píxeles por imagen** (aproximadamente el 25% de una imagen estándar de 200x200). Esta decisión técnica se fundamenta en dos estándares clave del análisis de imágenes satelitales (*Remote Sensing*):
+
+1. **Eficiencia de Memoria RAM:** Una imagen completa de 200x200 píxeles representa 40.000 filas de datos. Si se procesan conjuntos de datos extensos (por ejemplo, 70 imágenes), el modelo XGBoost tendría que ingerir millones de filas simultáneamente. Limitar la ingesta de píxeles evita la saturación de la memoria y previene caídas por falta de recursos en el contenedor Docker.
+2. **Mitigación de la Autocorrelación Espacial:** En las imágenes satelitales, los píxeles adyacentes suelen ser altamente redundantes (un píxel de "bosque quemado" es estadísticamente casi idéntico a su vecino inmediato). Ingerir 40.000 píxeles por imagen no aporta información sustancialmente nueva al modelo frente a tomar una muestra de 10.000. 
+
+Mediante este muestreo, el modelo logra capturar de manera óptima las firmas espectrales de las distintas superficies (incendios, vegetación, cuerpos de agua, nubosidad) manteniendo una alta precisión y reduciendo drásticamente la carga computacional.
+
 #### Consideraciones sobre las fuentes de datos
 Durante el desarrollo del proyecto se utilizaron principalmente datos obtenidos mediante otra api, ya que el acceso masivo a imágenes satelitales sin procesar generó restricciones y bloqueos por IP.
 Según lo indicado por el profesor de la materia, estos datos presentan una menor precisión que los datos satelitales originales, debido a que son distribuidos con una menor cantidad de decimales y ya procesados previamente. Esto puede haber afectado negativamente la calidad de los entrenamientos y los resultados obtenidos.
