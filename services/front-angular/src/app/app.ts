@@ -24,4 +24,5 @@ export class App {
   estaLogueado(): boolean {return this.auth.isLogged();}
   cerrarSesion() {this.auth.logout();}
   nombreDeSesion(): string {return this.auth.getUsername();}
+  esAdmin() : boolean {return (this.nombreDeSesion() === "admin");}
 }

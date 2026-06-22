@@ -21,12 +21,9 @@
 <button mat-raised-button routerLink="/informes-de-riesgo">Informes de Riesgo</button>
 <button mat-raised-button routerLink="/ordenes">Lista Ordenes</button>
 <button mat-raised-button routerLink="/mapa">Mapa</button>
-
-<button
-  mat-raised-button
-  routerLink="/healt">
-  Estado
-</button>
+@if (esAdmin()){
+<button mat-raised-button routerLink="/healt"> Estado </button>
+}
 }
 </mat-toolbar>
 <div  class="app-background" >

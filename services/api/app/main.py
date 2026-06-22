@@ -413,6 +413,7 @@ def listar_ordenes(username: str, db: Session = Depends(get_db)):
             "type": "Feature",
             "properties": {
                 "id": orden.id,
+                "cliente": orden.cliente,
                 "dia": args.get("dia_de_la_imagen"),
                 "estado": orden.status,
                 "prediccion": orden.prediccion,
@@ -655,8 +656,8 @@ def listar_areas_cliente(cliente_id: int, db: Session = Depends(get_db)):
     return db.query(AreaAsegurada).filter(AreaAsegurada.cliente_id == cliente_id).order_by(AreaAsegurada.id.asc()).all()
 
 @app.post("/api/v1/clientes", response_model=ClienteResponse, status_code=status.HTTP_201_CREATED)
-def crear_cliente(req: ClienteCreate, db: Session = Depends(get_db)):
-    nuevo = Cliente(nombre=req.nombre, codigo_cliente=req.codigo_cliente, email=req.email, telefono=req.telefono, descripcion=req.descripcion)
+def crear_cliente(username: str, req: ClienteCreate, db: Session = Depends(get_db)):
+    nuevo = Cliente(nombre=req.nombre, responsable=username, codigo_cliente=req.codigo_cliente, email=req.email, telefono=req.telefono, descripcion=req.descripcion)
     db.add(nuevo)
     db.commit()
     db.refresh(nuevo)

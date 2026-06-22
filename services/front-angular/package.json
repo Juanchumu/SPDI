@@ -20,6 +20,7 @@
     "@angular/platform-browser": "^22.0.0",
     "@angular/router": "^22.0.0",
     "leaflet": "^1.9.4",
+    "leaflet.heat": "^0.2.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
