@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ignis Guard | Resiliencia Forestal Inteligente</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-dim": "#d9dad9",
+                    "primary-container": "#1b4332",
+                    "primary": "#012d1d",
+                    "surface-container-high": "#e7e8e7",
+                    "on-secondary": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "secondary-container": "#ff5c3e",
+                    "primary-fixed": "#c1ecd4",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-highest": "#e1e3e2",
+                    "secondary-fixed": "#ffdad3",
+                    "on-tertiary-container": "#9bac91",
+                    "on-secondary-container": "#5d0900",
+                    "tertiary-container": "#32402b",
+                    "inverse-primary": "#a5d0b9",
+                    "surface-container": "#edeeed",
+                    "on-primary": "#ffffff",
+                    "secondary": "#b5270e",
+                    "outline": "#717973",
+                    "on-background": "#191c1c",
+                    "tertiary-fixed": "#d7e8cb",
+                    "surface-tint": "#3f6653",
+                    "surface-container-low": "#f3f4f3",
+                    "secondary-fixed-dim": "#ffb4a5",
+                    "on-secondary-fixed-variant": "#8e1300",
+                    "tertiary": "#1d2a17",
+                    "on-primary-container": "#86af99",
+                    "background": "#f9f9f8",
+                    "on-error": "#ffffff",
+                    "inverse-on-surface": "#f0f1f0",
+                    "surface": "#f9f9f8",
+                    "on-tertiary-fixed": "#121f0d",
+                    "outline-variant": "#c1c8c2",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-variant": "#e1e3e2",
+                    "on-surface-variant": "#414844",
+                    "on-primary-fixed": "#002114",
+                    "surface-bright": "#f9f9f8",
+                    "primary-fixed-dim": "#a5d0b9",
+                    "error-container": "#ffdad6",
+                    "error": "#ba1a1a",
+                    "inverse-surface": "#2e3131",
+                    "on-tertiary-fixed-variant": "#3c4b35",
+                    "on-primary-fixed-variant": "#274e3d",
+                    "on-surface": "#191c1c",
+                    "tertiary-fixed-dim": "#bbccb0",
+                    "on-secondary-fixed": "#3e0400"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "margin-desktop": "48px",
+                    "container-max": "1440px",
+                    "unit": "8px",
+                    "margin-mobile": "16px"
+            },
+            "fontFamily": {
+                    "label-bold": ["Inter"],
+                    "headline-md": ["Montserrat"],
+                    "headline-lg": ["Montserrat"],
+                    "body-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-lg-mobile": ["Montserrat"],
+                    "data-mono": ["Inter"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "data-mono": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9f9f8;
+            color: #191c1c;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #012d1d 0%, #1b4332 100%);
+        }
+        .text-clay { color: #b5270e; }
+        .bg-clay { background-color: #b5270e; }
+        .bento-card {
+            background: #ffffff;
+            border: 1px solid #E2E8E2;
+            box-shadow: 0px 4px 20px rgba(27, 67, 50, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .bento-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.08);
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+<!-- Top Navigation (Portfolio style, no sidebar) -->
+<main>
+<!-- 1. Hero Section -->
+<section class="relative pt-32 pb-20 md:pt-48 md:pb-32 px-gutter overflow-hidden" id="inicio">
+<div class="absolute inset-0 z-0">
+
+</div>
+<div class="max-w-container-max mx-auto relative z-10 grid md:grid-cols-2 gap-12 items-center">
+<div class="space-y-8">
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-primary-fixed text-on-primary-fixed-variant rounded-full font-label-bold text-label-bold">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+                        Inteligencia Geoespacial Avanzada
+                    </div>
+<h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary max-w-xl">
+                        Protegiendo el valor natural con <span class="text-secondary">precisión satelital.</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg">
+                        Transformamos datos de monitoreo remoto en decisiones estratégicas de seguros y gestión forestal para un futuro resiliente ante incendios.
+                    </p>
+<div class="flex flex-wrap gap-4">
+<a class="px-8 py-4 border border-primary text-primary font-label-bold text-label-bold rounded-lg hover:bg-surface-container-low transition-all" href="#que-hacemos">
+                            Saber más
+                        </a>
+</div>
+</div>
+<div class="relative">
+<div class="bento-card aspect-video rounded-xl overflow-hidden relative group">
+<img class="w-full h-full object-cover" data-alt="A high-resolution professional satellite view of a lush pine forest area in Europe with overlapping semi-transparent digital layers showing thermal anomalies and heat maps in forest green and soft clay red colors. The lighting is crisp, evoking a high-end corporate data visualization interface. Professional, clean, and technologically advanced atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJar-0qbwkzifC0KS8sqVrXu0cB_JZN0BEppXc-ELz1fMkI-LnbNkUasxr-gBvFkth3u90NeT3XHxMgPNhgzuIgfYJgJPQJtKSh2DR_c-pcMba0yk8YSeoklmv5Hi6S8Q4O5moEV_DM_WhNoyXnnaU7X7kVET-wNcuyES9o4jHTlYGNTu6unOjG0_BzLKjxo2VkjQa0Xey11tRwoHM4fdHpXOyPSFRG6YhGHeWVBteXsNSQ7EzVXg2vRp1Vz4bqha8smIXoKJpnjB6"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-8">
+<p class="text-white font-body-sm text-body-sm">Visualización en tiempo real de índices de sequedad foliar mediante Sentinel-2.</p>
+</div>
+</div>
+<!-- Decorative elements -->
+<div class="absolute -top-6 -right-6 w-32 h-32 bg-secondary-fixed/50 rounded-full blur-3xl -z-10"></div>
+<div class="absolute -bottom-10 -left-10 w-48 h-48 bg-primary-fixed/30 rounded-full blur-3xl -z-10"></div>
+</div>
+</div>
+</section>
+<!-- 2. 'Qué hacemos' Section (Bento Grid) -->
+<section class="py-24 bg-surface-container-lowest px-gutter" id="que-hacemos">
+<div class="max-w-container-max mx-auto">
+<div class="text-center mb-16 space-y-4">
+<h2 class="font-headline-md text-headline-md text-primary">Gestión de riesgos de nueva generación</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">Nuestra plataforma integra flujos de datos satelitales automáticos para ofrecer una vigilancia 24/7 de sus activos forestales.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-6 h-auto md:h-[600px]">
+<!-- Satellite Mapping -->
+<div class="bento-card md:row-span-2 p-8 flex flex-col justify-between">
+<div>
+<div class="w-12 h-12 bg-primary-fixed rounded-lg flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-primary">satellite_alt</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-4">Risk Mapping</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Generación de mapas dinámicos de inflamabilidad basados en biomasa, pendiente y condiciones meteorológicas locales.</p>
+</div>
+<div class="mt-8 rounded-lg overflow-hidden h-48">
+<img class="w-full h-full object-cover" data-alt="A detailed digital risk map of a mountainous forest region with color-coded zones ranging from forest green (stable) to clay red (critical). The interface shows clean UI lines, 8px grid spacing, and professional typography markers. High-contrast and minimalist aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNBCYATtVJVMzhKRv_LrX7wluB-HcTqbhQm6ScuehGyV7GVLS84sSaHwvBVFqJY1eKA-8efN5Ae_kIa1ZWtbGvt3RScfKQ4H_GA96477OncxHfkEqj3nT8rKoM68vD7kyUElNLJLZbkn_hZJbcwA5Q74k2eD4yQlRC3ET3rOF2aCIwAVKRkPdv_q1ypTO8yddoqpMrZNA9u62sA4gzUPoCW35EHhp46t94kDyu2pqMvMvC7CvziJaoLk7aue9YsKlpRWj2CY-r3YTa"/>
+</div>
+</div>
+<!-- Insurance Analysis -->
+<div class="bento-card md:col-span-2 p-8 flex flex-col md:flex-row gap-8 items-center">
+<div class="flex-1">
+<div class="w-12 h-12 bg-secondary-fixed rounded-lg flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-secondary">security</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-4">Evaluación Actuarial</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Proporcionamos a las aseguradoras datos históricos y predictivos para ajustar primas basadas en el riesgo real mitigado.</p>
+</div>
+<div class="flex-1 w-full bg-surface-container-low rounded-lg p-6">
+<div class="flex flex-col gap-4">
+<div class="h-2 w-full bg-outline-variant rounded-full overflow-hidden"><div class="h-full bg-primary w-3/4"></div></div>
+<div class="h-2 w-full bg-outline-variant rounded-full overflow-hidden"><div class="h-full bg-secondary w-1/2"></div></div>
+<div class="h-2 w-full bg-outline-variant rounded-full overflow-hidden"><div class="h-full bg-primary-container w-full"></div></div>
+</div>
+<div class="mt-4 font-data-mono text-data-mono text-primary">REDUCCIÓN SINIESTRALIDAD: 18.4%</div>
+</div>
+</div>
+<!-- Alert System -->
+<div class="bento-card p-8">
+<div class="w-12 h-12 bg-tertiary-fixed rounded-lg flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-tertiary">notification_important</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-2">Alertas Tempranas</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Notificaciones inteligentes ante anomalías térmicas detectadas por sensores infrarrojos.</p>
+</div>
+<!-- System Health -->
+<div class="bento-card p-8">
+<div class="w-12 h-12 bg-primary-fixed rounded-lg flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-primary">monitor_heart</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-2">System Health</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Seguimiento constante de la regeneración post-incendio y salud de la masa forestal.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. 'Quiénes somos' Section -->
+<section class="py-24 px-gutter" id="equipo">
+<div class="max-w-container-max mx-auto">
+<div class="grid md:grid-cols-2 gap-16 items-center">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-6">Un equipo forjado en la vigilancia.</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-8">
+                            Ignis Guard nació de la unión entre la ingeniería aeroespacial y la gestión de desastres. Creemos que la tecnología es la mejor herramienta para preservar el patrimonio natural de las futuras generaciones.
+                        </p>
+<div class="flex gap-4">
+<div class="text-center">
+<div class="font-headline-md text-headline-md text-primary">15+</div>
+<div class="font-label-bold text-label-bold text-outline">Años Exp.</div>
+</div>
+<div class="w-px h-12 bg-outline-variant"></div>
+<div class="text-center">
+<div class="font-headline-md text-headline-md text-primary">200k</div>
+<div class="font-label-bold text-label-bold text-outline">Hectáreas</div>
+</div>
+<div class="w-px h-12 bg-outline-variant"></div>
+<div class="text-center">
+<div class="font-headline-md text-headline-md text-primary">AI</div>
+<div class="font-label-bold text-label-bold text-outline">Propia</div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-6">
+<!-- Founder 1 -->
+<div class="space-y-4">
+<div class="aspect-[3/4] rounded-xl overflow-hidden bento-card">
+<img class="w-full h-full object-cover" data-alt="Portrait of a male co-founder in his late 30s, wearing a professional charcoal grey sweater. He has an authoritative yet approachable look, standing in a bright minimalist office with soft natural lighting and a large architectural plant in the background. High-quality corporate photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2EiKM7yNJ9a-mhPX-i-4Wfvk6EahK1L_q5zUZaGITCunxCjul0_wXzomgPuWfPw7RnZDAdDVWsmTroT_emH5tbCiCEzAFUCu3w-84p141R9Xp1XSSussuBFf0hvriLHiNQvgtrIQd4byXmhVY9zobvoHv5AQuyMw80RWusCDXe1eVAKBfsh89h0yGXYaXBsUvKysU1KW_Lw45M7aFiudbcIwBzP24ldF2ILmlKPoqHVfYJKC8DZ22D3JUqwdHCAD0p6WQEliK8iuu"/>
+</div>
+<div>
+<h4 class="font-label-bold text-label-bold text-primary">Carlos M. Ruiz</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">CEO &amp; Especialista en Teledetección</p>
+</div>
+</div>
+<!-- Founder 2 -->
+<div class="space-y-4 mt-12">
+<div class="aspect-[3/4] rounded-xl overflow-hidden bento-card">
+<img class="w-full h-full object-cover" data-alt="Portrait of a female co-founder in her mid 30s, wearing a tailored navy blazer. She has a confident and visionary expression. The setting is a clean-lit modern technology laboratory with subtle reflections of data screens. Soft bokeh background, high-end professional lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAd6OQfcy5FS5OfgdiovXHX5-_E3tvVUSozjwSR44TwY8nJ1INq-nNUr3hR2YiBO8IdF6Lk3Qxw37awGUiYpr0HhtOg39TBU-6B-4t2WURsqsdmFmDFM9roXh2ucCKCp-qAss-O8-JQ3e0JqCEy7eD6J17GyAzzzTpkRoZz6fo6KX-tXptL8BvDcWmuc9O8SrToJLrP7o4onbmT0ltv21Y-mJwp_qD81_XoFXXO2AK_L88eoaPZWUYRWC4LS_06szyMft5JYWThyUHT"/>
+</div>
+<div>
+<h4 class="font-label-bold text-label-bold text-primary">Elena Ferrero</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">CTO &amp; Experta en Riesgos Forestales</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 4. Final CTA Section -->
+<section class="py-24 px-gutter bg-primary relative overflow-hidden">
+
+<div class="max-w-container-max mx-auto text-center relative z-10">
+<h2 class="font-headline-lg text-white mb-8">Listo para blindar sus activos forestales?</h2>
+<p class="font-body-lg text-primary-fixed mb-12 max-w-2xl mx-auto">Únase a las empresas líderes que ya utilizan Ignis Guard para transformar la incertidumbre en datos accionables.</p>
+<div class="flex flex-col sm:flex-row justify-center gap-6">
+
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container py-16 px-gutter border-t border-outline-variant">
+<div class="max-w-container-max mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+<div class="col-span-1 md:col-span-2">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-8 h-8 bg-primary flex items-center justify-center rounded">
+<span class="material-symbols-outlined text-white text-[20px]" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+</div>
+<span class="font-headline-md text-headline-md font-bold text-primary">Ignis Guard</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-sm">
+                    Líderes en monitorización satelital para la prevención de riesgos forestales y análisis actuarial.
+                </p>
+</div>
+<div>
+<h5 class="font-label-bold text-label-bold text-primary mb-6">Plataforma</h5>
+<ul class="space-y-4 font-body-sm text-body-sm text-on-surface-variant">
+<li><a class="hover:text-primary transition-colors" href="#">Risk Mapping</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Alertas Satelitales</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Seguros Forestales</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Soporte Técnico</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-label-bold text-label-bold text-primary mb-6">Compañía</h5>
+<ul class="space-y-4 font-body-sm text-body-sm text-on-surface-variant">
+<li><a class="hover:text-primary transition-colors" href="#">Sobre Nosotros</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Privacidad</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Contacto</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">LinkedIn</a></li>
+</ul>
+</div>
+</div>
+<div class="max-w-container-max mx-auto mt-16 pt-8 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="font-body-sm text-body-sm text-on-surface-variant">© 2024 Ignis Guard Risk Management Platform. All rights reserved.</p>
+<div class="flex gap-6">
+<span class="material-symbols-outlined text-outline hover:text-primary cursor-pointer">public</span>
+<span class="material-symbols-outlined text-outline hover:text-primary cursor-pointer">verified_user</span>
+<span class="material-symbols-outlined text-outline hover:text-primary cursor-pointer">language</span>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interactions and scroll effects
+        document.addEventListener('DOMContentLoaded', () => {
+            const nav = document.querySelector('nav');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 20) {
+                    nav.classList.add('shadow-md');
+                } else {
+                    nav.classList.remove('shadow-md');
+                }
+            });
+
+            // Intersection Observer for bento cards
+            const observerOptions = {
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('opacity-100', 'translate-y-0');
+                        entry.target.classList.remove('opacity-0', 'translate-y-10');
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.bento-card').forEach(card => {
+                card.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-10');
+                observer.observe(card);
+            });
+        });
+    </script>
+</body></html>

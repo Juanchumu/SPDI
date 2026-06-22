@@ -1,0 +1,93 @@
+<div class="container">
+
+  <mat-card class="header-card">
+    <mat-card-title>
+      <mat-icon>warning</mat-icon>
+      Informes de Riesgo
+    </mat-card-title>
+
+    <mat-card-subtitle>
+      Historial de informes generados
+    </mat-card-subtitle>
+  </mat-card>
+<div style="display:flex; gap:12px; margin-bottom:16px;">
+  <button mat-raised-button color="primary" (click)="cargarInformes()">
+    <mat-icon>refresh</mat-icon>
+    Actualizar
+  </button>
+</div>
+  <mat-accordion multi="false">
+
+    @for (informe of informes; track informe.id) {
+
+      <mat-expansion-panel>
+
+        <mat-expansion-panel-header>
+
+          <mat-panel-title>
+            #{{ informe.id }}
+          </mat-panel-title>
+
+          <mat-panel-description>
+
+            <span class="cliente">
+              {{ informe.cliente }}
+            </span>
+
+            <span class="responsable">
+              {{ informe.responsable }}
+            </span>
+
+            <mat-chip [ngClass]="estadoClass(informe.estado)">
+              {{ informe.estado }}
+            </mat-chip>
+
+          </mat-panel-description>
+
+        </mat-expansion-panel-header>
+
+        <div class="info-grid">
+
+          <div>
+            <strong>Cliente</strong>
+            <div>{{ informe.cliente }}</div>
+          </div>
+
+          <div>
+            <strong>Responsable</strong>
+            <div>{{ informe.responsable }}</div>
+          </div>
+
+          <div>
+            <strong>Creado</strong>
+            <div>
+              {{ informe.created_at | date:'dd/MM/yyyy HH:mm' }}
+            </div>
+          </div>
+
+          <div>
+            <strong>Actualizado</strong>
+            <div>
+              {{ informe.updated_at ? (informe.updated_at | date:'dd/MM/yyyy HH:mm') : '-' }}
+            </div>
+          </div>
+
+        </div>
+
+        <mat-card class="contenido-card">
+
+          <div class="contenido">
+            <pre>
+{{ informe.contenido ?? 'Sin contenido' }}
+            </pre>
+          </div>
+
+        </mat-card>
+
+      </mat-expansion-panel>
+
+    }
+
+  </mat-accordion>
+
+</div>

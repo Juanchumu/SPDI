@@ -1,60 +1,89 @@
-<mat-toolbar>
-  <span>Estado del Servicio</span>
-  <span class="example-spacer"></span>
+<mat-toolbar color="primary">
+  <span>Health Dashboard</span>
 
-  <button
-    mat-raised-button
-    (click)="cargarHealth()">
-    <mat-icon>update</mat-icon>
+  <span class="spacer"></span>
+
+  <button mat-raised-button color="accent" (click)="cargarHealth()">
+    <mat-icon>refresh</mat-icon>
     Actualizar
   </button>
-
 </mat-toolbar>
 
-@if (health) {
+@if (health?.services) {
 
-  @for (servicio of health.services | keyvalue; track servicio.key) {
+  <div class="grid">
 
-    <div class="card">
-      <h4>{{ servicio.key }}</h4>
+    @for (service of (health.services | keyvalue); track service.key) {
 
-      <p>
-        Estado:
-        <span
-          [class.up]="servicio.value.status === 'UP'"
-          [class.down]="servicio.value.status === 'DOWN'">
-          {{ servicio.value.status }}
-        </span>
-      </p>
+      <mat-card class="service-card">
 
-      @if (servicio.value.descripcion) {
-        <p>{{ servicio.value.descripcion }}</p>
-      }
+        <mat-card-title>
+          {{ service.key }}
+        </mat-card-title>
 
-      @if (servicio.value.uptime) {
-        <p>Uptime: {{ servicio.value.uptime }}</p>
-      }
+        <mat-card-subtitle>
+          @if (service.value.status === 'UP') {
+            <mat-chip class="chip-up">UP</mat-chip>
+          } @else {
+            <mat-chip class="chip-down">DOWN</mat-chip>
+          }
+        </mat-card-subtitle>
 
-      @if (servicio.value.last_seen) {
-        <p>Último reporte: {{ servicio.value.last_seen }}</p>
-      }
+        <mat-card-content>
 
-      @if (servicio.value.seconds_since_last_heartbeat) {
-        <p>
-          Segundos sin heartbeat:
-          {{ servicio.value.seconds_since_last_heartbeat }}
-        </p>
-      }
+          @if (service.value.descripcion) {
+            <p><strong>Estado:</strong> {{ service.value.descripcion }}</p>
+          }
 
-    </div>
+          @if (service.value.uptime) {
+            <p><strong>Uptime:</strong> {{ service.value.uptime }}</p>
+          }
 
-  }
+          @if (service.value.last_seen) {
+            <p><strong>Last seen:</strong> {{ service.value.last_seen }}</p>
+          }
 
-  <h3>Dependencias</h3>
+          @if (service.value.seconds_since_last_heartbeat) {
+            <p>
+              <strong>Heartbeat:</strong>
+              {{ service.value.seconds_since_last_heartbeat }}s
+            </p>
+          }
 
-  <div class="card">
-    <p>Database: {{ health.dependencies.database }}</p>
-    <p>MinIO: {{ health.dependencies.minio }}</p>
+        </mat-card-content>
+
+      </mat-card>
+
+    }
+
   </div>
+
+  <mat-card class="deps-card">
+    <mat-card-title>Dependencias</mat-card-title>
+
+    <mat-card-content class="deps">
+
+      <div class="dep">
+        <span>Database</span>
+
+        @if (health.dependencies.database === 'UP') {
+          <mat-chip class="chip-up">UP</mat-chip>
+        } @else {
+          <mat-chip class="chip-down">DOWN</mat-chip>
+        }
+      </div>
+
+      <div class="dep">
+        <span>MinIO</span>
+
+        @if (health.dependencies.minio === 'UP') {
+          <mat-chip class="chip-up">UP</mat-chip>
+        } @else {
+          <mat-chip class="chip-down">DOWN</mat-chip>
+        }
+      </div>
+
+    </mat-card-content>
+  </mat-card>
 
 }

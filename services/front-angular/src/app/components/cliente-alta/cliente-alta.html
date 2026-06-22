@@ -1,0 +1,133 @@
+<div class="container">
+
+  <mat-card class="cliente-card">
+
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>person_add</mat-icon>
+        Alta de Cliente
+      </mat-card-title>
+
+      <mat-card-subtitle>
+        Registro de nuevos clientes
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+
+      <form [formGroup]="form">
+
+        <div class="grid">
+
+          <mat-form-field appearance="outline">
+            <mat-label>Nombre</mat-label>
+
+            <input
+              matInput
+              formControlName="nombre">
+
+            @if (form.controls.nombre.hasError('required') &&
+                 form.controls.nombre.touched) {
+              <mat-error>
+                El nombre es obligatorio
+              </mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Código Cliente</mat-label>
+
+            <input
+              matInput
+              formControlName="codigo_cliente">
+
+            @if (form.controls.codigo_cliente.hasError('required') &&
+                 form.controls.codigo_cliente.touched) {
+              <mat-error>
+                El código es obligatorio
+              </mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+
+            <input
+              matInput
+              type="email"
+              formControlName="email">
+
+            @if (form.controls.email.hasError('email')) {
+              <mat-error>
+                Email inválido
+              </mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Teléfono</mat-label>
+
+            <input
+              matInput
+              formControlName="telefono">
+          </mat-form-field>
+
+        </div>
+
+        <mat-form-field
+          appearance="outline"
+          class="full-width">
+
+          <mat-label>
+            ¿Cuál es la descripción del negocio del cliente?
+          </mat-label>
+
+          <textarea
+            matInput
+            rows="6"
+            formControlName="descripcion">
+          </textarea>
+
+          @if (form.controls.descripcion.hasError('required') &&
+               form.controls.descripcion.touched) {
+            <mat-error>
+              La descripción es obligatoria
+            </mat-error>
+          }
+
+        </mat-form-field>
+
+      </form>
+
+      @if (error) {
+        <div class="mensaje error">
+          {{ error }}
+        </div>
+      }
+
+      @if (exito) {
+        <div class="mensaje exito">
+          Cliente creado correctamente
+        </div>
+      }
+
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+
+      <button
+        mat-flat-button
+        color="primary"
+        (click)="guardar()"
+        [disabled]="cargando">
+
+        <mat-icon>save</mat-icon>
+        Guardar Cliente
+
+      </button>
+
+    </mat-card-actions>
+
+  </mat-card>
+
+</div>

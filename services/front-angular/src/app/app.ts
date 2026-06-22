@@ -19,6 +19,10 @@ import { AuthService } from './auth';
   styleUrl: './app.css'
 })
 export class App {
+  //public estaLogueado : boolean =
   constructor(private auth: AuthService) {}
+  estaLogueado(): boolean {return this.auth.isLogged();}
   cerrarSesion() {this.auth.logout();}
+  nombreDeSesion(): string {return this.auth.getUsername();}
+  esAdmin() : boolean {return (this.nombreDeSesion() === "admin");}
 }

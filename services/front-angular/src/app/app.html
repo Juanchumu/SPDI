@@ -1,25 +1,36 @@
+
+
 <mat-toolbar>
   <button mat-icon-button>
     <mat-icon>gite</mat-icon>
   </button>
-
-
-  <span>SPDI</span>
-
+  <span>Ignis Guard</span>
+  @if (estaLogueado()  ){
+ <button
+    mat-raised-button
+    (click)="cerrarSesion()">
+    <mat-icon>logout</mat-icon>
+    Cerrar Sesion
+    {{nombreDeSesion()}}
+  </button>
+  }
   <span class="example-spacer"></span>
-<button
-  mat-raised-button
-  routerLink="/mapa">
-  Mapa
-</button>
-
-<button
-  mat-raised-button
-  routerLink="/healt">
-  Estado
-</button>
-
-
-</mat-toolbar><router-outlet>
+  @if( estaLogueado() ) {
+  <button mat-raised-button routerLink="/alta-cliente">+ Clientes</button>
+<button mat-raised-button routerLink="/informe-riesgo">Informes Riesgo</button>
+<button mat-raised-button routerLink="/informes-de-riesgo">Informes de Riesgo</button>
+<button mat-raised-button routerLink="/dashboard-ordenes">Dashboard Órdenes</button>
+<button mat-raised-button routerLink="/mapa">Mapa</button>
+@if (esAdmin()){
+<button mat-raised-button routerLink="/health"> Estado </button>
+<button mat-raised-button routerLink="/alta-usuario"> + Usuarios </button>
+}
+}
+@if (!estaLogueado()  ){
+<button mat-raised-button routerLink="/login"> Ingresar! </button>
+}
+</mat-toolbar>
+<div  class="app-background" >
+<router-outlet>
 </router-outlet>
-
+</div>

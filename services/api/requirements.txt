@@ -6,4 +6,4 @@ uvicorn[standard]
 requests
 passlib[bcrypt]
 python-jose
-
+google-generativeai
