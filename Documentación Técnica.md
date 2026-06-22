@@ -68,6 +68,7 @@ El sistema tiene dos tipos de bases de datos:
 
 ### Módulos de Inteligencia Artificial
 ![Diagrama Analista](/diagramas/analista.jpg)
+
 El sistema integra modelos de IA generativa con dos propósitos y arquitecturas distintas:
 
 1. **Auditoría Local para Administradores (Ollama):** Se implementó Ollama de forma local (utilizando el modelo `llama3.2:3b`) para generar reportes sobre el estado del servicio. Este analista ingesta logs, estados de órdenes y métricas de modelos para generar un resumen ejecutivo con problemas detectados, riesgos y recomendaciones operativas. El procesamiento local garantiza la privacidad de la información de infraestructura.
