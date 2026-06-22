@@ -66,11 +66,12 @@ El sistema tiene dos tipos de bases de datos:
 * **PostgreSQL:** Con una estructura relacional donde se lleva registro de las ordenes solicitadas y sus estados, de los modelos disponibles y sus métricas, los entrenamientos y las descargas.
 * **MinIO (AWS Local):** Para almacenar las imagenes de entrenamiento, las usadas para predicción, los modelos y los archivos .tiff que son el resultado de la predicción y se pueden entender como un mapa probabilistico donde cada pixel representa el riesgo de incendio en ese punto.
 
-### Analista (Módulo de IA)
+### Módulos de Inteligencia Artificial
 ![Diagrama Analista](/diagramas/analista.jpg)
+El sistema integra modelos de IA generativa con dos propósitos y arquitecturas distintas:
 
-Se encarga de generar reportes sobre el estado del servicio, utilizando un modelo de OLLAMA (llama3.2:3b), recibe logs, estados de ordenes y modelos.
-Genera un Resumen ejecutivo, Estado general del sistema, Problemas detectados, Riesgos y Recomendaciones.
+1. **Auditoría Local para Administradores (Ollama):** Se implementó Ollama de forma local (utilizando el modelo `llama3.2:3b`) para generar reportes sobre el estado del servicio. Este analista ingesta logs, estados de órdenes y métricas de modelos para generar un resumen ejecutivo con problemas detectados, riesgos y recomendaciones operativas. El procesamiento local garantiza la privacidad de la información de infraestructura.
+2. **Generación de Alertas para Clientes (Gemini API):** Se integró la API de Google Gemini (`gemini-2.5-flash`) para redactar dinámicamente correos electrónicos de alerta personalizados dirigidos a los clientes. Al delegar esta tarea a la API de Gemini, se asegura una redacción rápida, natural y de alta calidad sin sobrecargar los recursos computacionales locales del servidor.
 
 ---
 
