@@ -1,4 +1,4 @@
-# Sistema de Predicción de Incendios (SPDI)
+# Sistema de Predicción de Incendios (Ignis Guard)
 
 Este repositorio contiene un proyecto desarrollado para la materia **Proyecto Integrador de Ciencias de Datos**.
 El proyecto consiste en un sistema de predicción de incendios basado en el procesamiento de datos satelitales históricos y modelos de *Machine Learning*.
@@ -49,12 +49,12 @@ Todo el entorno está dockerizado y se debe levantar desde el directorio `servic
    ```
    Luego, detener los servicios con `Ctrl + C`.
 
-3. **Levantar el sistema completo:**
-   Dependiendo de la versión de Docker instalada, utiliza uno de estos comandos (levantar todo desde cero puede demorar ~25 minutos):
+3. **Levantar el sistema completo (con modelo XGBoost):**
+   Para levantar todo el entorno ejecutando la variante del modelo basado en XGBoost, se debe utilizar explícitamente el archivo `docker-compose-x.yml`. Dependiendo de la versión de Docker instalada, utiliza uno de estos comandos (levantar todo desde cero puede demorar ~25 minutos):
    ```bash
-   sudo docker-compose up --build
+   sudo docker-compose -f docker-compose-x.yml up --build
    # O si usas la versión más reciente:
-   sudo docker compose up --build
+   sudo docker compose -f docker-compose-x.yml up --build
    ```
 
 ### Troubleshooting de Docker
