@@ -93,7 +93,7 @@ Para mejorar los resultados es necesario incorporar nuevas fuentes de informaci�
 - Información topográfica y de vegetación.
 
 #### Requisitos de hardware
-Se recomienda disponer de al menos **64 GB de RAM** para procesar imágenes satelitales en formato bruto (`.SAFE`).
+Originalmente, el sistema requería disponer de al menos **64 GB de RAM** para procesar imágenes satelitales en su formato bruto monolítico (`.SAFE`). Gracias a la migración a la API de Microsoft Planetary Computer y la estrategia de submuestreo de XGBoost, estos requerimientos disminuyeron drásticamente, permitiendo su ejecución en estaciones de trabajo o servidores estándar.
 
 #### Optimización del Entrenamiento (Submuestreo de Píxeles)
 Durante la etapa de entrenamiento en el módulo **Modelador**, se aplica un submuestreo aleatorio limitado a **10.000 píxeles por imagen** (aproximadamente el 25% de una imagen estándar de 200x200). Esta decisión técnica se fundamenta en:
@@ -125,7 +125,8 @@ A partir de este conjunto de datos (que puede superar el millón de filas al agr
 #### APIs y Fuentes de Datos Utilizadas
 El sistema se nutre de distintas APIs para componer tanto el dataset de entrenamiento como la interfaz de usuario:
 
-1. **Microsoft Planetary Computer (MPC):** Se utiliza su API STAC (`stac/v1`) para consultar y descargar las imágenes satelitales multiespectrales históricas y recientes (Sentinel-2). Estas imágenes son la base para calcular los índices espectrales (NDVI, NBR, etc.) que alimentan al modelo.
+1. **Microsoft Planetary Computer (MPC):** Se utiliza su API STAC (`stac/v1`) para consultar y descargar las imágenes satelitales multiespectrales históricas y recientes (Sentinel-2). Estas imágenes son la base para calcular los índices espectrales (NDVI, NBR, etc.) que alimentan al modelo. 
+   *(Nota sobre la migración: En una primera instancia, se intentó descargar las imágenes directamente desde Copernicus en su formato bruto original `.SAFE`. No obstante, este enfoque resultó ser tan pesado e impráctico para procesar localmente que se decidió migrar a MPC, lo cual permite un acceso fraccionado y mucho más ágil a los datos).*
 2. **OpenStreetMap (OSM):** Mediante esta API se obtienen vectores de infraestructura y factores antrópicos (rutas y zonas de acampe), fundamentales como variables predictoras de riesgo.
 3. **ESRI (ArcGIS World Imagery):** Se emplea como capa base (*basemap*) en el frontend (portal web), brindando imágenes satelitales de alta resolución para que el usuario tenga una referencia visual clara al visualizar el mapa de riesgos superpuesto.
 
