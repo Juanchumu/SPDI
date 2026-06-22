@@ -18,6 +18,7 @@ Aclaración: El valor de 0.42 km cuadrados tiene que ver con una decisión técn
 ### Diagrama C2
 
 El siguiente diagrama permite una visión en detalle de los distintos componentes del sistema y como se interrelacionan entre sí. Para verlo en detalle, pueden acceder a `/diagramas`.
+
 ![Diagrama C2](/diagramas/C2.png)
 
 ## Componentes del Sistema
@@ -27,39 +28,47 @@ Los componentes (organizados en contenedores docker) son:
 
 ### API
 ![Diagrama API](/diagramas/api.jpg)
+
 Acá se presentan los endpoints que permiten a los usuarios hacer solicitudes, recibir respuesta, consultar el estado de la consulta y el estado de los servicios en general.
 Tambien permite a los administradores probar distintos modelos, conocer el estado de las ordenes y entrenar el modelo (ingresando nuevos datos de incendio mediante el endpoint *Generar_datos*).
 Actualización: El endpoint `/Informes` ahora incorpora el uso de un modelo LLM que genera un reporte sobre el estado del servicio, problemas, sugerencias de mejoras/soluciones, etc.
 
 ### Entrenador
 ![Diagrama Entrenador](/diagramas/entrenador.svg)
+
 Este componente se encarga de recibir localizaciones historicas en donde hubo incendios, generando asi, el dataset para los entrenamientos.  
 
 ### Modelador
 ![Diagrama Modelador](/diagramas/modelador.svg)
+
 Este componente se encarga de buscar las imágenes nuevas en minIO para realizar un entrenamiento guardando el modelo nuevo en un bucket de minIO, le asigna un id y lo registra en la base de datos junto a métricas de rendimiento del modelo lo cual permite rankear los modelos y elegir el de mejor performance siempre.
 
 ### Predictor
 ![Diagrama Predictor](/diagramas/predictor.svg)
+
 El predictor revisa la cola de ordenes, toma una orden y procede igual que el modelador: busca las imagenes del ultimo mes en minIO asociadas al id de la orden, realiza la predicción con el modelo indicado (politica actualmente hardcodeada), guarda el resultado en minIO y registra en la base de datos. (Tambien cambia el estado de la orden).
 
 ### Validador
 ![Diagrama Validador](/diagramas/validador.svg)
+
 Este sitema se encarga de validar la orden recibida por la API, de momento contiene unos bloques IF sobre los atributos de las ordenes.
 En si, este seria el espacio para verificar (todavia no implementadas) que las ordenes cumplan requerimientos de seguridad, coberturas.. etc. 
 
 ### Worker
 ![Diagrama Worker](/diagramas/worker.svg)
+
 Se encarga de descargar las imagenes satelitales de una orden, sobre las cuales, el predictor realizará la predicción.
 
 ### Bases de datos
 ![Diagrama Base de Datos](/diagramas/bd.jpg)
+
 El sistema tiene dos tipos de bases de datos: 
 * **PostgreSQL:** Con una estructura relacional donde se lleva registro de las ordenes solicitadas y sus estados, de los modelos disponibles y sus métricas, los entrenamientos y las descargas.
 * **MinIO (AWS Local):** Para almacenar las imagenes de entrenamiento, las usadas para predicción, los modelos y los archivos .tiff que son el resultado de la predicción y se pueden entender como un mapa probabilistico donde cada pixel representa el riesgo de incendio en ese punto.
 
 ### Analista (Módulo de IA)
 ![Diagrama Analista](/diagramas/analista.jpg)
+
 Se encarga de generar reportes sobre el estado del servicio, utilizando un modelo de OLLAMA (llama3.2:3b), recibe logs, estados de ordenes y modelos.
 Genera un Resumen ejecutivo, Estado general del sistema, Problemas detectados, Riesgos y Recomendaciones.
 
