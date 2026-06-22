@@ -1,6 +1,6 @@
-# Documentación Técnica - SPDI
+# Documentación Técnica - Ignis Guard
 
-Este documento describe la arquitectura, los componentes y el flujo de datos del Sistema de Predicción de Incendios (SPDI).
+Este documento describe la arquitectura, los componentes y el flujo de datos del Sistema de Predicción de Incendios (Ignis Guard).
 
 ## Estructura y Flujo de Datos
 

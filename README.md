@@ -1,4 +1,4 @@
-# Sistema de Predicción de Incendios (SPDI)
+# Sistema de Predicción de Incendios (Ignis Guard)
 
 Este repositorio contiene un proyecto desarrollado para la materia **Proyecto Integrador de Ciencias de Datos**.
 El proyecto consiste en un sistema de predicción de incendios basado en el procesamiento de datos satelitales históricos y modelos de *Machine Learning*.
