@@ -94,6 +94,25 @@ Durante la etapa de entrenamiento en el módulo **Modelador**, se aplica un subm
 
 Mediante este muestreo, el modelo logra capturar de manera óptima las firmas espectrales de las distintas superficies (incendios, vegetación, cuerpos de agua, nubosidad) manteniendo una alta precisión y reduciendo drásticamente la carga computacional.
 
+#### Balanceo del Dataset y Casos de Control
+El conjunto de datos de entrenamiento se encuentra **balanceado de forma natural**, garantizando una adecuada representación de casos positivos ("Incendio") y negativos ("No Incendio"). Esto se logra mediante dos estrategias fundamentales:
+
+1. **Aprovechamiento del Contexto Espacial:** Al procesar una imagen satelital de 4x4 km (200x200 píxeles) correspondiente a un evento de incendio, el área afectada (delimitada por el *shapefile*) generalmente ocupa una porción menor de la imagen. Los píxeles restantes se etiquetan automáticamente como clase `0` (No Incendio). Esta técnica provee al modelo XGBoost con ejemplos negativos que comparten exactamente las mismas condiciones atmosféricas y lumínicas que los píxeles positivos, mejorando la capacidad discriminativa del algoritmo entre vegetación sana y afectada.
+2. **Escenas de Control Estáticas:** En el proceso de recopilación de imágenes históricas, se incorporaron intencionalmente cinco escenas de control donde la superficie quemada es estrictamente nula (`0.0`). Estas escenas actúan como casos extremos para mitigar falsos positivos:
+   - Centro urbano densamente construido (ej. Ciudad de Buenos Aires).
+   - Extensas masas de agua profunda (ej. Lago Nahuel Huapi).
+   - Superficies acuáticas con alta salinidad/sedimentos (ej. Laguna Mar Chiquita).
+   - Suelo desnudo o arado sin cobertura vegetal (ej. campos en Santa Fe). 
+   Estas escenas previenen que el modelo confunda firmas espectrales de espejos de agua o áreas urbanas con áreas quemadas o cenizas.
+
+#### Ingesta y Procesamiento mediante XGBoost
+A nivel computacional, XGBoost no procesa la imagen en su estructura matricial bidimensional nativa. Durante el submuestreo aleatorio, el sistema transforma los 10.000 píxeles seleccionados en un conjunto tabular estructurado. Cada píxel se convierte en una fila independiente que consta de 18 columnas:
+
+- **Columnas 1 a 17 (Features):** Variables derivadas de las bandas satelitales e índices calculados (como Infrarrojo, NDVI, NBR), sumado a variables espaciales (distancia a rutas, distancia a zonas de acampe).
+- **Columna 18 (Target):** La variable objetivo que indica la presencia (`1`) o ausencia (`0`) de incendio.
+
+A partir de este conjunto de datos (que puede superar el millón de filas al agregar múltiples imágenes), XGBoost construye iterativamente un ensamble de árboles de decisión. El algoritmo infiere patrones estadísticos complejos multivariables, determinando probabilidades basadas en la combinación de los índices espectrales y factores antrópicos.
+
 #### Consideraciones sobre las fuentes de datos
 Durante el desarrollo del proyecto se utilizaron principalmente datos obtenidos mediante otra api, ya que el acceso masivo a imágenes satelitales sin procesar generó restricciones y bloqueos por IP.
 Según lo indicado por el profesor de la materia, estos datos presentan una menor precisión que los datos satelitales originales, debido a que son distribuidos con una menor cantidad de decimales y ya procesados previamente. Esto puede haber afectado negativamente la calidad de los entrenamientos y los resultados obtenidos.
