@@ -1,173 +1,104 @@
-# Repositorio del SPID
+# Sistema de Predicción de Incendios (SPDI)
 
 Este repositorio contiene un proyecto desarrollado para la materia **Proyecto Integrador de Ciencias de Datos**.
-
-## Estructura del proyecto
 El proyecto consiste en un sistema de predicción de incendios basado en el procesamiento de datos satelitales históricos y modelos de *Machine Learning*.
 
-### Diagrama C1
-Podemos observar el flujo general de los datos. 
-El usuario accede al sistema solicitando una predicción indicando latitud y longitud, el sistema procesa la solicitud, descarga las imagenes satelitales de la zona durante el ultimo mes para generar una predicción la cual devuelve en distintos formatos: un dashboard en frontend web o alertas mediante aplicaciones de mensajería.
-Aclaración: El valor de 0.42 km cuadrados tiene que ver con una decisión técnica que involucra tomar imagenes de 200x200 pixeles, midiendo cada uno 10 metros cuadrados, se llega a ese valor de 0.42 km cuadrados.
+> **Nota:** Para conocer en detalle la arquitectura de microservicios, el flujo de datos y los resultados de la investigación, consulte el archivo `Documentación Técnica.md`.
 
-![Diagrama C1](/diagramas/C1.svg)
+## Organización de las Carpetas
 
----
-
-### Diagrama C2
-
-El siguiente diagrama permite una visión en detalle de los distintos componentes del sistema y como se interrelacionan entre sí. Para verlo en detalle, pueden acceder a `/diagramas`.
-![Diagrama C2](/diagramas/C2.png)
-
-A nivel técnico, el proyecto sigue una arquitectura modular, separando las distintas etapas del procesamiento de datos, entrenamiento y despliegue.
-Los componentes (organizados en contenedores docker) son:
-
-### API
-![Diagrama API](/diagramas/api.jpg)
-
-Acá se presentan los endpoints que permiten a los usuarios hacer solicitudes, recibir respuesta, consultar el estado de la consulta y el estado de los servicios en general.
-Tambien permite a los administradores probar distintos modelos, conocer el estado de las ordenes y entrenar el modelo (ingresando nuevos datos de incendio mediante el endpoint *Generar_datos*).
-Actualización: El endpoint /Informes ahora incorpora el uso de un modelo LLM que genera un reporte ready friendly sobre el estado del servicio, problemas, sugerencias de mejoras/soluciones, etc.
-
-### Entrenador
-
-![Diagrama Entrenador](/diagramas/entrenador.svg)
-
-Este componente se encarga de recibir localizaciones historicas en donde hubo incendios, generando asi, el dataset para los entrenamientos.  
-
-
-### Modelador
-
-![Diagrama Modelador](/diagramas/modelador.svg)
-
-Este componente se encarga de buscar las imágenes nuevas en miniIO para realizar un entrenamiento guardando el modelo nuevo en un bucket de minIO, le asigna un id y lo registra en la base de datos junto a métricas de rendimiento del modelo lo cual permite rankear los modelos y elegir el de mejor performance siempre.
-
-### Predictor
-
-![Diagrama Predictor](/diagramas/predictor.svg)
-
-El predictor revisa la cola de ordenes, toma una orden y procede igual que el modelador: busca las imagenes del ultimo mes en minIO asociadas al id de la orden, realiza la predicción con el modelo indicado (politica actualmente hardcodeada), guarda el resultado en minIO y registra en la base de datos. (Tambien cambia el estado de la orden).
-
-### Validador
-
-![Diagrama Validador](/diagramas/validador.svg)
-
-Este sitema se encarga de validar la orden recibida por la API, de momento contiene unos bloques IF sobre los atributos de las ordenes.
-En si, este seria el espacio para verificar (todavia no implementadas) que las ordenes cumplan requerimientos de seguridad, coberturas.. etc. 
-
-### Worker
-
-![Diagrama Worker](/diagramas/worker.svg)
-
-Se encarga de descargar las imagenes satelitales de una orden, sobre las cuales, el predictor:
-* Predecir(imagenes descargadas por el worker asociadas a una orden).
-
-
-### Bases de datos
-
-![Diagrama Base de Datos](/diagramas/bd.jpg)
-
-El sistema tiene dos tipos de bases de datos: 
-* (PostgreSQL) Con una estructura relacional donde se lleva registro de las ordenes solicitadas y sus estados, de los modelos disponibles y sus métricas, los entrenamientos y las descargas.
-
-* (AWS Local) Para almacenar las imagenes de entrenamiento, las usadas para predicción, los modelos y los archivos .tiff que son el resultado de la predicción y se pueden entender como un mapa probabilistico donde cada pixel representa el riesgo de incendio en ese punto.
-
-
-### Analista (modulo de IA)
-
-![Diagrama Analista](/diagramas/analista.jpg)
-
-Se encarga de generar reportes sobre el estado del servicio, utilizando un modelo de OLLAMA, recibe logs, estados de ordenes y modelos.
-
-Genera:
-
-1. Resumen ejecutivo.
-2. Estado general del sistema.
-3. Problemas detectados.
-4. Riesgos.
-5. Recomendaciones.
-
-
-
-# Organización de las carpetas y guía de uso
-## 🔹 `services/`
-
-Contiene los servicios principales del sistema en producción:
-
-- API
-- Workers.. Servicios independientes
-- Configuración Docker
-
-### 📌 Punto de entrada recomendado
-
-Dentro de este directorio se encuentra un archivo `README.md` con las instrucciones necesarias para desplegar todo el sistema utilizando Docker.
+- `services/`: Contiene los servicios principales del sistema en producción (API, Workers, Configuración Docker, Frontend Angular, etc).
+- `tools/`: Scripts auxiliares para generación de datasets y pruebas.
+- `notebooks/`: Notebooks utilizados durante la etapa de experimentación y entrenamiento del modelo.
+- `test/`: Pruebas y validaciones del sistema.
+- `diagramas/`: Diagramas de arquitectura del sistema.
 
 ---
 
-## 🔹 `tools/`
+## Requisitos Previos e Instalación
 
-Contiene scripts auxiliares para:
+Para poder ejecutar este proyecto, es fundamental cumplir con los siguientes requisitos previos:
 
-- Generación de datasets
-- Pruebas de la API
-- Creación de datos de entrenamiento
+### 1. Archivo de Variables de Entorno (`.env`)
+El sistema requiere un archivo `.env` en el directorio `services/`, el cual debe contener las credenciales y configuraciones necesarias para los distintos servicios (base de datos, MinIO, credenciales de API para los modelos, etc.). Por cuestiones de seguridad, este archivo no se incluye en el repositorio público. Existe un archivo `dotenv_ejemplo.txt` dentro de la carpeta `services/` que debe usarse como plantilla.
 
-Una vez levantados los servicios, pueden ejecutarse scripts para generar conjuntos de entrenamiento utilizando datos reales o datos sintéticos.
-
----
-
-## 🔹 `notebooks/`
-
-Notebooks utilizados durante la etapa de experimentación:
-
-- Entrenamiento del modelo
-- Evaluación de resultados
-- Generación del archivo del modelo (`fire_model.pth`)
+### 2. Shapefiles y Datos Geográficos Protegidos
+El proyecto requiere una carpeta de Google Drive que contiene *shapefiles* específicos para el procesamiento espacial. **Estos archivos no se encuentran subidos al repositorio público** debido a que la información fue solicitada formalmente a la **Dirección Nacional de Mitigación y Prevención (DNMyP)**, perteneciente a la **Agencia Federal de Emergencias (AFE)**. Esta entidad establece restricciones de confidencialidad que no permiten compartir dicha información públicamente.
 
 ---
 
-## 🔹 `test/`
+## Ejecución del Sistema (Docker)
 
-Pruebas y validaciones del sistema.
+Todo el entorno está dockerizado y se debe levantar desde el directorio `services/`.
+
+1. **Dar permisos de ejecución** (necesario ya que algunos contenedores generan archivos localmente):
+   ```bash
+   cd services
+   sudo chmod -R 777 .
+   ```
+
+2. **Levantar los servicios esenciales por primera vez (API y BD)** para crear las tablas:
+   ```bash
+   sudo docker compose -f docker-compose-x.yml up --build db api
+   ```
+   Una vez iniciados, abrir otra terminal, entrar al contenedor de la API e inicializar la base de datos:
+   ```bash
+   sudo docker exec -it services-api-1 bash
+   python app/crearDB.py
+   exit
+   ```
+   Luego, detener los servicios con `Ctrl + C`.
+
+3. **Levantar el sistema completo:**
+   Dependiendo de la versión de Docker instalada, utiliza uno de estos comandos (levantar todo desde cero puede demorar ~25 minutos):
+   ```bash
+   sudo docker-compose up --build
+   # O si usas la versión más reciente:
+   sudo docker compose up --build
+   ```
+
+### Troubleshooting de Docker
+- **Listar servicios configurados:** `sudo docker compose config --services`
+- **Detener contenedores:** `sudo docker compose down`
+- **Limpiar volúmenes y contenedores (Hard reset):** `sudo docker compose down -v`
+- **Reconstruir sin caché:** `sudo docker compose build --no-cache`
 
 ---
 
-# Notas finales
+## Uso del Sistema
 
-## Hipótesis planteada
+Una vez que el sistema está en ejecución, se puede interactuar con él a través de la API REST o de su frontend web.
 
-Utilizar imágenes satelitales históricas de amplio espectro para entrenar modelos capaces de predecir incendios.
+### Frontend Web (Angular)
+El sistema cuenta con un portal interactivo de administración y monitoreo. Si todos los servicios están en ejecución, puede acceder vía navegador a la URL y puerto configurado (ej: `http://localhost:4200` o mapeado mediante Nginx al puerto `80`).
 
-## Resultado obtenido
+### Documentación Interactiva (Swagger)
+Para explorar, testear o automatizar peticiones, la API expone documentación auto-generada:
+- **Swagger UI:** [http://localhost:8000/docs](http://localhost:8000/docs)
+- **OpenAPI JSON:** [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json)
 
-Tras entrenar y evaluar modelos utilizando la totalidad de los registros históricos de incendios disponibles para Argentina, se concluye que:
+### Ejemplos de uso mediante API (cURL)
 
-- El uso exclusivo de imágenes satelitales no permite construir un modelo con capacidad predictiva suficiente para anticipar incendios de manera útil.
+**1. Verificar el estado del sistema (Healthcheck):**
+```bash
+curl -X GET http://localhost:8000/api/v1/health
+```
 
-## Información importante para quienes deseen continuar el proyecto
+**2. Crear una orden de predicción:**
+Genera una nueva orden para evaluar riesgo de incendio en una ubicación y fecha determinada.
+```bash
+curl -X POST http://localhost:8000/api/v1/orden \
+     -H "Content-Type: application/json" \
+     -d '{ "dia": 20211125, "lat": -34.249801, "lon": -58.880148 }'
+```
 
-### Fuentes de datos adicionales
+**3. Consultar el estado de una orden:**
+```bash
+curl -X GET http://localhost:8000/api/v1/orden/1
+```
 
-Para mejorar los resultados es necesario incorporar nuevas fuentes de información, por ejemplo:
-
-- Detección de rayos en tiempo real.
-- Pronósticos meteorológicos.
-- Variables atmosféricas y climáticas.
-- Información topográfica y de vegetación.
-
-### Requisitos de hardware
-
-Se recomienda disponer de al menos **64 GB de RAM** para procesar imágenes satelitales en formato bruto (`.SAFE`).
-
-### Consideraciones sobre las fuentes de datos
-
-Durante el desarrollo del proyecto se utilizaron principalmente datos obtenidos mediante otra api, ya que el acceso masivo a imágenes satelitales sin procesar generó restricciones y bloqueos por IP.
-
-Según lo indicado por el profesor de la materia, estos datos presentan una menor precisión que los datos satelitales originales, debido a que son distribuidos con una menor cantidad de decimales y ya procesados previamente. Esto puede haber afectado negativamente la calidad de los entrenamientos y los resultados obtenidos.
-
-Se recomienda, cuando sea posible:
-
-- Descargar cada archivo `.SAFE` una única vez.
-- Mantener una copia local de los datos descargados.
-- Trabajar directamente con las imágenes satelitales originales para conservar la máxima precisión disponible.
-- Utilizar las fuentes procesadas únicamente cuando existan limitaciones de acceso o recursos de hardware.
+**4. Ver los informes automáticos (Módulo Analista IA):**
+Devuelve los informes ejecutivos autogenerados.
+```bash
+curl -X GET http://localhost:8000/api/v1/informes/ultimo
+```
