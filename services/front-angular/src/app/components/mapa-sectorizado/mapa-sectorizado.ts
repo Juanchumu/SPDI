@@ -99,8 +99,8 @@ export class MapaSectorizado implements AfterViewInit, OnChanges {
     this.capaGeojson = L.geoJSON(this.geojson, {
       pointToLayer: (feature: any, latlng) => {
         const p = feature.properties;
-
-        const risk = p.riesgo ?? '-';
+        const pred = p.prediccion ? JSON.parse(p.prediccion) : null;
+        const risk = pred?.riesgo ?? '-';
         const client = p.cliente ?? null;
 
         const fillColor = this.getRiskColor(risk);
@@ -125,7 +125,7 @@ export class MapaSectorizado implements AfterViewInit, OnChanges {
           <b>Cliente:</b> ${p.cliente ?? 'Sin cliente'}<br>
           <b>Día:</b> ${p.dia}<br>
           <b>Estado:</b> ${p.estado}<br>
-          <b>Riesgo:</b> ${p.riesgo ?? '-'}<br>
+          <b>Riesgo:</b> ${pred?.riesgo ?? '-'}<br>
           <b>Porcentaje:</b> ${pred?.porcentaje_area_riesgo ?? 'Sin Calcular'}<br>
           <b>Modelo:</b> ${p.modelo}<br>
           <b>Enviado:</b> ${p.enviado}
