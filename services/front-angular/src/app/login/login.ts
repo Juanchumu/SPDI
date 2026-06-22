@@ -53,7 +53,7 @@ export class Login implements OnInit{
         localStorage.setItem('username', this.username);
 
         this.loading = false;
-        this.router.navigate(['/home']);
+        this.router.navigate(['/dashboard-ordenes']);
       },
       error: () => {
         this.loading = false;

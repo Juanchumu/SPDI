@@ -19,11 +19,15 @@
   <button mat-raised-button routerLink="/alta-cliente">+ Clientes</button>
 <button mat-raised-button routerLink="/informe-riesgo">Informes Riesgo</button>
 <button mat-raised-button routerLink="/informes-de-riesgo">Informes de Riesgo</button>
-<button mat-raised-button routerLink="/ordenes">Lista Ordenes</button>
+<button mat-raised-button routerLink="/dashboard-ordenes">Dashboard Órdenes</button>
 <button mat-raised-button routerLink="/mapa">Mapa</button>
 @if (esAdmin()){
-<button mat-raised-button routerLink="/healt"> Estado </button>
+<button mat-raised-button routerLink="/health"> Estado </button>
+<button mat-raised-button routerLink="/alta-usuario"> + Usuarios </button>
 }
+}
+@if (!estaLogueado()  ){
+<button mat-raised-button routerLink="/login"> Ingresar! </button>
 }
 </mat-toolbar>
 <div  class="app-background" >
