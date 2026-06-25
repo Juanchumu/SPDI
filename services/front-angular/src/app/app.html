@@ -4,26 +4,36 @@
   <button mat-icon-button>
     <mat-icon>gite</mat-icon>
   </button>
+<button mat-icon-button matTooltip="Cambiar de Tema" (click)="themeService.toggle()">
+  @if (themeService.isDark()) {
+    <mat-icon
+      >light_mode</mat-icon>
+  } @else {
+    <mat-icon>dark_mode</mat-icon>
+  }
+</button>
+
+
   <span>Ignis Guard</span>
   @if (estaLogueado()  ){
  <button
-    mat-raised-button
+     mat-raised-button
+     matTooltip="Cerrar Sesion"
     (click)="cerrarSesion()">
-    <mat-icon>logout</mat-icon>
-    Cerrar Sesion
     {{nombreDeSesion()}}
+    <mat-icon>logout</mat-icon>
   </button>
   }
   <span class="example-spacer"></span>
   @if( estaLogueado() ) {
-  <button mat-raised-button routerLink="/alta-cliente">+ Clientes</button>
-<button mat-raised-button routerLink="/informe-riesgo">Informes Riesgo</button>
-<button mat-raised-button routerLink="/informes-de-riesgo">Informes de Riesgo</button>
+  <button mat-raised-button matTooltip="Dar de Alta Clientes"  routerLink="/alta-cliente">+ Clientes</button>
+<button mat-raised-button matTooltip="Generar Informes de Riesgo" routerLink="/informe-riesgo">+ Informes</button>
+<button mat-raised-button matTooltip="Lista de resultados de informes de riesgo" routerLink="/informes-de-riesgo">Resultados</button>
 <button mat-raised-button routerLink="/dashboard-ordenes">Dashboard Órdenes</button>
-<button mat-raised-button routerLink="/mapa">Mapa</button>
+<button mat-raised-button matTooltip="Visualizar/Añadir Predicciones" routerLink="/mapa">Mapa</button>
 @if (esAdmin()){
 <button mat-raised-button routerLink="/health"> Estado </button>
-<button mat-raised-button routerLink="/alta-usuario"> + Usuarios </button>
+<button mat-raised-button matTooltip="Dar de Alta Usuarios" routerLink="/alta-usuario"> + Usuarios </button>
 }
 }
 @if (!estaLogueado()  ){

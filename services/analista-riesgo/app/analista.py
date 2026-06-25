@@ -162,7 +162,8 @@ def run():
             print(f"Generando informe de riesgo para {informe.cliente}")
             predicciones = obtener_predicciones_cliente(
                     db,informe.cliente)
-            if len(predicciones) == 0:
+            #if len(predicciones) == 0:
+            if predicciones is None:
                 informe.estado = "error"
                 informe.updated_at = datetime.utcnow()
                 print("No existen predicciones para analizar.")

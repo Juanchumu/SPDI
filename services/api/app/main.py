@@ -330,12 +330,18 @@ def health():
                     "status": "UP",
                     "uptime": uptime_str
                     },
-                "worker": workerVida("worker"),
+                "worker-x": workerVida("worker-x"),
                 "validador": workerVida("validador"),
+                "entrenador-x": workerVida("entrenador-x"),
+                "modelador-x":workerVida("modelador-x"),
+                "predictor-x": workerVida("predictor-x"),
+                "worker": workerVida("worker"),
                 "entrenador": workerVida("entrenador"),
                 "modelador":workerVida("modelador"),
                 "predictor": workerVida("predictor"),
                 "analista": workerVida("analista"),
+                "analista-cliente": workerVida("analista"),
+                "analista-riesgo": workerVida("analista")
                 },
             "dependencies": {
                 "database": dbVida(),

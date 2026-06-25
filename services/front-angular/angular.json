@@ -27,7 +27,7 @@
             ],
             "styles": [
               "src/material-theme.scss",
-              "src/styles.css",
+              "src/styles.scss",
               "node_modules/leaflet/dist/leaflet.css"]
           },
           "configurations": {

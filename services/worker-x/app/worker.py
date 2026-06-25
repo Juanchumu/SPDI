@@ -70,7 +70,7 @@ def run():
                     orden.status = "Lista para el worker.."
                     db.commit()
                     db.close()
-                    time.sleep(5)
+                    time.sleep(50)
                     continue
 
                 orden.status = "Lista para predecir-x.."
