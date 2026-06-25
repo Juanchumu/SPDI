@@ -33,7 +33,7 @@ export class Healt implements OnInit {
   }
 
   cargarHealth() {
-    this.http.get('http://localhost:8000/api/v1/health')
+    this.http.get('/api/v1/health')
       .subscribe({
         next: (data) => this.health = data,
         error: (err) => console.error(err)

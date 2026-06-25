@@ -50,7 +50,7 @@ export class AltaUsuario {
 
     const payload = this.form.value;
 
-    this.http.post<any>('http://localhost:8000/api/v1/usuarios', payload)
+    this.http.post<any>('/api/v1/usuarios', payload)
       .subscribe({
         next: (res) => {
           this.loading.set(false);

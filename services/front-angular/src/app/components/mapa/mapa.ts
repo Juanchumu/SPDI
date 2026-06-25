@@ -55,7 +55,7 @@ export class Mapa implements OnInit {
   cerrarSesion() {this.auth.logout();}
   recuperar_ordenes(){
     console.log("click");
-    this.http.get(`http://localhost:8000/api/v1/recuperar_ordenes?username=${this.nombreUsuario}`).subscribe((geojson) => {
+    this.http.get(`/api/v1/recuperar_ordenes?username=${this.nombreUsuario}`).subscribe((geojson) => {
       console.log(geojson);
       this.geojsonData = geojson;
     });
@@ -87,7 +87,7 @@ export class Mapa implements OnInit {
     console.log(dia); // 20260609
     for (const p of this.puntos) {
       this.http.post(
-        'http://localhost:8000/api/v1/orden',
+        '/api/v1/orden',
         {
           dia,
           lat: p.lat,
@@ -122,7 +122,7 @@ export class Mapa implements OnInit {
   for (const p of this.puntos) {
 
     this.http.post(
-      'http://localhost:8000/api/v1/orden',
+      '/api/v1/orden',
       {
         dia,
         lat: p.lat,
@@ -142,7 +142,7 @@ export class Mapa implements OnInit {
 /*
   cargarClientes() {
   this.http.get<any>(
-    `http://localhost:8000/api/v1/clientes?username=${this.nombreUsuario}`
+    `/api/v1/clientes?username=${this.nombreUsuario}`
   )
   .subscribe({
     next: (data) => {
@@ -161,7 +161,7 @@ export class Mapa implements OnInit {
 */
 cargarClientes() {
   this.http.get<any[]>(
-    `http://localhost:8000/api/v1/clientes?username=${this.nombreUsuario}`
+    `/api/v1/clientes?username=${this.nombreUsuario}`
   )
   .subscribe({
     next: (data) => {

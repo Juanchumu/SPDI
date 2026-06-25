@@ -38,7 +38,7 @@ export class InformesDeRiesgo implements OnInit {
 
   informes: InformeRiesgo[] = [];
 
-  readonly apiUrl = 'http://localhost:8000/api/v1';
+  readonly apiUrl = '/api/v1';
 
   ngOnInit(): void {
     this.cargarInformes();

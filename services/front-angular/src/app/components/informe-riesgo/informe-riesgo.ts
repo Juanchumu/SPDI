@@ -56,10 +56,10 @@ export class InformeRiesgo implements OnInit {
   private fb = inject(FormBuilder);
 
   readonly apiClientes =
-    'http://localhost:8000/api/v1/clientes';
+    '/api/v1/clientes';
 
   readonly apiInformes =
-    'http://localhost:8000/api/v1/informes/riesgo';
+    '/api/v1/informes/riesgo';
 
   responsable =
     localStorage.getItem('username') ?? '';

@@ -31,7 +31,7 @@ export class ClienteAlta {
   private fb = inject(FormBuilder);
   private http = inject(HttpClient);
 
-  private readonly apiUrl = 'http://localhost:8000/api/v1/clientes';
+  private readonly apiUrl = '/api/v1/clientes';
 
   cargando = false;
   exito = false;

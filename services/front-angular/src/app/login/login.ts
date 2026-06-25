@@ -42,7 +42,7 @@ export class Login implements OnInit{
     this.loading = true;
 
     this.http.post<any>(
-      'http://localhost:8000/api/v1/login',
+      '/api/v1/login',
       {
         username: this.username,
         password: this.password
