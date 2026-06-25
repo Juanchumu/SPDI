@@ -1,5 +1,5 @@
 FROM nginx:alpine
-
+COPY front-angular/nginx.conf /etc/nginx/conf.d/default.conf
 COPY front-angular/dist/front-angular/browser /usr/share/nginx/html
 COPY front-angular/src/assets/leaflet /usr/share/nginx/html
 
